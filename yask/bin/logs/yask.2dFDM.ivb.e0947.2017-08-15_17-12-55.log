@@ -1,0 +1,1 @@
+Invocation: ./yask.sh -stencil 2dFDM -arch ivb -- -dx 1 -dy 1024 -dz 1024

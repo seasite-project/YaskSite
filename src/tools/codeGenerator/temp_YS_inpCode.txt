@@ -1,0 +1,12 @@
+BASE_STENCIL=heat2d;
+DERIVED_STENCIL=heat2d_irk;
+GRID_ARRAY F[24];
+GRID_POINT tmp;
+GRID_POINT_ARRAY tmp[4];
+PARAM h;
+tmp = STENCIL(DATA<0>);
+F[1]<0> = tmp[0]*h + DATA<0>;
+F[ll]<0> = tmp[1]*h + DATA<0>;
+F[14]<0> = tmp[2]*h + DATA<0>;
+F[15]<0> = tmp[3]*h + DATA<0>;
+

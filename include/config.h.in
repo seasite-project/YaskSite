@@ -1,0 +1,35 @@
+#ifndef yaskSite_CONFIG_H
+#define yaskSite_CONFIG_H
+
+#define yaskSite_VERBOSITY ${yaskSite_VERBOSITY}
+#define YASK_PATH "${YASK_ABSOLUTE_PATH}"
+#define TARGET_ARCH "${TARGET_ARCH}"
+#define IACA_PATH "${IACA_PATH}"
+#define TOOL_DIR "${LIB_TOOL_DIR}"
+#define SRC_DIR "${SRC_DIR}"
+#define STENCIL_DIR "${TEMP_STENCIL_DIR}"
+#define INC_DIR "${INC_DIR}"
+#define TEMP_DIR "${TEMP_DIR}"
+#define yaskSite_PRINT_RANK ${yaskSite_PRINT_RANK}
+#define LD_PORTS "${LD_PORTS}"
+#define L1_cache "${L1}"
+#define L2_cache "${L2}"
+#define L3_cache "${L3}"
+#define MEM "${MEM}"
+#define TH_P_SOCK ${THREAD_PER_SOCKET}
+#define CL_SIZE ${CL_SIZE}
+
+#cmakedefine MODEL_BOUNDARY_EFFECT
+#cmakedefine MODEL_PREFETCH_EFFECT
+#cmakedefine MODEL_LATENCY_EFFECT
+#cmakedefine MODEL_ASSOCIATIVITY_EFFECT
+#cmakedefine MODEL_REMAINDER_EFFECT
+
+#cmakedefine LOG_SYS_CALL
+#cmakedefine yaskSite_HAVE_MPI
+#cmakedefine yaskSite_HAVE_OpenMP
+#cmakedefine yaskSite_PRINT_ONLYFIRST
+#cmakedefine CACHE_BUILD
+#cmakedefine ENABLE_LOOPADAPT
+
+#endif

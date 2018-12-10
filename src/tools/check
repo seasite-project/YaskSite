@@ -1,0 +1,39 @@
+Intel(R) Architecture Code Analyzer Version - 2.3 build:246dfea (Thu, 6 Jul 2017 13:38:05 +0300)
+Analyzed File - /home/hpc/unrz/unrz002h/tmp_YaskSite/heat2d_radius_1_ivb_1_1_1_pre_off_default_noLikwid/assembly_iaca_comp.o
+Binary Format - 64Bit
+Architecture  - IVB
+Analysis Type - Throughput
+
+Throughput Analysis Report
+--------------------------
+Block Throughput: 4.00 Cycles       Throughput Bottleneck: FrontEnd
+
+Port Binding In Cycles Per Iteration:
+-------------------------------------------------------------------------
+|  Port  |  0   -  DV  |  1   |  2   -  D   |  3   -  D   |  4   |  5   |
+-------------------------------------------------------------------------
+| Cycles | 1.0    0.0  | 4.0  | 3.0    2.5  | 3.0    2.5  | 1.0  | 2.0  |
+-------------------------------------------------------------------------
+
+N - port number or number of cycles resource conflict caused delay, DV - Divider pipe (on port 0)
+D - Data fetch pipe (on ports 2 and 3), CP - on a critical path
+F - Macro Fusion with the previous instruction occurred
+* - instruction micro-ops not bound to a port
+^ - Micro Fusion happened
+# - ESP Tracking sync uop was issued
+@ - SSE instruction followed an AVX256/AVX512 instruction, dozens of cycles penalty is expected
+X - instruction not supported, was not accounted in Analysis
+
+| Num Of |              Ports pressure in cycles               |    |
+|  Uops  |  0  - DV  |  1  |  2  -  D  |  3  -  D  |  4  |  5  |    |
+---------------------------------------------------------------------
+|   2    | 1.0       |     | 0.5   0.5 | 0.5   0.5 |     |     |    | vmulsd xmm1, xmm0, qword ptr [rdx+rsi*8]
+|   2    |           | 1.0 | 0.5   0.5 | 0.5   0.5 |     |     | CP | vaddsd xmm2, xmm1, qword ptr [r14+rsi*8+0x8]
+|   2    |           | 1.0 | 0.5   0.5 | 0.5   0.5 |     |     | CP | vaddsd xmm3, xmm2, qword ptr [r14+rsi*8-0x8]
+|   2    |           | 1.0 | 0.5   0.5 | 0.5   0.5 |     |     | CP | vaddsd xmm4, xmm3, qword ptr [r15+rsi*8]
+|   2    |           | 1.0 | 0.5   0.5 | 0.5   0.5 |     |     | CP | vaddsd xmm5, xmm4, qword ptr [r8+rsi*8]
+|   2    |           |     | 0.5       | 0.5       | 1.0 |     |    | vmovsd qword ptr [rax+rsi*8], xmm5
+|   1    |           |     |           |           |     | 1.0 |    | inc rsi
+|   1    |           |     |           |           |     | 1.0 |    | cmp rsi, rcx
+|   0F   |           |     |           |           |     |     |    | jb 0x6
+Total Num Of Uops: 14

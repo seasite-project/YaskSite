@@ -1,0 +1,14 @@
+
+WARNING: The module "intelmpi/2017up02-intel" is deprecated and may be removed in the near future!
+
+
+
+WARNING: The module "mkl/2017up03" is deprecated and may be removed in the near future!
+
+
+
+WARNING: The module "intel64/17.0up03" is deprecated and may be removed in the near future!
+
+
+NOTE: likwirt-features and likwid-setFrequency are not available. Power  measurements are incorrect.
+error: no grids defined in ' make clean;  make -j all EXTRA_MACROS='' stencil=heat3d arch=ivb real_bytes=8 radius=3 EXTRA_CXXFLAGS=-O0  2>&1 && bin/yask.sh -exe_prefix 'taskset -c 0-9 time' -stencil heat3d -arch ivb  -t 0 -d 1'.

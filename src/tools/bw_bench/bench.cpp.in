@@ -1,0 +1,173 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include "dummy.h"
+#include "timing.h"
+#include "omp.h"
+
+//This includes benchmarks to measure bandwidth depending on LD:ST ratios
+//return bw in GB/s
+//minimum ratio is 1; i.e 1 load and 1 store; and load >= store
+double measure_bw(int repeat)
+{
+    int ld = LOAD;
+    int st = STORE;
+
+    if(ld < st)
+    {
+        printf("LD streams has to be greater than ST; i.e LD:ST >= 1\n");
+        return 0;
+    }
+
+    if(st == 0)
+    {
+        printf("LD only bench not supported\n");
+    }
+
+    int LD_stream_sz = (ld-st);
+    int ST_stream_sz = st;
+
+    int nthreads = 1;
+
+#pragma omp parallel
+    {
+#pragma omp single
+        {
+            nthreads =omp_get_num_threads();
+        }
+    }
+
+
+    //calculate N depending on SIZE (which is in MB)
+    int N_per_thread = (int)(SIZE*1024.0*1024.0/(8*(double)(LD_stream_sz+ST_stream_sz)));
+    //make N_per_thread multiple of 64
+    N_per_thread = N_per_thread + (64-N_per_thread%64);
+
+    int N=N_per_thread*nthreads;
+
+    //we need ST times ld+store streams and (LD-ST) times pure load streams
+    double* ld_stream = (double*) malloc((LD_stream_sz)*sizeof(double)*N);
+    double* st_stream = (double*) malloc((ST_stream_sz)*sizeof(double)*N);
+
+    double** ld_ptr = (double**) malloc((LD_stream_sz)*sizeof(double*));
+    double** st_ptr = (double**) malloc((ST_stream_sz)*sizeof(double*));
+
+    //init ptrs
+    for(int i=0; i<LD_stream_sz; ++i)
+    {
+        ld_ptr[i] = &(ld_stream[i*N]);
+    }
+
+    for(int i=0; i<ST_stream_sz; ++i)
+    {
+        st_ptr[i] = &(st_stream[i*N]);
+    }
+
+    int* myStart = (int*) malloc((nthreads+1)*sizeof(int));
+
+    for(int t=0; t<nthreads; ++t)
+    {
+        myStart[t] = t*N_per_thread;
+    }
+
+    myStart[nthreads] = N;
+
+    //init values
+    for(int i=0; i<N; ++i)
+    {
+        for(int j=0; j<LD_stream_sz; ++j)
+        {
+            ld_ptr[j][i] = 2.0*j*i;
+        }
+        for(int j=0; j<ST_stream_sz; ++j)
+        {
+            st_ptr[j][i] = 1.0*j*i;
+        }
+    }
+
+    int warm_up = 20;
+    //warm-up
+#pragma omp parallel
+    {
+        int id = omp_get_thread_num();
+        for(int r=0; r<warm_up; ++r)
+        {
+#pragma vector temporal
+#pragma simd
+            for(int i=myStart[id]; i<myStart[id+1]; ++i)
+            {
+                double ld_val = 1;
+
+                //need to unroll it completely
+                //#UNROLL_BEGIN(LOAD)#
+                ld_val += ld_ptr[@][i];
+                //#UNROLL_END#
+
+                //#UNROLL_BEGIN(STORE)#
+                st_ptr[@][i] += ld_val;
+                //#UNROLL_END#
+            }
+
+            dummy(ld_stream, st_stream);
+        }
+    }
+
+    START_TIME(bench);
+    //create benchmark
+#pragma omp parallel
+    {
+        int id = omp_get_thread_num();
+        for(int r=0; r<repeat; ++r)
+        {
+#pragma vector temporal
+#pragma simd
+            for(int i=myStart[id]; i<myStart[id+1]; ++i)
+            {
+                double ld_val = 1;
+
+                //need to unroll it completely
+                //#UNROLL_BEGIN(LOAD)#
+                ld_val += ld_ptr[@][i];
+                //#UNROLL_END#
+
+                //#UNROLL_BEGIN(STORE)#
+                st_ptr[@][i] += ld_val;
+                //#UNROLL_END#
+            }
+
+            dummy(ld_stream, st_stream);
+        }
+    }
+    STOP_TIME(bench);
+
+    double bench_time = GET_TIME(bench);
+    printf("bench_time = %f\n", bench_time);
+
+    printf("Size per thread = %f MB\n", (LD_stream_sz + ST_stream_sz)*N_per_thread*sizeof(double)/(1024.0*1024.0));
+
+    //calculate bandwidth
+    double total_bytes = repeat*(LD_stream_sz + 2.0*ST_stream_sz)*N*sizeof(double);
+    double bw = (total_bytes/bench_time)*1e-6;
+
+    free(ld_ptr);
+    free(st_ptr);
+    free(ld_stream);
+    free(st_stream);
+    free(myStart);
+
+    return bw;
+}
+
+int main(int argc, char** argv)
+{
+    int repeat    = 20;
+    if(argc > 1)
+    {
+        repeat    = atoi(argv[1]);
+    }
+
+    double bw = measure_bw(repeat);
+
+    printf("Measured bandwidth = %6.2f MB/s\n", bw);
+
+    return 0;
+}

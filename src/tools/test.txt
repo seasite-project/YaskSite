@@ -1,0 +1,15 @@
+stencil_0 data data 1 1
+stencil_1 data data 1 1
+stencil_2 data data 1 1
+stencil_3 data data 1 1
+stencil_5 data k1 1 1
+stencil_6 k1 k1 1 1
+stencil_7 k1 k1 1 1
+stencil_8 k1 k1 1 1
+stencil_9 k1 k1 1 1
+stencil_10 dt,k1 k2 2 1
+stencil_11 k2 k2 1 1
+stencil_12 k2 k2 1 1
+stencil_13 k2 k2 1 1
+stencil_14 k2 k2 1 1
+stencil_4 k2,k1,dt,data dataERR 4 2

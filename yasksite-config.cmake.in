@@ -1,0 +1,30 @@
+set(yaskSite_INCLUDE_DIRS @CMAKE_INSTALL_PREFIX@/include/yaskSite
+    @LIKWID_INCLUDE_DIR@ @MPI_INCLUDE_PATH@)
+
+if (@BUILD_SHARED_LIBS@ STREQUAL "ON")
+    set(yaskSite_LIBRARIES @CMAKE_INSTALL_PREFIX@/lib/yaskSite/libyaskSite.so -lpthread)
+else()
+    set(yaskSite_LIBRARIES @CMAKE_INSTALL_PREFIX@/lib/yaskSite/libyaskSite.a -lpthread)
+endif()
+set(yaskSite_LIBDIR @CMAKE_INSTALL_PREFIX@/lib)
+
+set(yaskSite_C_FLAGS "${yaskSite_C_FLAGS}")
+set(yaskSite_CXX_FLAGS "${yaskSite_CXX_FLAGS} -std=c++11")
+
+set(yaskSite_CC @CC@)
+set(yaskSite_CXX @CXX@)
+
+set(yaskSite_VERSION @yaskSite_VERSION@)
+
+# set default paths for libraries
+set(LIKWID_LIBRARIES @LIKWID_LIBRARIES@ CACHE STRING "likwid libraries (optional by @CMAKE_PROJECT_NAME@)")
+
+set(MPI_LIBRARIES @MPI_LIBRARIES@ CACHE STRING "MPI libraries (required by @CMAKE_PROJECT_NAME@)")
+
+
+set(yaskSite_LIBRARIES ${yaskSite_LIBRARIES} ${LIKWID_LIBRARIES} ${MPI_LIBRARIES})
+
+if (@yaskSite_HAVE_OPENMP@)
+    set(yaskSite_C_FLAGS "${yaskSite_C_FLAGS} @OpenMP_C_FLAGS@")
+    set(yaskSite_CXX_FLAGS "${yaskSite_CXX_FLAGS} @OpenMP_CXX_FLAGS@")
+endif()

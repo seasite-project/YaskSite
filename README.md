@@ -20,15 +20,17 @@ yaskSite (YASK+SeASiTe) is a library that's help in generating and running well-
 
 ### How do I get set up? ###
 
-* git clone the repository
-* CC=icc CXX=icpc cmake ..
+* git clone the repository && cd yasksite
+* We prefer out of source build so create a separate build directory (mkdir build)
+* CC=icc CXX=icpc cmake .. -DCMAKE_INSTALL_PREFIX=[where to install]
+* cmake . (to make configuration changes, TEMP_DIR, CACHE_BUILD and LIKWID PATH might be interesting)
 * make
 * make install
 * make calibrate - Calibrate the machine on which code has to be run.
 
 ### Dependencies ###
 
-* YASK 
+* YASK
 * Intel IACA
 * Intel MLC
 * LIKWID

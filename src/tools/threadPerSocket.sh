@@ -1,9 +1,11 @@
 #!/bin/bash
 
+lscpu="LANG=en_US.UTF-8 lscpu"
+
 #USAGE: ./threadPerSocket.sh
-nthread=$(lscpu | grep "socket"| cut -d ":" -f 2-2 )
-nsocket=$(lscpu | grep "Socket(s)"| cut -d ":" -f 2-2 )
-nnuma=$(lscpu | grep "NUMA node(s)"| cut -d ":" -f 2-2 )
+nthread=$(eval $lscpu | grep "socket"| cut -d ":" -f 2-2 )
+nsocket=$(eval $lscpu | grep "Socket(s)"| cut -d ":" -f 2-2 )
+nnuma=$(eval $lscpu | grep "NUMA node(s)"| cut -d ":" -f 2-2 )
 numa_per_socket=$(($nnuma/$nsocket))
 
 if [[ $numa_per_socket > 1 ]]; then

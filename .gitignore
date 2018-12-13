@@ -3,3 +3,6 @@
 *.s
 yask/bin/*
 include/config.h
+yask/src/stencil_code.hpp
+yask/src/stencil_macros.hpp
+yask/src/foldBuilder/stencils.hpp

@@ -2,7 +2,7 @@
 
 getInfo()
 {
-    Lx=$(lscpu | grep "$1" | cut -d ":" -f 2 | awk '{$0=tolower($0);$1=$1}1')
+    Lx=$(lscpu | grep -i "$1" | cut -d ":" -f 2 | awk '{$0=tolower($0);$1=$1}1')
     Lx_ext=$(echo $Lx|sed 's/[0-9]*//g')
     Lx_val=$(echo $Lx|grep -m1 -Eo '[0-9]*\.?[0-9]+')
     multiple=1

@@ -60,12 +60,34 @@ void main(int argc, char** argv)
 
     double* dt;
     //Generating code examples
-    //1. heat2d_update
     CODIFY( "heat2d_update", "heat2d",
             "PARAM dt;\n"
-            "OUT = INP + dt*STENCIL(INP);\n"
+            "DATA<1> = DATA<0> + dt*STENCIL(DATA<0>);\n"
           );
 
+    CODIFY( "heat2d_rk", "heat2d",
+            "GRID k1, k2;\n"
+            "GRID_POINT k3;\n"
+            "PARAM dt;\n"
+            "k1<0>  = STENCIL(DATA<0>);\n"
+            "k2<0>  = k1<0> + dt*1.0*STENCIL(k1<0>);\n"
+            "k3  = k1<0> + (0.25)*(k2<0>-k1<0>) + dt*0.25*STENCIL(k2<0>);\n"
+            "DATA<1> = DATA<0> + dt*(0.5*k1<0> + 0.5*k2<0> + 0*k3);\n"
+          );
+
+
+    CODIFY( "heat2d_embrk", "heat2d",
+            "GRID k1, k2, ERR;\n"
+            "GRID_POINT k3;\n"
+            "PARAM dt;\n"
+            "k1<0>  = STENCIL(DATA<0>);\n"
+            "k2<0>  = k1<0> + dt*1.0*STENCIL(k1<0>);\n"
+            "k3  = k1<0> + (0.25)*(k2<0>-k1<0>) + dt*0.25*STENCIL(k2<0>);\n"
+            "DATA<1> = DATA<0> + dt*(0.5*k1<0> + 0.5*k2<0> + 0*k3);\n"
+            "ERR<0> = (1/6.0-0.5)*k1<0> + (1/6.0-0.5)*k2<0> + (4/6.0)*k3;\n"
+          );
+
+#if 0
     /*    yaskSite* stencil_0 = new yaskSite(&mpiMan, "heat2d_update",2,1,1,1);
           stencil_0->setThread(10,1);
           stencil_0->setDim(60000, 2000, 1, 50);
@@ -154,12 +176,13 @@ void main(int argc, char** argv)
             "OUT = INP + dt*(0.5*k1 + 0.5*k2 + 0*k3);\n"
             "ERR = (1/6.0-0.5)*k1 + (1/6.0-0.5)*k2 + (4/6.0)*k3;\n"
         );
+#endif
 
-    yaskSite* stencil_2 = new yaskSite(&mpiMan, "heat2d_embrk",2,1,1,1);
-    stencil_2->setThread(1,1);
-    stencil_2->setDim(80000, 2000, 1, 50);
-    stencil_2->init();//init goes here
-    dt = stencil_2->getParam("dt"); //set the defined parameters
+    yaskSite* stencil = new yaskSite(&mpiMan, "heat2d_embrk",2,1,1,1);
+    stencil->setThread(1,1);
+    stencil->setDim(80000, 2000, 1, 50);
+    stencil->init();//init goes here
+    dt = stencil->getParam("dt"); //set the defined parameters
     (*dt) = 0.025;
 
   /*  PERF_RUN(stencil_2,"plain");
@@ -167,10 +190,10 @@ void main(int argc, char** argv)
     stencil_2->spatialTuner("L3", "L2");
     PERF_RUN(stencil_2, "spatial");
 */
-    stencil_2->blockTuner("L3", "L3", "L2");
-    PERF_RUN(stencil_2, "temporal");
+    stencil->blockTuner("L3", "L3", "L2");
+    PERF_RUN(stencil, "temporal");
 
-    delete stencil_2;
+    delete stencil;
 
 #ifdef LIKWID_PERFMON
     LIKWID_MARKER_CLOSE;

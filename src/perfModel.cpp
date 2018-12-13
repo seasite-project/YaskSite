@@ -277,11 +277,12 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         bool ilc_jump = false, olc_jump = false;
         std::vector<double> assocOh = simulateCache_assoc(ilc_jump, olc_jump, currCache, shrink_space);
         double latency_oh = (totalGrids)*latency_oh_per_LUP;
-
-        if(olc_jump)
+        int dim = stencil->dim;
+        bool jump = (dim>2)?olc_jump:ilc_jump;
+        if(jump)
         {
             double outer_fold=1;
-            if(stencil->dim==3)
+            if(dim==3)
             {
                 outer_fold=stencil->fold_x;
             }
@@ -298,17 +299,19 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
             latency_oh = streams*latency_oh_per_LUP;
         }
 
-        double totalData = actual_data + extra_data + assocOh[0];
+        double assoc_oh = (dim>2)?assocOh[0]:assocOh[1];
+
+        double totalData = actual_data + extra_data + assoc_oh;
         ECM_prefetch[currCache.hierarchy] = prefetch_oh*currCache.bytePerWord;
         ECM_boundary[currCache.hierarchy] = boundary_oh*currCache.bytePerWord;
         ECM_latency[currCache.hierarchy] = latency_oh;
-        ECM_assoc[currCache.hierarchy] = assocOh[0]*currCache.bytePerWord;
+        ECM_assoc[currCache.hierarchy] = assoc_oh*currCache.bytePerWord;
         return { totalData, (totalData-numWriteGrids)/((double)numWriteGrids) };
     }
     //TODO: only for symmetric stencils currently
     //if greater than Inner blocked LC
     //stencil_data = (2*(int((rad-1)/fold) + 1) + 1)
-    else if(currCache.hierarchy > opt->spatialIBC->hierarchy || (stencil->dim == 2))
+    else if((currCache.hierarchy > opt->spatialIBC->hierarchy) || (stencil->dim == 2))
     {
         double outer_fold=1;
 
@@ -332,7 +335,11 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         bool ilc_jump = false, olc_jump = false;
         std::vector<double> assocOh = simulateCache_assoc(ilc_jump, olc_jump, currCache, shrink_space);
         double latency_oh = (stencil_contrib_outer + stencil_centre + totalGrids - 1)*latency_oh_per_LUP;
-        if(ilc_jump)
+        int dim =stencil->dim;
+
+        bool jump = (dim>2)?ilc_jump:false;
+
+        if(jump)
         {
             int stencil_contrib_inner = 2*( static_cast<int>((stencil->radius-1)/((double)stencil->fold_y)) +1 );
             double streams = stencil_contrib_outer + stencil_contrib_inner + stencil_centre + totalGrids - 1;
@@ -342,13 +349,13 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
             latency_oh = streams*latency_oh_per_LUP;
         }
 
-        double totalData = actual_data + extra_data + assocOh[1];
+        double assoc_oh = (dim>2)?assocOh[1]:assocOh[2];
 
+        double totalData = actual_data + extra_data + assoc_oh;
         ECM_latency[currCache.hierarchy] = latency_oh;
         ECM_prefetch[currCache.hierarchy] = prefetch_oh*currCache.bytePerWord;
         ECM_boundary[currCache.hierarchy] = boundary_oh*currCache.bytePerWord;
-        printf("assoc Oh = %f\n", assocOh[1]);
-        ECM_assoc[currCache.hierarchy] = assocOh[1]*currCache.bytePerWord;
+        ECM_assoc[currCache.hierarchy] = assoc_oh*currCache.bytePerWord;
         return {totalData, ((totalData-numWriteGrids)/(double)numWriteGrids)};
     }
     //no blocking condition
@@ -1155,40 +1162,46 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
     words_miss_ilc.push_back(centre_rhs);
     words_miss_olc.push_back(centre_rhs);
 
-    double radius_x = ( static_cast<int>((stencil->radius-1)/(fold_x)) + 1 );
+    int dim = stencil->data->dim;
+    double radius_x = (dim > 2)?( static_cast<int>((stencil->radius-1)/(fold_x)) + 1 ):0;
     double centre_next = dx*dy*dz + dy*dz;
     double extreme_x = dz*dy*(radius_x)*static_cast<int>(fold_x) + centre_next;
     double min_x = -1.0*dz*dy*radius_x*static_cast<int>(fold_x) + centre;
-    for(int i=(int)(-radius_x); i<=(int)radius_x; ++i)
-    {
-        if(i!=0)
-        {
-            double curr_word = dz*dy*i*static_cast<int>(fold_x) + centre;
-//            words_nlc.push_back(curr_word);
-//            words_ilc.push_back(curr_word);
-//           words_drop_nlc.push_back(curr_word);
-//            words_drop_ilc.push_back(curr_word);
-            words_olc.push_back(curr_word);
 
-            if(i>(int)(-radius_x))
+    printf("radius_x = %f\n", radius_x);
+
+    if(dim >2)
+    {
+        for(int i=(int)(-radius_x); i<=(int)radius_x; ++i)
+        {
+            if(i!=0)
             {
-                words_hit_olc.push_back(curr_word);
+                double curr_word = dz*dy*i*static_cast<int>(fold_x) + centre;
+                //            words_nlc.push_back(curr_word);
+                //            words_ilc.push_back(curr_word);
+                //           words_drop_nlc.push_back(curr_word);
+                //            words_drop_ilc.push_back(curr_word);
+                words_olc.push_back(curr_word);
+
+                if(i>(int)(-radius_x))
+                {
+                    words_hit_olc.push_back(curr_word);
+                }
             }
         }
-    }
-    words_drop_olc.push_back(min_x);
+        words_drop_olc.push_back(min_x);
 
-    for(int i=(int)(-radius_x); i<=(int)radius_x; ++i)
-    {
-        if(i!=0)
+        for(int i=(int)(-radius_x); i<=(int)radius_x; ++i)
         {
-            double curr_word = dz*dy*i*static_cast<int>(fold_x) + centre_next;
-            words_miss_nlc.push_back(curr_word);
-            words_miss_ilc.push_back(curr_word);
-
+            if(i!=0)
+            {
+                double curr_word = dz*dy*i*static_cast<int>(fold_x) + centre_next;
+                words_miss_nlc.push_back(curr_word);
+                words_miss_ilc.push_back(curr_word);
+            }
         }
+        words_miss_olc.push_back(extreme_x);
     }
-    words_miss_olc.push_back(extreme_x);
 
     double radius_y = ( static_cast<int>((stencil->radius-1)/(fold_y)) + 1 );
     centre_next = centre + dz;
@@ -1210,7 +1223,11 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
             }
         }
     }
-    words_olc.push_back(extreme_y);
+    if(dim > 2)
+    {
+        words_hit_olc.push_back(extreme_y);
+        words_olc.push_back(extreme_y);
+    }
     words_drop_ilc.push_back(min_y);
 
     for(int i=(int)(-radius_y); i<=(int)radius_y; ++i)
@@ -1232,6 +1249,7 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
         words_nlc.push_back(centre+i*8);
     }
     words_nlc.push_back(extreme_z);
+    words_hit_ilc.push_back(extreme_z);
     words_ilc.push_back(extreme_z);
 
     double word_per_cl = 8;
@@ -1419,7 +1437,9 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
             extra_cl_ilc = (stencil_contrib_inner*ilc_layer_cl);
             ilc_jump = true;
         }
-   }
+    }
+    printf("extra cl ilc = %f\n", extra_cl_ilc);
+
 
     for(int i=1; i<=olc_layer_cl; ++i)
     {
@@ -1433,93 +1453,95 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
     double extra_cl_olc =  0;
     int ctr_olc = 0;
 
-    //std::vector<int> cl_dropped_list_olc;
-    for(int i=0; i<olc_layer_cl; ++i)
+    if(dim > 2)
     {
-        for(int j=0; j<(int)cl_drop_olc.size(); ++j)
+        //std::vector<int> cl_dropped_list_olc;
+        for(int i=0; i<olc_layer_cl; ++i)
         {
-            // cl_dropped_list_olc.push_back(cl_drop_olc[j]+i);
-            int curr_cl = cl_drop_olc[j];
-            way_ctr_olc[curr_cl] -= 1;
-            cl_drop_olc[j]=(cl_drop_olc[j]+1)%set_size;
-        }
-    }
-
-    printf("finished\n");
-
-    //std::sort(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end());
-
-    for(int i=1; i<=olc_layer_cl; ++i)
-    {
-        for(int j=0; j<(int)cl_miss_olc.size(); ++j)
-        {
-            int curr_cl = cl_miss_olc[j];
-            /*if(way_ctr_olc[curr_cl] == (assoc))
+            for(int j=0; j<(int)cl_drop_olc.size(); ++j)
             {
-                std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
-                if(pos != cl_dropped_list_olc.end())
+                // cl_dropped_list_olc.push_back(cl_drop_olc[j]+i);
+                int curr_cl = cl_drop_olc[j];
+                way_ctr_olc[curr_cl] -= 1;
+                cl_drop_olc[j]=(cl_drop_olc[j]+1)%set_size;
+            }
+        }
+
+
+        //std::sort(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end());
+
+        for(int i=1; i<=olc_layer_cl; ++i)
+        {
+            for(int j=0; j<(int)cl_miss_olc.size(); ++j)
+            {
+                int curr_cl = cl_miss_olc[j];
+                /*if(way_ctr_olc[curr_cl] == (assoc))
+                  {
+                  std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
+                  if(pos != cl_dropped_list_olc.end())
+                  {
+                //drop this element
+                cl_dropped_list_olc.erase(pos);
+                }
+                else
                 {
+                way_ctr_olc[curr_cl] += 1;
+                ++extra_cl_olc;
+                ++ctr_olc;
+                }
+                }*/
+                if(way_ctr_olc[curr_cl] >= (assoc))
+                {
+                    /* std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
+                       if(pos != cl_dropped_list_olc.end())
+                       {
                     //drop this element
                     cl_dropped_list_olc.erase(pos);
+                    }
+                    else*/
+                    {
+                        way_ctr_olc[curr_cl] += 1;
+                    }
+                    ++extra_cl_olc;
+                    ++ctr_olc;
                 }
                 else
                 {
                     way_ctr_olc[curr_cl] += 1;
+                }
+                cl_miss_olc[j]=(cl_miss_olc[j]+1)%set_size;
+            }
+
+            for(int j=0; j<(int)cl_hit_olc.size(); ++j)
+            {
+                int curr_cl = cl_hit_olc[j];
+                if(way_ctr_olc[curr_cl] > assoc)
+                {
+                    /* std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
+                       if(pos != cl_dropped_list_olc.end())
+                       {
+                    //drop this element
+                    cl_dropped_list_olc.erase(pos);
+                    }
+                    else*/
+                    {
+                        way_ctr_olc[curr_cl] += 1;
+                    }
                     ++extra_cl_olc;
                     ++ctr_olc;
                 }
-            }*/
-            if(way_ctr_olc[curr_cl] >= (assoc))
-            {
-               /* std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
-                if(pos != cl_dropped_list_olc.end())
-                {
-                    //drop this element
-                    cl_dropped_list_olc.erase(pos);
-                }
-                else*/
-                {
-                    way_ctr_olc[curr_cl] += 1;
-                }
-                ++extra_cl_olc;
-                ++ctr_olc;
+                cl_hit_olc[j]=(cl_hit_olc[j]+1)%set_size;
             }
-            else
+            double outer_fold = (stencil->dim==3)?stencil->fold_x:stencil->fold_y;
+            int stencil_contrib_outer = 2*( static_cast<int>((stencil->radius-1)/(outer_fold)) + 1 );
+            //printf("lhs = %f, rhs = %d\n", extra_cl_olc/static_cast<double>(olc_layer_cl), stencil_contrib_outer);
+            //if more than LC break; record as LC break
+            if(extra_cl_olc/static_cast<double>(olc_layer_cl) > stencil_contrib_outer)
             {
-                way_ctr_olc[curr_cl] += 1;
+                extra_cl_olc = (stencil_contrib_outer*olc_layer_cl);
+                olc_jump = true;
+                break;
             }
-            cl_miss_olc[j]=(cl_miss_olc[j]+1)%set_size;
-        }
-
-        for(int j=0; j<(int)cl_hit_olc.size(); ++j)
-        {
-            int curr_cl = cl_hit_olc[j];
-            if(way_ctr_olc[curr_cl] > assoc)
-            {
-               /* std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
-                if(pos != cl_dropped_list_olc.end())
-                {
-                    //drop this element
-                    cl_dropped_list_olc.erase(pos);
-                }
-                else*/
-                {
-                    way_ctr_olc[curr_cl] += 1;
-                }
-                ++extra_cl_olc;
-                ++ctr_olc;
-            }
-            cl_hit_olc[j]=(cl_hit_olc[j]+1)%set_size;
-        }
-        double outer_fold = (stencil->dim==3)?stencil->fold_x:stencil->fold_y;
-        int stencil_contrib_outer = 2*( static_cast<int>((stencil->radius-1)/(outer_fold)) + 1 );
-        //printf("lhs = %f, rhs = %d\n", extra_cl_olc/static_cast<double>(olc_layer_cl), stencil_contrib_outer);
-        //if more than LC break; record as LC break
-        if(extra_cl_olc/static_cast<double>(olc_layer_cl) > stencil_contrib_outer)
-        {
-            extra_cl_olc = (stencil_contrib_outer*olc_layer_cl);
-            olc_jump = true;
-            break;
         }
     }
     printf("extra cl olc = %f\n", extra_cl_olc);

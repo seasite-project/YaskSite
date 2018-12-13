@@ -1,5 +1,5 @@
 *.swp
 *.o
 *.s
-yask/bin
+yask/bin/*
 include/config.h

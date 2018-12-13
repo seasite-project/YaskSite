@@ -1,8 +1,0 @@
-/home/hpc/unrz/unrz002h/installkit/include/yaskSite/yaskSite.h
-/home/hpc/unrz/unrz002h/installkit/include/yaskSite/config.h
-/home/hpc/unrz/unrz002h/installkit/include/yaskSite/macros.h
-/home/hpc/unrz/unrz002h/installkit/include/yaskSite/yaskFork.h
-/home/hpc/unrz/unrz002h/installkit/include/yaskSite/util.h
-/home/hpc/unrz/unrz002h/installkit/include/yaskSite/MPI_Manager.h
-/home/hpc/unrz/unrz002h/installkit/include/yaskSite/print.h
-/home/hpc/unrz/unrz002h/installkit/lib/yaskSite/libyaskSite.so

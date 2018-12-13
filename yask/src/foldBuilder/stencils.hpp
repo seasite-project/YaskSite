@@ -11,3 +11,6 @@
 #include "yaskSiteStencils/heat.hpp"
 #include "yaskSiteStencils/heat_rev.hpp"
 #include "yaskSiteStencils/Iso3dfdStencil.hpp"
+#include "yaskSiteStencils/heat2d_update.hpp"
+#include "yaskSiteStencils/heat2d_rk.hpp"
+#include "yaskSiteStencils/heat2d_embrk.hpp"

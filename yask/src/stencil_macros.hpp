@@ -11,10 +11,10 @@
 #define USING_DIM_Y (1)
 #define USING_DIM_Z (1)
 
-// One vector fold: x=1 * y=1 * z=4
-#define VLEN_X (1)
+// One vector fold: x=4 * y=1 * z=1
+#define VLEN_X (4)
 #define VLEN_Y (1)
-#define VLEN_Z (4)
+#define VLEN_Z (1)
 #define VLEN (4)
 #define VLEN_FIRST_DIM_IS_UNIT_STRIDE (1)
 #define USING_UNALIGNED_LOADS (0)

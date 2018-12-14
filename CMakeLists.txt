@@ -187,6 +187,8 @@ endif()
 set(yaskSite_USE_MPI 1 CACHE BOOL "Build with MPI" FORCE)
 
 if(yaskSite_USE_MPI)
+    execute_process(COMMAND which mpicc OUTPUT_VARIABLE MPI_C_COMPILER OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND which mpicxx OUTPUT_VARIABLE MPI_CXX_COMPILER OUTPUT_STRIP_TRAILING_WHITESPACE)
     set(MPI_LIBRARIES "-lmpi_mt")
     find_package(MPI)
     if (MPI_FOUND)

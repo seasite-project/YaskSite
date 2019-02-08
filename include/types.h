@@ -92,10 +92,8 @@ struct cache_info
 
 //IVB
 static std::vector<cache_info> CACHES{(cache_info("L1",L1_cache,0,64,8,{},0,1.5)),(cache_info("L2",L2_cache,1,512,8,{},2.215,1.5)),(cache_info("L3",L3_cache,2,25600,16,{},7.61,1.5)), (cache_info("MEM",MEM,3,-1,-1,{},18.95))};
-
 //BDW
 //static std::vector<cache_info> CACHES{(cache_info("L1",L1_cache,0,64,8,{},0,1.5)),(cache_info("L2",L2_cache,1,512,8,{},2.171096,1.5)),(cache_info("L3",L3_cache,2,5632,64,{},11.4325,1.5)), (cache_info("MEM",MEM,3,-1,-1,{},18.9327))};
-
 
 //static std::vector<cache_info> CACHES{(cache_info(L1_cache,1,{0},1,0.5)), (cache_info(L2_cache,2,{0},20,0.5)), (cache_info(L3_cache,3,{0},20,0.5)), (cache_info(MEM,4,{0}))};
 

@@ -22,6 +22,7 @@ class codeGen
     char *genCode;
     char* tmpInpCodeFile;
     void generateCode();
+    int numStencils;
 
     public:
     codeGen(char* derivedStencil_, char* baseStencil_, char* genCode_);

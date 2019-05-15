@@ -22,6 +22,7 @@ class perfModel
     STENCIL *stencil;
     int numReadGrids;
     int numWriteGrids;
+    int numStencils;
     double cpu_freq;
     //port cycles
     std::map<std::string, double> portCycle;
@@ -84,7 +85,7 @@ class perfModel
     perfModel(STENCIL *stencil_, double cpu_freq, char* iacaOut_=NULL);
     ~perfModel();
 
-    void setReadWriteGrids(int numReadGrids_, int numWriteGrids_);
+    void setReadWriteGrids(int numReadGrids_, int numWriteGrids_, int numStencils_);
     void setWeight(double weight_);
     void setDerived(bool derived_);
 

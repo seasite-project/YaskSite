@@ -58,7 +58,6 @@ void main(int argc, char** argv)
 
     codeGen code2("heat3d_irk_2", "heat3d", codeStr);
 
-
     free(codeStr);
     ////////////////////////////////////////////////////////////////////
 
@@ -168,6 +167,8 @@ void main(int argc, char** argv)
             printf("Unknown stencil dimension\n");
         }
 
+        double const_m = 6;
+
         yaskSite* stencil_1 = new yaskSite(&mpiMan, "heat3d_irk_1", dimension, radius, f_z, f_y, f_x, prefetch);
         stencil_1->setDim(dim_z, dim_y, dim_x, 1);
         stencil_1->setThread(threads,1);
@@ -175,7 +176,7 @@ void main(int argc, char** argv)
 
         //need effective Ptr transfers btw stencils
         yaskSite* stencil_2 = new yaskSite(&mpiMan, "heat3d_irk_2", dimension, radius, f_z, f_y, f_x, prefetch);
-        stencil_2->setDim(dim_z, dim_y, dim_x, 5);
+        stencil_2->setDim(dim_z, dim_y, dim_x, const_m);
         stencil_2->setThread(threads,1);
         stencil_2->init();//init goes here, warm-up
 
@@ -184,17 +185,23 @@ void main(int argc, char** argv)
         stencil_3->setThread(threads,1);
         stencil_3->init();//init goes here, warm-up
 
+        bool validate = true;
 
         //plain run
         if(opt_bool[0])
         {
-            stencil_1->calcECM(false);
-            stencil_2->calcECM(false);
-            stencil_3->calcECM(false);
+            stencil_1->calcECM(true);
+            stencil_2->calcECM(true);
+            stencil_3->calcECM(true);
+
+            stencil_1->printECM();
+            stencil_2->printECM();
+            stencil_3->printECM();
+
             double ECM_1 = stencil_1->getPerfECM();
             double ECM_2 = stencil_2->getPerfECM();
             double ECM_3 = stencil_3->getPerfECM();
-            double pred_time = 1/ECM_1 + 5/ECM_2 + 1/ECM_3;
+            double pred_time = 1/ECM_1 + const_m/ECM_2 + 1/ECM_3;
             printf("plain prediction: mlups = %f\n", 1/pred_time);
 
             //define relations
@@ -232,17 +239,22 @@ void main(int argc, char** argv)
         //spatial blocked
         if(opt_bool[1])
         {
-            stencil_1->spatialTuner("L3", "L2");
-            stencil_2->spatialTuner("L3", "L2");
-            stencil_3->spatialTuner("L3", "L2");
+            stencil_1->spatialTuner("L3", "L2",0.5);
+            stencil_2->spatialTuner("L3", "L2",0.5);
+            stencil_3->spatialTuner("L3", "L2",0.5);
 
-            stencil_1->calcECM(false);
-            stencil_2->calcECM(false);
-            stencil_3->calcECM(false);
+            stencil_1->calcECM(true);
+            stencil_2->calcECM(true);
+            stencil_3->calcECM(true);
+
+            stencil_1->printECM();
+            stencil_2->printECM();
+            stencil_3->printECM();
+
             double ECM_1 = stencil_1->getPerfECM();
             double ECM_2 = stencil_2->getPerfECM();
             double ECM_3 = stencil_3->getPerfECM();
-            double pred_time = 1/ECM_1 + 5/ECM_2 + 1/ECM_3;
+            double pred_time = 1/ECM_1 + const_m/ECM_2 + 1/ECM_3;
             printf("spatial prediction: mlups = %f\n", 1/pred_time);
 
 #ifdef COUPLE_GRID
@@ -275,17 +287,22 @@ void main(int argc, char** argv)
         //temporal & spatial blocked
         if(opt_bool[2])
         {
-            stencil_1->spatialTuner("L3", "L2");
+            stencil_1->spatialTuner("L3", "L2", 0.5);
             stencil_2->blockTuner("L3","L3","L2", 0.5);
-            stencil_3->spatialTuner("L3", "L2");
+            stencil_3->spatialTuner("L3", "L2", 0.5);
 
-            stencil_1->calcECM(false);
-            stencil_2->calcECM(false);
-            stencil_3->calcECM(false);
+            stencil_1->calcECM(true);
+            stencil_2->calcECM(true);
+            stencil_3->calcECM(true);
+
+            stencil_1->printECM();
+            stencil_2->printECM();
+            stencil_3->printECM();
+
             double ECM_1 = stencil_1->getPerfECM();
             double ECM_2 = stencil_2->getPerfECM();
             double ECM_3 = stencil_3->getPerfECM();
-            double pred_time = 1/ECM_1 + 5/ECM_2 + 1/ECM_3;
+            double pred_time = 1/ECM_1 + const_m/ECM_2 + 1/ECM_3;
             printf("temporal prediction: mlups = %f\n", 1/pred_time);
 
 #ifdef COUPLE_GRID

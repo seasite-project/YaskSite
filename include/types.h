@@ -30,6 +30,7 @@ struct EQ_GROUP
     //with spatial dimension are included
     int num_spatial_reads;
     int num_spatial_writes;
+    int num_stencils;
 
     std::vector<GRID> read_grids;
     std::vector<GRID> write_grids;
@@ -51,6 +52,7 @@ struct STENCIL
     int dim;
     int radius;
     int s;
+    int maxNumStencils;
     int fold_x;
     int fold_y;
     int fold_z;
@@ -91,7 +93,7 @@ struct cache_info
 
 
 //IVB
-static std::vector<cache_info> CACHES{(cache_info("L1",L1_cache,0,64,8,{},0,1.5)),(cache_info("L2",L2_cache,1,512,8,{},2.215,1.5)),(cache_info("L3",L3_cache,2,25600,16,{},7.61,1.5)), (cache_info("MEM",MEM,3,-1,-1,{},18.95))};
+static std::vector<cache_info> CACHES{(cache_info("L1",L1_cache,0,64,8,{},0,0.75)),(cache_info("L2",L2_cache,1,512,8,{},2.215,0.75)),(cache_info("L3",L3_cache,2,25600,16,{},7.61,0.75)), (cache_info("MEM",MEM,3,-1,-1,{},18.95))};
 //BDW
 //static std::vector<cache_info> CACHES{(cache_info("L1",L1_cache,0,64,8,{},0,1.5)),(cache_info("L2",L2_cache,1,512,8,{},2.171096,1.5)),(cache_info("L3",L3_cache,2,5632,64,{},11.4325,1.5)), (cache_info("MEM",MEM,3,-1,-1,{},18.9327))};
 

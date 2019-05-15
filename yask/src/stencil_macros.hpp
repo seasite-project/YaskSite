@@ -1,9 +1,9 @@
 // Automatically generated code; do not edit.
 
 // Stencil:
-#define YASK_STENCIL_NAME "heat3d"
-#define YASK_STENCIL_IS_HEAT3D (1)
-#define YASK_STENCIL_CONTEXT StencilContext_heat3d
+#define YASK_STENCIL_NAME "heat3d_irk_3"
+#define YASK_STENCIL_IS_HEAT3D_IRK_3 (1)
+#define YASK_STENCIL_CONTEXT StencilContext_heat3d_irk_3
 
 // Dimensions:
 #define USING_DIM_T (1)
@@ -11,10 +11,10 @@
 #define USING_DIM_Y (1)
 #define USING_DIM_Z (1)
 
-// One vector fold: x=4 * y=1 * z=1
-#define VLEN_X (4)
+// One vector fold: x=1 * y=1 * z=4
+#define VLEN_X (1)
 #define VLEN_Y (1)
-#define VLEN_Z (1)
+#define VLEN_Z (4)
 #define VLEN (4)
 #define VLEN_FIRST_DIM_IS_UNIT_STRIDE (1)
 #define USING_UNALIGNED_LOADS (0)

@@ -2,7 +2,7 @@
 
 #Get details of equation groups defined in stencil
 #O/P Format
-#eq_group_name | read_grid_1, read_grid_2, ... | update_grid_1, update_grid_2,... | num_reads | num_writes
+#eq_group_name | read_grid_1, read_grid_2, ... | update_grid_1,update_grid_2,... | num_reads | num_writes | num_stencils
 
 file=$1
 out_file=$2
@@ -51,5 +51,7 @@ for u_eqG in $unique_eqGroups; do
          fi
         let write_ctr=$write_ctr+1
     done
-    printf " %d %d\n" $read_ctr $write_ctr >> $out_file
+    num_stencils=$(sed -n -e "/class EqGroup_$u_eqG/,/EqGroup_$u_eqG/p" $file | grep -c \
+        "EQUALS.*x+1\|EQUALS.*y+1\|EQUALS.*z+1")
+    printf " %d %d %d\n" $read_ctr $write_ctr $num_stencils >> $out_file
 done

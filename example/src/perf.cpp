@@ -197,9 +197,9 @@ void main(int argc, char** argv)
         //spatial blocked
         if(opt_bool[1])
         {
-            stencil_1->spatialTuner("L3", "L2",0.5, 0.5);
+            //stencil_1->spatialTuner("L3", "L2",0.5, 0.5);
             //stencil_1->setSubBlock(750,5,512);
-           // stencil_1->setBlock(210,21,100);
+            stencil_1->setBlock(600,30,200);
             PERF_RUN(stencil_1, files[1]);
         }
 

@@ -29,6 +29,7 @@ perfModel::perfModel(STENCIL* stencil_, double cpu_freq_, char* iacaOut):stencil
         //boxes known
         numReadGrids = stencil->s - 1;
         numWriteGrids = 1;
+        //numStencils = 1;
 
         //default weight=1
         weight = 1;
@@ -61,10 +62,11 @@ perfModel::~perfModel()
     }
 }
 
-void perfModel::setReadWriteGrids(int numReadGrids_, int numWriteGrids_)
+void perfModel::setReadWriteGrids(int numReadGrids_, int numWriteGrids_, int numStencils_)
 {
     numReadGrids = numReadGrids_;
     numWriteGrids = numWriteGrids_;
+    numStencils = numStencils_;
 }
 
 void perfModel::setWeight(double weight_)
@@ -219,7 +221,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
     cache_info currCache = CACHE(cache_str);
 
     //Right now assuming only one stencil per eqn. Group
-    double rest_contrib = (numReadGrids-1.0)+2*numWriteGrids;//1.0+(stencil->s-1.0);
+    double rest_contrib = (numReadGrids-numStencils)+2*numWriteGrids;//1.0+(stencil->s-1.0);
     printf("Read Grids = %d, writeGrids = %d\n", numReadGrids, numWriteGrids);
     int totalGrids = numReadGrids+numWriteGrids;
 
@@ -245,16 +247,16 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         bool ilc_jump = false, olc_jump = false;
         std::vector<double> assocOh = simulateCache_assoc(ilc_jump, olc_jump, currCache, shrink_space);
 
-        double totalSpatialContrib = (rest_contrib+1.0+extra_data+assocOh[0]);/*TODO compute per region*/
-        double totalStreams = (totalGrids - 1.0)+1.0;
+        double totalSpatialContrib = (rest_contrib+numStencils*1.0+extra_data+assocOh[0]);/*TODO compute per region*/
+        double totalStreams = (totalGrids);
 
         if(temporalStoreMode == 1)
         {
-            totalSpatialContrib-=1; //NO WA
+            totalSpatialContrib-=numWriteGrids; //NO WA
         }
         else if(temporalStoreMode == 2)
         {
-            totalSpatialContrib=1; //only store
+            totalSpatialContrib=numWriteGrids; //only store
         }
 
         //temporal effect only from second timestep; i.e. when the dx reduces
@@ -272,7 +274,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         double prefetch_oh = totalGrids*prefetch_oh_per_LUP;
         double boundary_oh = spatialOh[0];
         double extra_data = boundary_oh+prefetch_oh;
-        double actual_data = rest_contrib+1.0;
+        double actual_data = rest_contrib+1.0*numStencils;
         double shrink_space = 1.0 - (extra_data)/(extra_data+actual_data);
         bool ilc_jump = false, olc_jump = false;
         std::vector<double> assocOh = simulateCache_assoc(ilc_jump, olc_jump, currCache, shrink_space);
@@ -292,7 +294,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
             }
             int stencil_contrib_outer = 2*( static_cast<int>((stencil->radius-1)/(outer_fold)) + 1 );
             int stencil_centre = 1;
-            double streams = (stencil_contrib_outer + stencil_centre + totalGrids - 1);
+            double streams = (numStencils*(stencil_contrib_outer + stencil_centre) + totalGrids - numStencils);
             prefetch_oh = streams*prefetch_oh_per_LUP;
             boundary_oh = spatialOh[1];
             extra_data = prefetch_oh + boundary_oh;
@@ -327,14 +329,16 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         int stencil_contrib_outer = 2*( static_cast<int>((stencil->radius-1)/(outer_fold)) + 1 );
         int stencil_centre = 1;
 
-        double prefetch_oh = (stencil_contrib_outer + stencil_centre + totalGrids - 1)*prefetch_oh_per_LUP;
-        double boundary_oh = spatialOh[1];
+        double prefetch_oh = (numStencils*(stencil_contrib_outer + stencil_centre) + totalGrids - numStencils)*prefetch_oh_per_LUP;
+        double boundary_oh = spatialOh[1]*numStencils;
         double extra_data = boundary_oh+prefetch_oh;
-        double actual_data = stencil_contrib_outer + stencil_centre + rest_contrib;
+        double actual_data = (numStencils*(stencil_contrib_outer + stencil_centre) + rest_contrib);
+        printf("Actual data = %f\n", actual_data);
+        printf("Rest = %f\n", rest_contrib);
         double shrink_space = 1.0 - (extra_data)/(extra_data+actual_data);
         bool ilc_jump = false, olc_jump = false;
         std::vector<double> assocOh = simulateCache_assoc(ilc_jump, olc_jump, currCache, shrink_space);
-        double latency_oh = (stencil_contrib_outer + stencil_centre + totalGrids - 1)*latency_oh_per_LUP;
+        double latency_oh = (numStencils*(stencil_contrib_outer + stencil_centre) + totalGrids - numStencils)*latency_oh_per_LUP;
         int dim =stencil->dim;
 
         bool jump = (dim>2)?ilc_jump:false;
@@ -342,7 +346,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         if(jump)
         {
             int stencil_contrib_inner = 2*( static_cast<int>((stencil->radius-1)/((double)stencil->fold_y)) +1 );
-            double streams = stencil_contrib_outer + stencil_contrib_inner + stencil_centre + totalGrids - 1;
+            double streams = numStencils*(stencil_contrib_outer + stencil_contrib_inner + stencil_centre) + totalGrids - numStencils;
             prefetch_oh = streams*prefetch_oh_per_LUP;
             boundary_oh = spatialOh[2];
             extra_data = prefetch_oh + boundary_oh;
@@ -351,7 +355,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
 
         double assoc_oh = (dim>2)?assocOh[1]:assocOh[2];
 
-        double totalData = actual_data + extra_data + assoc_oh;
+        double totalData = (actual_data + extra_data + assoc_oh);
         ECM_latency[currCache.hierarchy] = latency_oh;
         ECM_prefetch[currCache.hierarchy] = prefetch_oh*currCache.bytePerWord;
         ECM_boundary[currCache.hierarchy] = boundary_oh*currCache.bytePerWord;
@@ -365,10 +369,10 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         int stencil_contrib_inner = 2*( static_cast<int>((stencil->radius-1)/((double)stencil->fold_y)) +1 );
         int stencil_centre = 1;
 
-        ECM_latency[currCache.hierarchy] = (stencil_contrib_outer + stencil_contrib_inner + stencil_centre + totalGrids - 1)*latency_oh_per_LUP;
-        double prefetch_oh = (stencil_contrib_outer + stencil_contrib_inner + stencil_centre + totalGrids - 1)*prefetch_oh_per_LUP;
+        ECM_latency[currCache.hierarchy] = (numStencils*(stencil_contrib_outer + stencil_contrib_inner + stencil_centre) + totalGrids - numStencils)*latency_oh_per_LUP;
+        double prefetch_oh = (numStencils*(stencil_contrib_outer + stencil_contrib_inner + stencil_centre) + totalGrids - numStencils)*prefetch_oh_per_LUP;
         double extra_data = spatialOh[2]+prefetch_oh;
-        double actual_data = stencil_contrib_outer + stencil_contrib_inner + stencil_centre + rest_contrib;
+        double actual_data = numStencils*(stencil_contrib_outer + stencil_contrib_inner + stencil_centre) + rest_contrib;
         double shrink_space = 1.0 - (extra_data)/(extra_data+actual_data);
         bool ilc_jump=false, olc_jump=false;
         std::vector<double> assocOh = simulateCache_assoc(ilc_jump, olc_jump, currCache, shrink_space);
@@ -630,11 +634,11 @@ double perfModel::getPrefetchEffects(cache_info currCache)
         {
 
            //No prefetching; because of wrap around
-            if( num_block_z == actualThreads )
+            if( num_block_z == thread_z ) //actualThreads )
             {
                 reuseFactor = 1;
             }
-            else if(2*bz*actualThreads < upperCache.words)
+            else if(totalGrids*bz*actualThreads < upperCache.words)
             {
                 //for dynamic scheduling on region loop
                 reuseFactor = (1- (1/(double)thread_z));

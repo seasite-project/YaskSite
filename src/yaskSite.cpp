@@ -80,6 +80,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     dy = -1;
     dz = -1;
     s = -1;
+    maxNumStencils = -1;
     totalTime = 0;
     radius = radius_;
     dim = dim_;
@@ -208,14 +209,17 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     std::vector<std::string> writeGrids;
     std::vector<int> n_reads;
     std::vector<int> n_writes;
+    std::vector<int> n_stencils;
     readTable(eqGroupFile, eqGroupName, 0, -1, 0, 0);
     readTable(eqGroupFile, readGrids, 0, -1, 1, 1);
     readTable(eqGroupFile, writeGrids, 0, -1, 2, 2);
     readTable(eqGroupFile, n_reads, 0, -1, 3, 3);
     readTable(eqGroupFile, n_writes, 0, -1, 4, 4);
+    readTable(eqGroupFile, n_stencils, 0, -1, 5, 5);
 
     num_eqns=(int)eqGroupName.size();
     s = 0;
+    maxNumStencils = 0;
     for(int i=0; i<(int)eqGroupName.size(); ++i)
     {
         EQ_GROUP curr_eq_group;
@@ -224,7 +228,6 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
         curr_eq_group.name=eqGroupName[i];
         curr_eq_group.num_reads=n_reads[i];
         curr_eq_group.num_writes=n_writes[i];
-
         //split grids in the string, with comma delimiter
         std::vector<std::string> readGridVec = split(readGrids[i],',');
         std::vector<std::string> writeGridVec = split(writeGrids[i],',');
@@ -247,6 +250,8 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
 
         //max is the value of s
         s=std::max(s, curr_eq_group.num_spatial_reads+curr_eq_group.num_spatial_writes);
+        curr_eq_group.num_stencils=std::min(n_stencils[i],curr_eq_group.num_spatial_reads);
+        maxNumStencils=std::max(maxNumStencils, curr_eq_group.num_stencils);
         eqGroups.push_back(curr_eq_group);
     }
 
@@ -260,6 +265,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     //copy to stencilDetails all unfilled details
     stencilDetails->radius = radius;
     stencilDetails->s = s;
+    stencilDetails->maxNumStencils = maxNumStencils;
     stencilDetails->folder = localDir;
     stencilDetails->data = this;
 
@@ -854,6 +860,7 @@ bool yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_il
                     if( (curr_bx >= bx_min) && (curr_by >= by_min) && (curr_bz >= bz_min) )
                     {
                         printf("out = %d, middle = %d, in =  %d\n", out, middle, in);
+                        printf("out_b = %d, middle_b = %d, in_b =  %d\n", curr_bx, curr_by, curr_bz);
                         //will have to rank based on reminder; this makes to select the
                         //block with good load balancing
                         reminder_size.push_back(  ((curr_bx*out)-rx_p)*ry_p*rz_p + ((curr_by*out)-ry_p)*rz_p + (curr_bz*in-rz_p) );
@@ -962,7 +969,7 @@ bool yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_OBC_inp, dou
         getMaxLayers(layer, stencilDetails, OUTER);
         cache_info OBC = CACHE(OBC_str);
         double sf_OBC = (sf_OBC_inp < 0) ? OBC.sf : sf_OBC_inp;
-        double OBC_words = (OBC.shared)?(sf_OBC*OBC.words)/nthreads:(sf_OBC*OBC.words);
+        double OBC_words = (OBC.shared)?(OBC.words*sf_OBC)/nthreads:(OBC.words*sf_OBC);
 
         double n_z = (layer*((double)rz_p))/(OBC_words);
         //round n_z to next greatest multiple of nthreads
@@ -1010,13 +1017,14 @@ bool yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_OBC_inp, dou
 
         //TODO: determine how many threads are currently sharing the resources
         //if its in shared mode
-        double OBC_words = (OBC.shared)?(sf_OBC*OBC.words)/nthreads:(sf_OBC*OBC.words);
-        double IBC_words = (IBC.shared)?(sf_IBC*IBC.words)/nthreads:(sf_IBC*IBC.words);
+        double OBC_words = (OBC.shared)?(OBC.words*sf_OBC)/nthreads:(OBC.words*sf_OBC);
+        double IBC_words = (IBC.shared)?(IBC.words*sf_IBC)/nthreads:(IBC.words*sf_IBC);
 
         //adding prefetching effects
         OBC_words -= (OBC.prefetch_cl*8*layer_outer);
         IBC_words -= (IBC.prefetch_cl*8*layer_inner);
 
+        printf("OBC = %f, ry = %d, rz = %d\n", OBC_words, ry_p, rz_p);
         double n_z = (layer_outer*((double)ry_p)*((double)rz_p))/(OBC_words);
         //round n_z to next greatest multiple of nthreads
         //double n = ceil(n_z/nthreads)*nthreads;
@@ -1032,6 +1040,7 @@ bool yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_OBC_inp, dou
 
         if(n_z>1)
         {
+            printf("n_z = %f, start = %d\n", n_z, bz_ratio_start);
             bool found = setDefaultBlock_min_rem(static_cast<int>(ceil(n_z)), static_cast<int>(bz_ratio_start));
             setDefaultSubBlock();
             /*
@@ -1114,7 +1123,7 @@ bool yaskSite::temporalTuner(char  *cacheStr, double sf_inp)
 
     //TODO: determine how many threads share the cache
     //maybe use hwloc
-    double cacheWords = sf*blockCache.words;
+    double cacheWords = blockCache.words*sf;
 
     double ryInit = cacheWords/((double)(s*dx_p*dz_p));
     //now set ry : ry is a proper multiple of dy; used ceil to absorb
@@ -1288,7 +1297,7 @@ void yaskSite::init()
         //Now tie mainEqGroup with their perf. model
         for(int i=0; i<numMainEqns; ++i)
         {
-            models[i]->setReadWriteGrids(eqGroups[mainEqGroups[i]].num_spatial_reads, eqGroups[mainEqGroups[i]].num_spatial_writes);
+            models[i]->setReadWriteGrids(eqGroups[mainEqGroups[i]].num_spatial_reads, eqGroups[mainEqGroups[i]].num_spatial_writes, eqGroups[mainEqGroups[i]].num_stencils);
             models[i]->setWeight( (eqGroups[mainEqGroups[i]].num_points / (double) total_spatial_size) );
             eqGroups[mainEqGroups[i]].model = models[i];
         }

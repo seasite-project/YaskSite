@@ -409,10 +409,21 @@ math(EXPR l2_w_sf "(${L1_private}+${L2_private})/2048")
 #in L1
 math(EXPR l1_w_sf "(${L1_private})/2048")
 
+ExternalProject_Add(LDST-bench
+    PREFIX ${PROJECT_BINARY_DIR}/LDST-bench
+    URL https://github.com/christiealappatt/LDST-bench/zipball/master
+    DOWNLOAD_NAME LDST-bench.zip
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+)
+
+get_filename_component(CMAKE_CXX_COMPILER_SHORT ${CMAKE_CXX_COMPILER} NAME)
+
 if(NOT ${L3_val} STREQUAL "")
     add_custom_command(TARGET calibrate
         POST_BUILD
-        COMMAND mkdir -p ${TEMP_DIR}/bench_results && ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh  ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results 1 10 100 ${TEMP_DIR}/bench_results/bw_load_ratio.txt
+        COMMAND mkdir -p ${TEMP_DIR}/bench_results && ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${LIB_TOOL_DIR} 1 10 200 ${TEMP_DIR}/bench_results/bw_load_ratio.txt
         COMMAND mkdir -p ${TEMP_DIR}/bench_results/latency
         COMMAND cp -r ${TOOL_DIR}/latency_bench/wrapper/* ${LIB_TOOL_DIR}/MLC/mlc/. && cp ${TOOL_DIR}/latency_bench/latency_scan.sh ${LIB_TOOL_DIR}/MLC/.
         COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${mem_w_sf} -1 ${MEM_type} ${TEMP_DIR}/bench_results/latency/MEM.txt
@@ -423,7 +434,8 @@ if(NOT ${L3_val} STREQUAL "")
 else()
     add_custom_command(TARGET calibrate
         POST_BUILD
-        #COMMAND mkdir -p ${TEMP_DIR}/bench_results && ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh  ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results 1 10 100 ${TEMP_DIR}/bench_results/bw_load_ratio.txt
+        #       COMMAND mkdir -p ${TEMP_DIR}/bench_results && ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh  ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results 1 10 100 ${TEMP_DIR}/bench_results/bw_load_ratio.txt
+        COMMAND mkdir -p ${TEMP_DIR}/bench_results && ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${LIB_TOOL_DIR} 1 10 300 ${TEMP_DIR}/bench_results/bw_load_ratio.txt
         COMMAND mkdir -p ${TEMP_DIR}/bench_results/latency
         COMMAND cp -r ${TOOL_DIR}/latency_bench/wrapper/* ${LIB_TOOL_DIR}/MLC/mlc/. && cp ${TOOL_DIR}/latency_bench/latency_scan.sh ${LIB_TOOL_DIR}/MLC/.
         COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${mem_w_sf} -1 ${MEM_type} ${TEMP_DIR}/bench_results/latency/MEM.txt
@@ -432,6 +444,7 @@ else()
         )
 endif()
 
+add_dependencies(calibrate LDST-bench)
 
 if("${L3_val}" STREQUAL "")
     set(L3 "${L2_val_type}")

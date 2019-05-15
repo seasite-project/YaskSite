@@ -71,6 +71,8 @@ class yaskSite
         int s; //If there is dependency within a stencil;
                // a single sweep of stencil calculates for 's' timesteps
 
+        int maxNumStencils;
+
         int totalTime; //total time steps done
         int radius;
         int dim;

@@ -159,7 +159,7 @@ void main(int argc, char** argv)
         }
 
         yaskSite* stencil_1 = new yaskSite(&mpiMan, "heat2d_irk", dimension, radius, f_z, f_y, f_x, prefetch);
-        stencil_1->setDim(dim_z, dim_y, dim_x, 1);
+        stencil_1->setDim(dim_z, dim_y, dim_x, dt);
         stencil_1->setThread(threads,1);
         stencil_1->init();//init goes here, warm-up
 
@@ -177,7 +177,7 @@ void main(int argc, char** argv)
             stencil_1->run();
             STOP_TIME(stencil_);
             double time = GET_TIME(stencil_);
-            double mlups = dim_x*dim_y*dim_z/time;
+            double mlups = dim_x*dim_y*dim_z*dt/time;
             printf("plain: mlups = %f\n", mlups*1e-6);
         }
 
@@ -195,7 +195,7 @@ void main(int argc, char** argv)
             stencil_1->run();
             STOP_TIME(stencil_);
             double time = GET_TIME(stencil_);
-            double mlups = dim_x*dim_y*dim_z/time;
+            double mlups = dim_x*dim_y*dim_z*dt/time;
             printf("spatial: mlups = %f\n", mlups*1e-6);
         }
 
@@ -213,7 +213,7 @@ void main(int argc, char** argv)
             stencil_1->run();
             STOP_TIME(stencil_);
             double time = GET_TIME(stencil_);
-            double mlups = dim_x*dim_y*dim_z/time;
+            double mlups = dim_x*dim_y*dim_z*dt/time;
             printf("temporal: mlups = %f\n", mlups*1e-6);
         }
 

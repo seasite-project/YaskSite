@@ -24,8 +24,10 @@ void codeGen::generateCode()
     fprintf(file,"%s", genCode);
     fclose(file);
 
+    printf("script called\n");
     //now call script to generate the required stencil file
     SYSTEM(NULL, "%s/codeGenerator/codeGenerator.sh %s %s/%s.hpp %s %s %s", TOOL_DIR, tmpInpCodeFile, STENCIL_DIR, derivedStencil, STENCIL_DIR, TOOL_DIR, TEMP_DIR);
+    printf("script finished\n");
 
     //now update the list of stencils to include the new file
     SYSTEM(NULL, "%s/updateStencil.sh %s %s %s", TOOL_DIR, STENCIL_DIR, YASK_PATH, TEMP_DIR);

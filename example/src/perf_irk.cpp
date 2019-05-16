@@ -147,7 +147,7 @@ void main(int argc, char** argv)
     {
         //taking care size always fits only in memory
         //(here 200 times L3 is the total size)
-        cache_info L3 = CACHE("L2"); //L3_cache macro defined by yaskSite library
+        cache_info L3 = CACHE("L3"); //L3_cache macro defined by yaskSite library
         int L3_size = L3.bytes;
         int dim_x=1, dim_y=1, dim_z=1;
 

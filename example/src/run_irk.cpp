@@ -147,7 +147,7 @@ void main(int argc, char** argv)
         free(file_path);
     }
 
-    int const_m = 6;
+    int const_m = 5
     //taking care size always fits only in memory
     //(here 200 times L3 is the total size)
     cache_info L3 = CACHE("L3"); //L3_cache macro defined by yaskSite library

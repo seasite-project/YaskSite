@@ -69,19 +69,24 @@ struct cache_info
     double bytes;
     double words;
     std::string name;
-    std::string details;
+    //std::string details;
     bool shared;
     int hierarchy;
     int set_size;
     int ways;
+    int cl_size;
+    int cores;
     std::vector<double> latency; //latency in ns as a function of threads
     double sf;
-    int prefetch_cl;
+    double prefetch_cl;
     int bytePerWord;
+    int isMEM;
     double getLatency(int threads);
     void readLatency(char* file);
-    cache_info(char* name_, char* details_, int hierarchy_, int set_size=-1, int ways=-1, std::vector<double> latency_={}, int prefetch_cl_=0, double sf_=1, int bytePerWord=8);
-//    cache_info();
+    //cache_info(char* name_, char* details_, int hierarchy_, int set_size=-1, int ways=-1, std::vector<double> latency_={}, int prefetch_cl_=0, double sf_=1, int bytePerWord=8);
+    cache_info(int hierarchy_, char *mc_file, int isMEM_=false);
+
+    //~cache_info();
 };
 
 //L1-cache given a safety factor since they have to store constants and program
@@ -93,7 +98,7 @@ struct cache_info
 
 
 //IVB
-static std::vector<cache_info> CACHES{(cache_info("L1",L1_cache,0,64,8,{},0,0.75)),(cache_info("L2",L2_cache,1,512,8,{},2.215,0.75)),(cache_info("L3",L3_cache,2,25600,16,{},7.61,0.75)), (cache_info("MEM",MEM,3,-1,-1,{},18.95))};
+extern std::vector<cache_info> CACHES;//{(cache_info("L1",L1_cache,0,64,8,{},0,0.75)),(cache_info("L2",L2_cache,1,512,8,{},2.215,0.75)),(cache_info("L3",L3_cache,2,25600,16,{},7.61,0.75)), (cache_info("MEM",MEM,3,-1,-1,{},18.95))};
 //BDW
 //static std::vector<cache_info> CACHES{(cache_info("L1",L1_cache,0,64,8,{},0,1.5)),(cache_info("L2",L2_cache,1,512,8,{},2.171096,1.5)),(cache_info("L3",L3_cache,2,5632,64,{},11.4325,1.5)), (cache_info("MEM",MEM,3,-1,-1,{},18.9327))};
 
@@ -101,6 +106,7 @@ static std::vector<cache_info> CACHES{(cache_info("L1",L1_cache,0,64,8,{},0,0.75
 
 //static std::vector<cache_info> CACHES{(cache_info(L1_cache,1,{0},0,0.5)), (cache_info(L2_cache,2,{0},0,0.5)), (cache_info(L3_cache,3,{0},0,0.5)), (cache_info(MEM,4,{0}))};
 
+void initializeCaches();
 
 cache_info CACHE(char* str);
 

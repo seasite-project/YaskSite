@@ -108,6 +108,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
 
     stencilContext = NULL;
     stencilSettings = NULL;
+
     /* INIT END */
 
     //this is the path of scratch directory
@@ -181,6 +182,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     std::vector<int> grid_dim;
     readTable(gridFile, grid_name, 0, -1, 0, 0);
     readTable(gridFile, grid_dim, 0, -1, 1, 1);
+    free(gridFile);
     for(int i=0; i<(int)grid_name.size(); ++i)
     {
         GRID curr_grid(i, grid_name[i], grid_dim[i]);
@@ -216,6 +218,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     readTable(eqGroupFile, n_reads, 0, -1, 3, 3);
     readTable(eqGroupFile, n_writes, 0, -1, 4, 4);
     readTable(eqGroupFile, n_stencils, 0, -1, 5, 5);
+    free(eqGroupFile);
 
     num_eqns=(int)eqGroupName.size();
     s = 0;

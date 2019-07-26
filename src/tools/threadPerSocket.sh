@@ -1,17 +1,14 @@
 #!/bin/bash
 
-lscpu="LANG=en_US.UTF-8 lscpu"
+LANG=en_US.UTF-8
 
-#USAGE: ./threadPerSocket.sh
-nthread=$(eval $lscpu | grep "socket"| cut -d ":" -f 2-2 )
-nsocket=$(eval $lscpu | grep "Socket(s)"| cut -d ":" -f 2-2 )
-nnuma=$(eval $lscpu | grep "NUMA node(s)"| cut -d ":" -f 2-2 )
-numa_per_socket=$(($nnuma/$nsocket))
+tool_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+tool_dir="$tool_dir/"
 
-if [[ $numa_per_socket > 1 ]]; then
-    (>&2 echo "COD ON")
-fi
-nthread=$(($nthread/$numa_per_socket))
+#USAGE: ./threadPerSocket.sh mc_file
+mc_file=$1
 
+threads=$($tool_dir/yamlParser/yamlParser $mc_file "cores per socket" \
+    | cut -d":" -f2)
 
-echo $nthread
+echo $threads

@@ -4,6 +4,9 @@
 #include <iostream>
 #include <array>
 #include "macros.h"
+#include "config.h"
+
+std::vector<cache_info> CACHES;
 
 GRID::GRID(int idx_, std::string name_, int dim_):idx(idx_),name(name_), dim(dim_)
 {
@@ -101,7 +104,7 @@ bool STENCIL::checkMinDef()
 
     return ret;
 }
-
+/*
 cache_info::cache_info(char* name_, char* details_, int hierarchy_, int set_size_, int ways_, std::vector<double> latency_, int prefetch_cl_, double sf_, int bytePerWord_):name(name_),details(details_),set_size(set_size_),ways(ways_),latency(latency_),prefetch_cl(prefetch_cl_),bytePerWord(bytePerWord_)
 {
     //writable string
@@ -126,6 +129,77 @@ cache_info::cache_info(char* name_, char* details_, int hierarchy_, int set_size
         ways = 1;
     }
 }
+*/
+cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheId), isMEM(isMEM_)
+{
+    char* sysLogFileName = NULL;
+    FILE *tmp;
+    POPEN(sysLogFileName, tmp, "%s/cacheInfo/getCacheInfo.sh %s %d name", TOOL_DIR, mc_file, cacheId);
+    char *cacheName = readStrVar(tmp);
+    PCLOSE(tmp);
+    name=cacheName;
+    free(cacheName);
+
+    bytePerWord = sizeof(double);
+    sf = 0.9;
+
+    printf("MEM = %d\n", isMEM);
+    if(!isMEM)
+    {
+        POPEN(sysLogFileName, tmp, "%s/cacheInfo/getCacheInfo.sh %s %d ways", TOOL_DIR, mc_file, cacheId);
+        int cacheWays = readIntVar(tmp);
+        PCLOSE(tmp);
+        ways=cacheWays;
+
+        POPEN(sysLogFileName, tmp, "%s/cacheInfo/getCacheInfo.sh %s %d sets", TOOL_DIR, mc_file, cacheId);
+        int cacheSets = readIntVar(tmp);
+        PCLOSE(tmp);
+        set_size=cacheSets;
+        printf("set size = %d\n", set_size);
+        POPEN(sysLogFileName, tmp, "%s/cacheInfo/getCacheInfo.sh %s %d cl_size", TOOL_DIR, mc_file, cacheId);
+        int cache_cl_size = readIntVar(tmp);
+        PCLOSE(tmp);
+        cl_size = cache_cl_size;
+
+        bytes = (double)ways*(double)set_size*cl_size;
+    }
+    else
+    {
+        POPEN(sysLogFileName, tmp, "%s/cacheInfo/getMemInfo.sh %s", TOOL_DIR, mc_file);
+        double size = readDoubleVar(tmp);
+        ways=-1;
+        set_size=-1;
+        bytes = size;
+        PCLOSE(tmp);
+
+        POPEN(sysLogFileName, tmp, "%s/cacheInfo/getCacheInfo.sh %s %d cl_size", TOOL_DIR, mc_file, cacheId-1);
+        int cache_cl_size = readIntVar(tmp);
+        PCLOSE(tmp);
+        cl_size = cache_cl_size;
+    }
+
+    words = bytes/bytePerWord;
+
+    printf("%s words = %f\n", name.c_str(), words);
+    POPEN(sysLogFileName, tmp, "%s/cacheInfo/getCacheInfo.sh %s %d cores", TOOL_DIR, mc_file, cacheId);
+    int cacheCores = readIntVar(tmp);
+    PCLOSE(tmp);
+    cores=cacheCores;
+    if(cores > 1)
+    {
+        shared=true;
+    }
+
+    char* lat_file;
+    STRINGIFY(lat_file, "%s/bench_results/latency/%d", TEMP_DIR, cacheId);
+    readLatency(mc_file);//lat_file);
+    free(lat_file);
+
+    POPEN(sysLogFileName, tmp, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;prefetch distance\"", TOOL_DIR, mc_file, name.c_str());
+    prefetch_cl = readDoubleVar(tmp);
+    printf("Prefetch dist = %f\n", prefetch_cl);
+    PCLOSE(tmp);
+}
 
 double cache_info::getLatency(int nthreads)
 {
@@ -148,21 +222,20 @@ double cache_info::getLatency(int nthreads)
     }
 }
 
-void cache_info::readLatency(char* file)
+void cache_info::readLatency(char* mc_file)
 {
     bool success = true;
-    if(shared)
-    {
-        success = readTable(file, latency, 1, TH_P_SOCK, 1, 1);
-    }
-    else
-    {
-        success = readTable(file, latency, 1, 1, 1, 1);
-    }
+    FILE *file;
+    char *sysLogFileName = NULL;
+    POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;latency\" | sed -e \"s@cy@@g\" | sed -e \"s@\\[@@g\" | sed -e \"s@\\]@@g\"", TOOL_DIR, mc_file, name.c_str());
+    char* latency_str = readStrVar(file);
+    //success = readTable(file, latency, 1, cores, 1, 1);
+    latency=split_double(latency_str, ',');
+    PCLOSE(file);
 
     if(!success)
     {
-        printf("Latency measurements not done, please go to build directory of YASKSITE and execute make calibrate\n");
+        printf("Latency measurements not done, please go to build directory of YASKSITE and execute 'make calibrate'\n");
     }
 }
 
@@ -176,6 +249,36 @@ cache_info::~cache_info()
     if(name)
         free(name);
 }*/
+
+//Parsing from yaml machine file
+void initializeCaches()
+{
+    char *mc_file_loc;
+    STRINGIFY(mc_file_loc, "%s/mc_file.txt", TOOL_DIR);
+
+    FILE *file = fopen(mc_file_loc, "r");
+    char *mc_file = readStrVar(file);
+    fclose(file);
+    free(mc_file_loc);
+
+    char *sysLogFileName = NULL;
+    FILE *tmp;
+    POPEN(sysLogFileName, tmp, "%s/cacheInfo/numCache.sh %s", TOOL_DIR, mc_file);
+    int numCaches = readIntVar(tmp);
+    PCLOSE(tmp);
+
+    for(int cacheId=0; cacheId<numCaches; ++cacheId)
+    {
+        CACHES.push_back(cache_info(cacheId, mc_file));
+        printf("Initialized %s cache\n", CACHES[cacheId].name.c_str());
+    }
+
+    CACHES.push_back(cache_info(numCaches, mc_file, true));
+    free(mc_file);
+
+    printf("prefetch dist L1 = %f\n", CACHES[0].prefetch_cl);
+    printf("prefetch dist MEM = %f\n", CACHES[3].prefetch_cl);
+}
 
 cache_info CACHE(char* str)
 {

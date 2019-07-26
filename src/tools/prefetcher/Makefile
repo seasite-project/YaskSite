@@ -1,4 +1,4 @@
-LIKWID_LIB ?= -L/usr/local/lib
+LIKWID_LIB ?= /usr/local/lib/liblikwid.so
 LIKWID_INC ?= -I/usr/local/include
 LIKWID_LIBS ?= -llikwid
 
@@ -10,8 +10,8 @@ SIZE?=100
 EXTRA_DEFINES ?=
 DEFINES=-DLIKWID_PERFMON
 
-BUILD_CFLAGS := $(LIKWID_LIB) $(LIKWID_INC) -I. $(REQUIRED_CFLAGS) $(CFLAGS)
-BUILD_LFLAGS := $(LIKWID_LIBS)
+BUILD_CFLAGS := $(LIKWID_INC) -I. $(REQUIRED_CFLAGS) $(CFLAGS)
+BUILD_LFLAGS := $(LIKWID_LIB)
 
 
 ifeq ($(CXX), icpc)
@@ -21,13 +21,12 @@ else
 endif
 
 all: bench.o dummy.o
-		$(CXX) $(CFLAGS) $(BUILD_CFLAGS) bench.o dummy.o -o bench_exec $(BUILD_LFLAGS)
+		$(CXX) $(CFLAGS) $(BUILD_CFLAGS) bench.o dummy.o $(BUILD_LFLAGS) -o bench_exec
 bench.o: bench.cpp
 		$(CXX) $(CFLAGS) $(BUILD_CFLAGS) -c bench.cpp -o bench.o
 dummy.o: dummy.cpp
 		$(CXX) $(CFLAGS) $(BUILD_CFLAGS) -c dummy.cpp -o dummy.o
 
 
-
 clean: 
-	rm bench_exec
+	rm bench_exec *.o

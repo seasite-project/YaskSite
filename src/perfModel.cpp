@@ -226,7 +226,6 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
     int totalGrids = numReadGrids+numWriteGrids;
 
     double prefetch_oh_per_LUP = getPrefetchEffects(currCache);
-    printf("cache = %s, prefetch = %f\n", currCache.name.c_str(), prefetch_oh_per_LUP);
     //in cycles
     double latency_oh_per_LUP = getLatencyEffects(currCache);
 
@@ -378,7 +377,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         std::vector<double> assocOh = simulateCache_assoc(ilc_jump, olc_jump, currCache, shrink_space);
         double totalData = actual_data + extra_data + assocOh[2];
 
-        ECM_prefetch[currCache.hierarchy] = prefetch_oh*8*currCache.bytePerWord;
+        ECM_prefetch[currCache.hierarchy] = prefetch_oh*currCache.bytePerWord;
         ECM_boundary[currCache.hierarchy] = spatialOh[2]*currCache.bytePerWord;
         ECM_assoc[currCache.hierarchy] = assocOh[2]*currCache.bytePerWord;
         return {totalData, ((totalData-numWriteGrids)/(double)numWriteGrids)};
@@ -402,6 +401,8 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
     {
         prevHierarchy = currCache.hierarchy;
     }
+
+
     cache_info cache = CACHES[prevHierarchy];
 
     double bx = (temporal)?stencil->data->rx:stencil->data->bx;
@@ -424,7 +425,6 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
     rz = rz*fold_x*fold_y;
     ry = ceil(ry/fold_y);
     rx = ceil(rx/fold_x);
-
 
     int num_block_z = (int)ceil(stencil->data->dz/bz);
 
@@ -561,6 +561,19 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
 double perfModel::getPrefetchEffects(cache_info currCache)
 {
 #ifdef MODEL_PREFETCH_EFFECT
+
+    int prevHierarchy;
+
+    if((currCache.hierarchy-1) >= 0)
+    {
+        prevHierarchy = currCache.hierarchy-1;
+    }
+    else
+    {
+        prevHierarchy = currCache.hierarchy;
+    }
+    cache_info prevCache = CACHES[prevHierarchy];
+
     double bx = stencil->data->bx;
     double by = stencil->data->by;
     double bz = stencil->data->bz;
@@ -649,11 +662,11 @@ double perfModel::getPrefetchEffects(cache_info currCache)
     //TODO:Assuming 8 doubles per CL
     if(stencil->dim==3)
     {
-        prefetch_oh= (1-reuseFactor)*(currCache.prefetch_cl*8) *dx*dy*(num_block_z)/fold_factor;
+        prefetch_oh= (1-reuseFactor)*(prevCache.prefetch_cl*prevCache.cl_size/(double)prevCache.bytePerWord)*dx*dy*(num_block_z)/fold_factor;
     }
     else
     {
-        prefetch_oh= (1-reuseFactor)*(currCache.prefetch_cl*8)*dy*(num_block_z)/fold_factor;
+        prefetch_oh= (1-reuseFactor)*(prevCache.prefetch_cl*prevCache.cl_size/(double)prevCache.bytePerWord)*dy*(num_block_z)/fold_factor;
     }
 
 

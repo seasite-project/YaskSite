@@ -7,7 +7,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-
+#include <iostream>
 void systemCallUtil(char* cmd, char* sysLogFileName);
 FILE* popenCallUtil(const char* cmd, const char* type, char* sysLogFileName);
 
@@ -17,10 +17,70 @@ int find_string(std::vector<const char*> arr, const char* val);
 
 int readIntVar(FILE* filename);
 double readDoubleVar(FILE* filename);
+char* readStrVar(FILE* filename);
 
 
 void dummy(void *tmp);
 
+#if 0
+template <typename T> inline bool readTable(FILE* file, std::vector<T> &table, int start_row, int end_row, int start_col, int end_col)
+{
+    //std::ifstream file(filename);
+    //FILE *file;
+    //file = fopen(filename, "r");
+
+    if(!file)
+    {
+        printf("File could not be opened\n");
+        return false;
+    }
+    int row_inf = (end_row<0)?true:false;
+    int col_inf = (end_col<0)?true:false;
+
+    //skip till start row
+    for(int i=0; i<start_row; ++i)
+    {
+        //std::string line;
+        //std::getline(file, line);
+        //
+        char *line = NULL;
+        size_t n = 0;
+        getline(&line, &n, file);
+        free(line);
+    }
+
+    char* line = NULL;
+    size_t n = 0;
+    size_t linesize = getline(&line, &n, file);
+    int i = start_row;
+    while( (row_inf || (i<=end_row)) && (linesize!=0) ) //(std::getline(file,line)) )
+    {
+        std::istringstream line_stream(line);
+
+        //skip till start_col
+        for(int j=0; j<start_col; ++j)
+        {
+            std::string word;
+            line_stream>>word;
+        }
+
+        int j=start_col;
+        T word;
+
+        while( (col_inf || (j<=end_col)) &&  (line_stream>>word) )
+        {
+            table.push_back(word);
+            ++j;
+        }
+
+        ++i;
+
+        linesize = getline(&line, &n, file);
+    }
+
+    return true;
+}
+#endif
 
 template <typename T> inline bool readTable(const char* filename, std::vector<T> &table, int start_row, int end_row, int start_col, int end_col)
 {
@@ -68,7 +128,11 @@ template <typename T> inline bool readTable(const char* filename, std::vector<T>
     return true;
 }
 
+
 std::vector<std::string> split(std::string str, char delim);
+std::vector<double> split_double(std::string str, char delim);
+std::vector<int> split_int(std::string str, char delim);
+
 
 template <typename T> inline void sort(T *arr, int range_lo, int range_hi, bool rev=false)
 {

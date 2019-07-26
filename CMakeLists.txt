@@ -61,7 +61,7 @@ set(MODEL_PREFETCH_EFFECT 1 CACHE BOOL "Considers effect from prefetching when m
 set(MODEL_LATENCY_EFFECT 1 CACHE BOOL "Considers effect from latency when modelling")
 set(MODEL_ASSOCIATIVITY_EFFECT 1 CACHE BOOL "Uses k-way associative cache model instead of perfect LRU")
 set(MODEL_REMAINDER_EFFECT 1 CACHE BOOL "Considers effect from remainder blocks when modelling")
-
+set(MC_FILE "" CACHE FILEPATH "Path to machine file")
 
 if (${USE_LIKWID})
     set(LIKWID_INC_DIR_INIT "")
@@ -91,6 +91,19 @@ set(TEMP_DIR "~/tmp_YaskSite" CACHE PATH "This is a temporary scratch and cachin
 file(MAKE_DIRECTORY ${TEMP_DIR})
 set(TEMP_STENCIL_DIR "${TEMP_DIR}/stencils")
 
+get_filename_component(CMAKE_CXX_COMPILER_SHORT ${CMAKE_CXX_COMPILER} NAME)
+get_filename_component(CMAKE_C_COMPILER_SHORT ${CMAKE_C_COMPILER} NAME)
+
+
+ExternalProject_Add(yaml-cpp
+    PREFIX ${PROJECT_BINARY_DIR}/yaml-cpp
+    URL https://github.com/jbeder/yaml-cpp/zipball/master
+    DOWNLOAD_NAME yaml-cpp.zip
+    CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER_SHORT} CXX=${CMAKE_CXX_COMPILER_SHORT} cmake ../yaml-cpp -DYAML_CPP_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    BUILD_COMMAND make
+    INSTALL_COMMAND make install
+)
+
 message(STATUS "Detecting cache sizes")
 #configure cache sizes
 execute_process(COMMAND ${TOOL_DIR}/getCacheInfo.sh "L1d cache" OUTPUT_VARIABLE L1_val OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -99,18 +112,43 @@ execute_process(COMMAND ${TOOL_DIR}/getCacheInfo.sh "L3 cache" OUTPUT_VARIABLE L
 execute_process(COMMAND ${TOOL_DIR}/getMemInfo.sh OUTPUT_VARIABLE MEM_val OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND ${TOOL_DIR}/threadPerSocket.sh OUTPUT_VARIABLE thread_per_socket_val OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+MESSAGE(STATUS "tool dir = ${TOOL_DIR}")
+#execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${TOOL_DIR}/yamlParser/IvyBridgeEP_E5-2660v2.yml "memory hierarchy" | grep "level:" | wc -l OUTPUT_VARIABLE numCaches OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy" COMMAND grep "level: " COMMAND cut -d ":" -f 2 COMMAND tr "\n" ";" COMMAND tr -d " \t\n\r" OUTPUT_VARIABLE memHierarchy OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-set(L1_val_type "${L1_val}; private")
-set(L2_val_type "${L2_val}; private")
-set(L3_val_type "${L3_val}; shared")
-set(MEM_val_type "${MEM_val}; shared")
+MESSAGE(STATUS "memory hierarchies = ${memHierarchy}")
+
+list(REMOVE_ITEM memHierarchy "MEM")
+
+MESSAGE(STATUS "memory hierarchies = ${memHierarchy}")
+set(loopCtr 0)
+foreach(item ${memHierarchy})
+    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cache per group;ways" OUTPUT_VARIABLE ways OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cache per group;sets" OUTPUT_VARIABLE sets OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cache per group;cl_size" OUTPUT_VARIABLE cl_size OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cores per group" OUTPUT_VARIABLE cores_per_group OUTPUT_STRIP_TRAILING_WHITESPACE)
+    MESSAGE(STATUS "ctr = ${loopCtr}")
+    MATH(EXPR loopCtr "${loopCtr}+1")
+    set(${item} "${cores_per_group};${ways};${sets};${cl_size}" CACHE STRING "${item} cache details (cores per group; ways; sets; cl_size), should be automatically filled")
+endforeach()
+
+execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cores per group" OUTPUT_VARIABLE cores_per_group OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(MEM ${cores_per_group} CACHE STRING "MEM details (cores_per_group), should be automatically filled")
+# ./yamlParser ${MC_FILE} "memory hierarchy;0;cache per group;sets"
+# ./yamlParser ${MC_FILE} "memory hierarchy;0;cache per group;cl_size"
 
 
-set(L1 "${L1_val_type}" CACHE STRING "L1 cache size")
-set(L2 "${L2_val_type}" CACHE STRING "L2 cache size")
-set(L3 "${L3_val_type}" CACHE STRING "L3 cache size")
-set(MEM "${MEM_val_type}" CACHE STRING "MEM size")
-set(THREAD_PER_SOCKET "${thread_per_socket_val}" CACHE STRING "Threads per socket")
+#set(L1_val_type "${L1_val}; private")
+#set(L2_val_type "${L2_val}; private")
+#set(L3_val_type "${L3_val}; shared")
+#set(MEM_val_type "${MEM_val}; shared")
+
+
+#set(L1 "${L1_val_type}" CACHE STRING "L1 cache size")
+#set(L2 "${L2_val_type}" CACHE STRING "L2 cache size")
+#set(L3 "${L3_val_type}" CACHE STRING "L3 cache size")
+#set(MEM "${MEM_val_type}" CACHE STRING "MEM size")
+#set(THREAD_PER_SOCKET "${thread_per_socket_val}" CACHE STRING "Threads per socket")
 
 set(CL_SIZE "8")
 
@@ -362,52 +400,52 @@ add_custom_target(calibrate
     MachineCalibration
     )
 
-list(GET L1 1 L1_type)
-list(GET L2 1 L2_type)
-list(GET L3 1 L3_type)
-list(GET MEM 1 MEM_type)
-
-if(L1_type MATCHES ".*shared.*")
-    math(EXPR L1_private "${L1_val}/${THREAD_PER_SOCKET}")
-else()
-    math(EXPR L1_private "${L1_val}")
-endif()
-
-if(L2_type MATCHES ".*shared.*")
-    math(EXPR L2_private "${L2_val}/${THREAD_PER_SOCKET}")
-else()
-    math(EXPR L2_private "${L2_val}")
-endif()
-
-if(NOT ${L3_val} STREQUAL "")
-    if( L3_type MATCHES ".*shared.*")
-        math(EXPR L3_private "${L3_val}/${THREAD_PER_SOCKET}")
-    else()
-        math(EXPR L3_private "${L3_val}")
-    endif()
-endif()
-
-if(MEM_type MATCHES ".*shared.*")
-    math(EXPR MEM_private "${MEM_val}/${THREAD_PER_SOCKET}")
-else()
-    math(EXPR MEM_private "${MEM_val}")
-endif()
-
-
-if(NOT ${L3_val} STREQUAL "")
-    math(EXPR mem_w_sf "${L3_val}/1024 + 10*1024")
-else()
-    math(EXPR mem_w_sf "${L2_val}/1024 + 10*1024")
-endif()
-
-#in between L3 and L2
-if(NOT ${L3_val} STREQUAL "")
-    math(EXPR l3_w_sf "(${L2_private}+${L3_private})/2048")
-endif()
-#in between L2 and L1
-math(EXPR l2_w_sf "(${L1_private}+${L2_private})/2048")
-#in L1
-math(EXPR l1_w_sf "(${L1_private})/2048")
+#list(GET L1 1 L1_type)
+#list(GET L2 1 L2_type)
+#list(GET L3 1 L3_type)
+#list(GET MEM 1 MEM_type)
+#
+#if(L1_type MATCHES ".*shared.*")
+#    math(EXPR L1_private "${L1_val}/${THREAD_PER_SOCKET}")
+#else()
+#    math(EXPR L1_private "${L1_val}")
+#endif()
+#
+#if(L2_type MATCHES ".*shared.*")
+#    math(EXPR L2_private "${L2_val}/${THREAD_PER_SOCKET}")
+#else()
+#    math(EXPR L2_private "${L2_val}")
+#endif()
+#
+#if(NOT ${L3_val} STREQUAL "")
+#    if( L3_type MATCHES ".*shared.*")
+#        math(EXPR L3_private "${L3_val}/${THREAD_PER_SOCKET}")
+#    else()
+#        math(EXPR L3_private "${L3_val}")
+#    endif()
+#endif()
+#
+#if(MEM_type MATCHES ".*shared.*")
+#    math(EXPR MEM_private "${MEM_val}/${THREAD_PER_SOCKET}")
+#else()
+#    math(EXPR MEM_private "${MEM_val}")
+#endif()
+#
+#
+#if(NOT ${L3_val} STREQUAL "")
+#    math(EXPR mem_w_sf "${L3_val}/1024 + 10*1024")
+#else()
+#    math(EXPR mem_w_sf "${L2_val}/1024 + 10*1024")
+#endif()
+#
+##in between L3 and L2
+#if(NOT ${L3_val} STREQUAL "")
+#    math(EXPR l3_w_sf "(${L2_private}+${L3_private})/2048")
+#endif()
+##in between L2 and L1
+#math(EXPR l2_w_sf "(${L1_private}+${L2_private})/2048")
+##in L1
+#math(EXPR l1_w_sf "(${L1_private})/2048")
 
 ExternalProject_Add(LDST-bench
     PREFIX ${PROJECT_BINARY_DIR}/LDST-bench
@@ -418,38 +456,24 @@ ExternalProject_Add(LDST-bench
     INSTALL_COMMAND ""
 )
 
-get_filename_component(CMAKE_CXX_COMPILER_SHORT ${CMAKE_CXX_COMPILER} NAME)
 
-if(NOT ${L3_val} STREQUAL "")
-    add_custom_command(TARGET calibrate
-        POST_BUILD
-        COMMAND mkdir -p ${TEMP_DIR}/bench_results && ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${LIB_TOOL_DIR} 1 10 200 ${TEMP_DIR}/bench_results/bw_load_ratio.txt
-        COMMAND mkdir -p ${TEMP_DIR}/bench_results/latency
-        COMMAND cp -r ${TOOL_DIR}/latency_bench/wrapper/* ${LIB_TOOL_DIR}/MLC/mlc/. && cp ${TOOL_DIR}/latency_bench/latency_scan.sh ${LIB_TOOL_DIR}/MLC/.
-        COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${mem_w_sf} -1 ${MEM_type} ${TEMP_DIR}/bench_results/latency/MEM.txt
-        COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${l3_w_sf} -1 ${L3_type} ${TEMP_DIR}/bench_results/latency/L3.txt
-        COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${l2_w_sf} -1 ${L2_type} ${TEMP_DIR}/bench_results/latency/L2.txt
-        COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${l1_w_sf} -1 ${L1_type} ${TEMP_DIR}/bench_results/latency/L1.txt
+add_custom_command(TARGET calibrate
+    POST_BUILD
+    COMMAND ${LIB_TOOL_DIR}/read_mc_file.sh ${LIB_TOOL_DIR}/mc_file.txt
+    COMMAND cd ${LIB_TOOL_DIR}/yamlParser && CXX=${CMAKE_CXX_COMPILER_SHORT} LIB_INC=${CMAKE_INSTALL_PREFIX}/include LIBS=${CMAKE_INSTALL_PREFIX}/lib/libyaml-cpp.a make
+    COMMAND mkdir -p ${TEMP_DIR}/bench_results && ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} 1 10 ${TEMP_DIR}/bench_results/bw_load_ratio.txt
+    COMMAND mkdir -p ${TEMP_DIR}/bench_results/latency
+    COMMAND cp -r ${TOOL_DIR}/latency_bench/wrapper/* ${LIB_TOOL_DIR}/MLC/mlc/. && cp ${TOOL_DIR}/latency_bench/latency_scan.sh ${LIB_TOOL_DIR}/MLC/.
+    COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${TEMP_DIR}/bench_results/latency
+    COMMAND ${LIB_TOOL_DIR}/prefetcher/prefetch_dist.sh ${LIKWID_INCLUDE_DIR} ${LIKWID_LIBRARIES}
     )
-else()
-    add_custom_command(TARGET calibrate
-        POST_BUILD
-        #       COMMAND mkdir -p ${TEMP_DIR}/bench_results && ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh  ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results 1 10 100 ${TEMP_DIR}/bench_results/bw_load_ratio.txt
-        COMMAND mkdir -p ${TEMP_DIR}/bench_results && ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${LIB_TOOL_DIR} 1 10 300 ${TEMP_DIR}/bench_results/bw_load_ratio.txt
-        COMMAND mkdir -p ${TEMP_DIR}/bench_results/latency
-        COMMAND cp -r ${TOOL_DIR}/latency_bench/wrapper/* ${LIB_TOOL_DIR}/MLC/mlc/. && cp ${TOOL_DIR}/latency_bench/latency_scan.sh ${LIB_TOOL_DIR}/MLC/.
-        COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${mem_w_sf} -1 ${MEM_type} ${TEMP_DIR}/bench_results/latency/MEM.txt
-        COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${l2_w_sf} -1 ${L2_type} ${TEMP_DIR}/bench_results/latency/L2.txt
-        COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${LIB_TOOL_DIR} ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${l1_w_sf} -1 ${L1_type} ${TEMP_DIR}/bench_results/latency/L1.txt
-        )
-endif()
 
 add_dependencies(calibrate LDST-bench)
 
-if("${L3_val}" STREQUAL "")
-    set(L3 "${L2_val_type}")
-    message(STATUS "L3 = ${L3}")
-endif()
+#if("${L3_val}" STREQUAL "")
+#    set(L3 "${L2_val_type}")
+#    message(STATUS "L3 = ${L3}")
+#endif()
 
 configure_file (
     "${PROJECT_SOURCE_DIR}/include/config.h.in"
@@ -461,6 +485,8 @@ configure_file(${PROJECT_SOURCE_DIR}/yasksite-config.cmake.in ${PROJECT_BINARY_D
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 add_library(yaskSite ${SOURCES})
+
+add_dependencies(yaskSite yaml-cpp)
 
 if(ENABLE_LOOPADAPT)
     message(STATUS "check ${LOOPADAPT_LIB_DIR}")

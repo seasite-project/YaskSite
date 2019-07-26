@@ -43,7 +43,7 @@ std::vector<int> set_counter(char* ctr_name, char* metric_string)
 //This includes benchmarks to measure bandwidth depending on LD:ST ratios
 //return bw in GB/s
 //minimum ratio is 1; i.e 1 load and 1 store; and load >= store
-std::vector<double> bench( int repeat)
+std::vector<double> bench(double memsize, int repeat)
 {
     cpuFeatures_init();
     topology_init();
@@ -60,12 +60,12 @@ std::vector<double> bench( int repeat)
 
     perfmon_init(nthreads, cpus);
 
-    double size = static_cast<int>(1000000/(8.0));
+    double words = memsize*1024*1024/(static_cast<double>(sizeof(double)));
+    //double size = static_cast<int>(1000000/(8.0));
     int block_size = 20*8;//20CL
     int skip_blocks = block_size*4;
-    size*=block_size; //multiplied by skip blocks to get from memory
-    int multiple = static_cast<int>(static_cast<double>(size)/static_cast<double>(skip_blocks)+1);
-    size = static_cast<double>(multiple)*static_cast<double>(skip_blocks);
+    int multiple = static_cast<int>(words/skip_blocks) + 1; //words
+    double size = multiple*static_cast<double>(skip_blocks);
     //make size multiple of block_size*skip_blocks
 
     printf("size = %f\n",size);
@@ -180,20 +180,27 @@ std::vector<double> bench( int repeat)
 int main(int argc, char** argv)
 {
     int repeat    = 20;
-    if(argc > 2)
+    if(argc < 2)
     {
-        repeat    = atoi(argv[1]);
+        printf("Error, please provide arguments\nUsage : %s [size in MB] [repeat]\n", argv[0]);
+        exit(-1);
+    }
+
+    double size = atof(argv[1]);
+    if(argc > 3)
+    {
+        repeat    = atoi(argv[2]);
     }
 
 
-    std::vector<double> data_vol_pre = bench(repeat);
+    std::vector<double> data_vol_pre = bench(size, repeat);
     DISABLE_PREFETCHER;
-    std::vector<double> data_vol = bench(repeat);
+    std::vector<double> data_vol = bench(size, repeat);
     ENABLE_PREFETCHER;
 
-    printf("Prefetch CL: MEM->L3 = %f\n", data_vol_pre[0]-data_vol[0]);
-    printf("Prefetch CL: L3->L2 = %f\n", data_vol_pre[1]-data_vol[1]);
-    printf("Prefetch CL: L2->L1 = %f\n", data_vol_pre[2]-data_vol[2]);
+    printf("Prefetch CL: L1 = %f\n", data_vol_pre[2]-data_vol[2]);
+    printf("Prefetch CL: L2 = %f\n", data_vol_pre[1]-data_vol[1]);
+    printf("Prefetch CL: L3 = %f\n", data_vol_pre[0]-data_vol[0]);
 
     return 0;
 }

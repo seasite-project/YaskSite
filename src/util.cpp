@@ -94,6 +94,19 @@ double readDoubleVar(FILE* filename)
     return ((double)var);
 }
 
+char* readStrVar(FILE* filename)
+{
+    char* var = NULL;
+    size_t n = 0;
+    size_t chars = getline(&var, &n, filename);
+
+    if ((var)[chars - 1] == '\n')
+    {
+        (var)[chars - 1] = '\0';
+    }
+    return var;
+}
+
 
 void dummy(void *tmp)
 {
@@ -114,6 +127,37 @@ std::vector<std::string> split(std::string str, char delim)
 
     return out;
 }
+
+std::vector<double> split_double(std::string str, char delim)
+{
+    std::vector<double> out;
+
+    std::istringstream str_stream(str);
+
+    std::string word;
+    while(std::getline(str_stream,word,delim))
+    {
+        out.push_back(atof(word.c_str()));
+    }
+
+    return out;
+}
+
+std::vector<int> split_int(std::string str, char delim)
+{
+    std::vector<int> out;
+
+    std::istringstream str_stream(str);
+
+    std::string word;
+    while(std::getline(str_stream,word,delim))
+    {
+        out.push_back(atoi(word.c_str()));
+    }
+
+    return out;
+}
+
 
 char* CAPITALIZE(char * temp) {
     char* name = strdup(temp);

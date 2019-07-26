@@ -1,6 +1,7 @@
 #include "MPI_Manager.h"
 #include "print.h"
 #include <stdlib.h>
+#include "types.h"
 
 #ifdef yaskSite_HAVE_OpenMP
 #include <omp.h>
@@ -16,11 +17,9 @@
 
 MPI_Manager::MPI_Manager(int* argc_, char*** argv_, int printRank_):argc(argc_), argv(argv_), nRanks(1), myRank(0), printRank(printRank_)
 {
-    printf("Am i here\n");
 #ifdef yaskSite_HAVE_MPI
     int provided = 0;
     MPI_Init_thread(argc, argv, MPI_THREAD_SERIALIZED, &provided);
-    printf("inited\n");
     if(provided < MPI_THREAD_SERIALIZED)
     {
         ERROR_PRINT("MPI error: MPI_THREAD_SERIALIZED not provided.\n");
@@ -64,6 +63,7 @@ MPI_Manager::MPI_Manager(int* argc_, char*** argv_, int printRank_):argc(argc_),
 #endif
 #endif
 
+    initializeCaches();
 }
 
 MPI_Manager::~MPI_Manager()

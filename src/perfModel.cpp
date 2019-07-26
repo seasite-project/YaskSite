@@ -195,7 +195,7 @@ void perfModel::getBytePerCycles()
 
     std::vector<double> bw_table;
 
-    char* bw_file;
+    /*char* bw_file;
     STRINGIFY(bw_file, "%s/bench_results/bw_load_ratio.txt", TEMP_DIR);
     bool success = readTable(bw_file, bw_table, 1, 10, 2, 2);
     if(success==false)
@@ -203,10 +203,27 @@ void perfModel::getBytePerCycles()
         ERROR_PRINT("Memory bandwidth not calibrated, please go to build directory of YASKSITE and execute make calibrate");
     }
     delete[] bw_file;
+    */
+
+    char *mc_file_loc;
+    STRINGIFY(mc_file_loc, "%s/mc_file.txt", TOOL_DIR);
+
+    FILE *file = fopen(mc_file_loc, "r");
+    char *mc_file = readStrVar(file);
+    fclose(file);
+    free(mc_file_loc);
+
+    char *sysLogFileName = NULL;
+    POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;MEM;1;LDST;BW\"| sed -e \"s@GB/s@@g\" | sed -e \"s@\\[@@g\" | sed -e \"s@\\]@@g\"", TOOL_DIR, mc_file);
+    char *bw_str = readStrVar(file);
+    bw_table = split_double(bw_str, ',');
+    PCLOSE(file);
+
+    free(mc_file);
 
     for(unsigned i=0; i<bw_table.size(); ++i)
     {
-        bw_table[i]=bw_table[i]/(cpu_freq*1000.0);
+        bw_table[i]=bw_table[i]/(cpu_freq);
     }
     bytePerCycle["MEM"] = bw_table;//18.5;
 }

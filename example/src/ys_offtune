@@ -1,0 +1,61 @@
+#! /bin/bash -l
+
+tool_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+codeFile=$1
+tmpFile="/tmp/ys_gen.txt"
+
+cat $codeFile > $tmpFile
+#__Y__ is reserved
+if grep -q "GRID_ARRAY Yprev.*" $codeFile; then
+    sed -i "s@GRID_ARRAY Yprev@GRID_ARRAY __Y__@g" $tmpFile
+elif grep -q "GRID_ARRAY Ycur.*" $codeFile; then
+    sed -i "s@GRID_ARRAY Ycur@GRID_ARRAY __Y__@g" $tmpFile
+fi
+
+sed -i "s@GRID_ARRAY Yprev.*@@g" $tmpFile
+sed -i "s@GRID_ARRAY Ycur.*@@g" $tmpFile
+sed -i "s@GRID_ARRAY Y_old.*@@g" $tmpFile
+sed -i "s@GRID_ARRAY Y_new.*@@g" $tmpFile
+#convert all Yprev[*] to Y[*]<0> and Ycurr[*] to Y[*]<1>
+sed -i "s@Yprev\[\([^\]\)]@__Y__\[\1\]<0>@g" $tmpFile
+sed -i "s@Ycur\[\([^\]\)]@__Y__\[\1\]<1>@g" $tmpFile
+#convert all Yprev to Y<0> and Ycurr to Y<1>
+sed -E -i "s@Yprev@__Y__<0>@g" $tmpFile
+sed -E -i "s@Ycur@__Y__<1>@g" $tmpFile
+#convert y_old to DATA<0> and y_new to DATA<1>
+sed -E -i "s@y_old@DATA<0>@g" $tmpFile
+sed -E -i "s@y_new@DATA<1>@g" $tmpFile
+
+#Find arguments of RHS
+nStencils=$(grep -E -o "RHS" $tmpFile | wc -l)
+#currently only 1 type of stencil supported per file
+#h_inv=$(grep -E -o -m1 "RHS(.*)" $tmpFile | cut -d"," -f2)
+#echo "hinv = $h_inv"
+#h_inv=$(echo $h_inv)
+
+params=$(grep -E -o -m1 "RHS(.*)" $tmpFile | grep -o "{{.*}}")
+sed -i "s@RHS\(.*\){{.*}}@RHS\1 param@g" $tmpFile
+stencil_name=$(grep -E -o -m1 "RHS(.*)" $tmpFile | cut -d"," -f3)
+for (( idx=1; idx<=$nStencils; idx++ )); do
+#    curr_h_inv=$(grep -E -o -m$idx "RHS(.*)" $tmpFile | tail -n 1 | cut -d"," -f2)
+#    curr_h_inv=$(echo $curr_h_inv)
+    curr_stencil_name=$(grep -E -o -m1 "RHS(.*)" $tmpFile | cut -d"," -f3)
+
+#    if (( $(echo "$h_inv != $curr_h_inv" |bc -l) )); then
+#        echo "Currently all arguments to RHS under a file should be same"
+#    fi
+
+    if [[ "$curr_stencil_name" != "$stencil_name" ]]; then
+        echo "Currently only same stencil supported per file"
+    fi
+done
+
+#REPLACE all RHS with STENCIL
+sed  -i "s@RHS\([^,]*\)[^\)]*@STENCIL\1@g" $tmpFile
+
+key=$(basename $codeFile | cut -f1 -d '.')
+
+restArgs="${@:2}"
+echo $restArgs
+${tool_dir}/offsite_adapter $tmpFile $key "$params" $stencil_name $restArgs

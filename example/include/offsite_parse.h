@@ -1,5 +1,5 @@
-#ifndef PARSE_H
-#define PARSE_H
+#ifndef OFFSITE_PARSE_H
+#define OFFSITE_PARSE_H
 
 
 #include <vector>
@@ -18,13 +18,12 @@ std::vector<int> getRange(char* range);
 std::vector<char*> splitChar(char* range);
 int findChar(std::vector<char*> vec, const char* str);
 
-struct parser
+struct os_parser
 {
-    char *kernel;
     int iter;
     int cores;
     int smt;
-    char* innerDim;
+    char* size;
     int radius;
     char* fold;
     bool prefetch;
@@ -32,11 +31,12 @@ struct parser
     char* outDir;
     char* opt;
     char *prgname;
+    char *mode;
     int numOptions;
     my_option *long_options;
     option *gnuOptions;
-    parser();
-    ~parser();
+    os_parser();
+    ~os_parser();
     bool parse_arg(int argc, char **argv);
     int dump_arg();
     void help();

@@ -1,18 +1,17 @@
 #!/bin/bash
 
 #updates only if the file does not exist or does not comply to machine
-#USAGE: ./latency_scan.sh TEMP_DIR LIC_FILE OUT_FOLDER
+#USAGE: ./latency_scan.sh TEMP_DIR OUT_FOLDER
 
 LANG=en_US.UTF-8
 tool_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 tool_dir="$tool_dir/../"
 
 temp_dir=$1
-lic_file=$2
 #SIZE=$4
 #nthreads=$5
 #mem_type=$6
-out_folder=$3
+out_folder=$2
 
 mkdir -p $out_folder
 
@@ -68,60 +67,62 @@ for((cache_id=0; cache_id<=$numCache; cache_id+=1)); do
 
     mkdir -p $temp_dir
 
-    lic_agree=$(cat $lic_file 2>/dev/null)
+    threads_per_core=$($tool_dir/yamlParser/yamlParser $mc_file "threads per core")
+    threads_per_core=$(echo $threads_per_core)
+
+    cd $tool_dir/latency_bench/mem_latency
+
 
     if [[ $cacheStale != "0" ]]; then
-        printf "%10s %12s %12s\n" "THREADS" "Latency(ns)" "SIZE(KB)" > $out_file
+        SIZE=$($tool_dir/yamlParser/yamlParser $mc_file "benchmarks;measurements;$cacheName;1;size per thread;0")
+        SIZE=$($tool_dir/unitconvert.sh "$SIZE")
+        echo "Doing latency measurements for size=$SIZE KB; this could take 1-2 min."
 
-        lat_out=""
-        if [[ $lic_agree == "1" ]]; then
-            if [[ $old == "0" ]]
-            then
-                SIZE=$($tool_dir/yamlParser/yamlParser $mc_file "benchmarks;measurements;$cacheName;1;size per thread;1")
+        factor=1
+
+        #cacheName=$($tool_dir/cacheInfo/getCacheInfo.sh $mc_file $cache_id "name")
+        #echo $cacheName
+        #TODO do this in a more nicer way such that CoD is also taken into account
+        #if [[ $cacheName == "L3" ]]; then
+        #    numa_per_socket=$($tool_dir/yamlParser/yamlParser $mc_file "NUMA domains per socket")
+        #    if [ $numa_per_socket -ge 2 ]; then
+        #        l3_size=$($tool_dir/cacheInfo/getCacheInfo.sh $mc_file $cache_id)
+        #        l3_size=$(echo "$l3_size/2" | bc -l)
+        #        echo "$SIZE and $l3_size"
+        #        currFactor=$(echo "1.15*$SIZE/$l3_size" | bc -l)
+        #        if (( $(echo "$currFactor > 1" |bc -l) )); then
+        #            factor=$currFactor
+        #        fi
+        #    fi
+        #fi
+
+        #echo "factor = $factor, size = $SIZE"
+        readWrite="1 2 3 4 5 6"
+        for rw in $readWrite; do
+            lat_out=""
+            ./memLatency.sh 1 $(($rw+1)) $SIZE $factor 1 E:N:1:1:$threads_per_core > $temp_dir/latency_out.txt
+            lat=$(grep "latency oh" $temp_dir/latency_out.txt | cut -d"=" -f2)
+            lat=$(echo $lat)
+            echo $lat
+            lat_out="$lat"
+
+            for (( thread=2; thread<=$nthreads; thread++ )); do
+                SIZE=$($tool_dir/yamlParser/yamlParser $mc_file "benchmarks;measurements;$cacheName;1;size per thread;$((thread-1))")
                 SIZE=$($tool_dir/unitconvert.sh "$SIZE")
-                SIZE=$(echo "$SIZE/(1024)" | bc -l) #convert to KB
-            fi
-            echo "Doing latency measurements for size=$SIZE KB; this could take 1-2 min."
-            curr_dir=$PWD
-            cd $tool_dir/MLC/mlc
-
-            make clean
-            make
-
-            ./mlc_no_pf -b $SIZE -t 1-1 -d 0 > $temp_dir/latency_out.txt #no noise threads not supported
-            lat=$(grep -A2 "Delay.*ns" $temp_dir/latency_out.txt | tail -n 1 | awk '{print $2}'| grep -Eo '[0-9]*\.?[0-9]+')
-            printf "%10s %12s %12s\n" 1 $lat $SIZE >> $out_file
-            lat_out="$lat cy"
-
-            for (( thread=2; thread<=$nthreads; thread++ )); do
-                if [[ $old == "0" ]]
-                then
-                    SIZE=$($tool_dir/yamlParser/yamlParser $mc_file "benchmarks;measurements;$cacheName;1;size per thread;$((thread-1))")
-                    SIZE=$($tool_dir/unitconvert.sh "$SIZE")
-                    SIZE=$(echo "$SIZE/(1024)" | bc -l) #convert to KB
-                fi
-                ./mlc_no_pf -b $SIZE -t 1-$((thread-1)) -d 0 > $temp_dir/latency_out.txt
-                lat=$(grep -A2 "Delay.*ns" $temp_dir/latency_out.txt | tail -n 1 | awk '{print $2}'| grep -Eo '[0-9]*\.?[0-9]+')
-
-                printf "%10s %12s %12s\n" $thread $lat $SIZE >> $out_file
-                lat_out="$lat_out, $lat cy"
+                ./memLatency.sh 1 $(($rw+1)) $SIZE $factor $thread E:N:$thread:1:$threads_per_core > $temp_dir/latency_out.txt
+                lat=$(grep "latency oh" $temp_dir/latency_out.txt | cut -d"=" -f2)
+                lat=$(echo $lat)
+                echo $lat
+                lat_out="$lat_out, $lat"
             done
 
-            cd $curr_dir
-        else
-            printf "%10s %12s %12s\n" 1 "0.0" $SIZE >> $out_file
-            lat_out="0"
-            for (( thread=2; thread<=$nthreads; thread++ )); do
-                printf "%10s %12s %12s\n" $thread "0.0" $SIZE >> $out_file
-                lat_out="$lat_out, 0 cy"
-            done
-        fi
+            $tool_dir/yamlParser/yamlParser $mc_file "benchmarks;measurements;$cacheName;1;results;latency;$rw" -o "[$lat_out]"
 
-        $tool_dir/yamlParser/yamlParser $mc_file "benchmarks;measurements;$cacheName;1;results;latency" -o "[$lat_out]"
-
-        printf "\nMachine Info\n" >> $out_file
-        lscpu | grep "Model name:" >> $out_file
-        lscpu | grep "CPU MHz:" >> $out_file
+        done
+        #printf "\nMachine Info\n" >> $out_file
+        #lscpu | grep "Model name:" >> $out_file
+        #lscpu | grep "CPU MHz:" >> $out_file
     fi
 
+    cd -
 done

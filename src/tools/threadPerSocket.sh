@@ -8,7 +8,7 @@ tool_dir="$tool_dir/"
 #USAGE: ./threadPerSocket.sh mc_file
 mc_file=$1
 
-threads=$($tool_dir/yamlParser/yamlParser $mc_file "cores per socket" \
+threads=$($tool_dir/yamlParser/yamlParser $mc_file "cores per NUMA domain" \
     | cut -d":" -f2)
 
 echo $threads

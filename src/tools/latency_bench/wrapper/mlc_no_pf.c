@@ -27,6 +27,7 @@ void print_help(char* exec)
     printf("-t <threads>\t: Noise threads (avoid 0 since it is the latency thread, defalt(1-1))\n");
     printf("-r\t\t: Use randomly assigned indicies\n");
     printf("-d \t\t: Injection delay time in seconds (default 0s)\n");
+    printf("-w \t\t: Read write ratio\n");
     printf("\n");
 }
 
@@ -36,6 +37,7 @@ typedef struct
     char* size;
     bool random;
     int delay;
+    int w;
 } options;
 
 options* getcmdline(int argc, char* argv[])
@@ -47,9 +49,10 @@ options* getcmdline(int argc, char* argv[])
     opts->nthreads = "1-1";
     opts->delay = 0;
     opts->random = false;
+    opts->w = 21;
 
     int opt;
-    while ((opt = getopt(argc, argv, "hb:t:rd:")) != -1) {
+    while ((opt = getopt(argc, argv, "hb:t:rd:w:")) != -1) {
         switch (opt) {
             case 'h':
                 print_help(argv[0]);
@@ -65,6 +68,8 @@ options* getcmdline(int argc, char* argv[])
                 break;
             case 'd':
                 opts->delay = atoi(optarg);
+            case 'w':
+                opts->w = atoi(optarg);
         }
     }
     return opts;
@@ -78,7 +83,8 @@ void main(int argc, char* argv[])
     options* opts = getcmdline(argc, argv);
 
     char* cmd;
-    int out = asprintf(&cmd, "./mlc --loaded_latency -e -b%s -k%s -d%d %s", opts->size, opts->nthreads, opts->delay, (opts->random)?"-r":"");
+    int readWrite = opts->w;
+    int out = asprintf(&cmd, "./mlc --loaded_latency -e -W%d -b%s -k%s -d%d %s", readWrite, opts->size, opts->nthreads, opts->delay, (opts->random)?"-r":"");
 
     DISABLE_PREFETCHER;
     out = system(cmd);

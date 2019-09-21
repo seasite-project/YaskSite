@@ -180,6 +180,7 @@ std::vector<double> bench(double memsize, int repeat)
 int main(int argc, char** argv)
 {
     int repeat    = 20;
+
     if(argc < 2)
     {
         printf("Error, please provide arguments\nUsage : %s [size in MB] [repeat]\n", argv[0]);

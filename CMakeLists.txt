@@ -106,34 +106,34 @@ ExternalProject_Add(yaml-cpp
 
 message(STATUS "Detecting cache sizes")
 #configure cache sizes
-execute_process(COMMAND ${TOOL_DIR}/getCacheInfo.sh "L1d cache" OUTPUT_VARIABLE L1_val OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${TOOL_DIR}/getCacheInfo.sh "L2 cache" OUTPUT_VARIABLE L2_val OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${TOOL_DIR}/getCacheInfo.sh "L3 cache" OUTPUT_VARIABLE L3_val OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${TOOL_DIR}/getMemInfo.sh OUTPUT_VARIABLE MEM_val OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${TOOL_DIR}/threadPerSocket.sh OUTPUT_VARIABLE thread_per_socket_val OUTPUT_STRIP_TRAILING_WHITESPACE)
+#execute_process(COMMAND ${TOOL_DIR}/getCacheInfo.sh "L1d cache" OUTPUT_VARIABLE L1_val OUTPUT_STRIP_TRAILING_WHITESPACE)
+#execute_process(COMMAND ${TOOL_DIR}/getCacheInfo.sh "L2 cache" OUTPUT_VARIABLE L2_val OUTPUT_STRIP_TRAILING_WHITESPACE)
+#execute_process(COMMAND ${TOOL_DIR}/getCacheInfo.sh "L3 cache" OUTPUT_VARIABLE L3_val OUTPUT_STRIP_TRAILING_WHITESPACE)
+#execute_process(COMMAND ${TOOL_DIR}/getMemInfo.sh OUTPUT_VARIABLE MEM_val OUTPUT_STRIP_TRAILING_WHITESPACE)
+#execute_process(COMMAND ${TOOL_DIR}/threadPerSocket.sh OUTPUT_VARIABLE thread_per_socket_val OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-MESSAGE(STATUS "tool dir = ${TOOL_DIR}")
+#MESSAGE(STATUS "tool dir = ${TOOL_DIR}")
 #execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${TOOL_DIR}/yamlParser/IvyBridgeEP_E5-2660v2.yml "memory hierarchy" | grep "level:" | wc -l OUTPUT_VARIABLE numCaches OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy" COMMAND grep "level: " COMMAND cut -d ":" -f 2 COMMAND tr "\n" ";" COMMAND tr -d " \t\n\r" OUTPUT_VARIABLE memHierarchy OUTPUT_STRIP_TRAILING_WHITESPACE)
+#execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy" COMMAND grep "level: " COMMAND cut -d ":" -f 2 COMMAND tr "\n" ";" COMMAND tr -d " \t\n\r" OUTPUT_VARIABLE memHierarchy OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-MESSAGE(STATUS "memory hierarchies = ${memHierarchy}")
+#MESSAGE(STATUS "memory hierarchies = ${memHierarchy}")
 
-list(REMOVE_ITEM memHierarchy "MEM")
+#list(REMOVE_ITEM memHierarchy "MEM")
 
-MESSAGE(STATUS "memory hierarchies = ${memHierarchy}")
-set(loopCtr 0)
-foreach(item ${memHierarchy})
-    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cache per group;ways" OUTPUT_VARIABLE ways OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cache per group;sets" OUTPUT_VARIABLE sets OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cache per group;cl_size" OUTPUT_VARIABLE cl_size OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cores per group" OUTPUT_VARIABLE cores_per_group OUTPUT_STRIP_TRAILING_WHITESPACE)
-    MESSAGE(STATUS "ctr = ${loopCtr}")
-    MATH(EXPR loopCtr "${loopCtr}+1")
-    set(${item} "${cores_per_group};${ways};${sets};${cl_size}" CACHE STRING "${item} cache details (cores per group; ways; sets; cl_size), should be automatically filled")
-endforeach()
+#MESSAGE(STATUS "memory hierarchies = ${memHierarchy}")
+#set(loopCtr 0)
+#foreach(item ${memHierarchy})
+#    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cache per group;ways" OUTPUT_VARIABLE ways OUTPUT_STRIP_TRAILING_WHITESPACE)
+#    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cache per group;sets" OUTPUT_VARIABLE sets OUTPUT_STRIP_TRAILING_WHITESPACE)
+#    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cache per group;cl_size" OUTPUT_VARIABLE cl_size OUTPUT_STRIP_TRAILING_WHITESPACE)
+#    execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cores per group" OUTPUT_VARIABLE cores_per_group OUTPUT_STRIP_TRAILING_WHITESPACE)
+#    MESSAGE(STATUS "ctr = ${loopCtr}")
+#    MATH(EXPR loopCtr "${loopCtr}+1")
+#    set(${item} "${cores_per_group};${ways};${sets};${cl_size}" CACHE STRING "${item} cache details (cores per group; ways; sets; cl_size), should be automatically filled")
+#endforeach()
 
-execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cores per group" OUTPUT_VARIABLE cores_per_group OUTPUT_STRIP_TRAILING_WHITESPACE)
-set(MEM ${cores_per_group} CACHE STRING "MEM details (cores_per_group), should be automatically filled")
+#execute_process(COMMAND ${TOOL_DIR}/yamlParser/yamlParser ${MC_FILE} "memory hierarchy;${loopCtr};cores per group" OUTPUT_VARIABLE cores_per_group OUTPUT_STRIP_TRAILING_WHITESPACE)
+#set(MEM ${cores_per_group} CACHE STRING "MEM details (cores_per_group), should be automatically filled")
 # ./yamlParser ${MC_FILE} "memory hierarchy;0;cache per group;sets"
 # ./yamlParser ${MC_FILE} "memory hierarchy;0;cache per group;cl_size"
 
@@ -150,18 +150,21 @@ set(MEM ${cores_per_group} CACHE STRING "MEM details (cores_per_group), should b
 #set(MEM "${MEM_val_type}" CACHE STRING "MEM size")
 #set(THREAD_PER_SOCKET "${thread_per_socket_val}" CACHE STRING "Threads per socket")
 
-set(CL_SIZE "8")
+#set(CL_SIZE "8")
 
 
 AutodetectHostArchitecture()
 #OptimizeForArchitecture()
 message(STATUS "Target Architecture detected is ${TARGET_ARCHITECTURE}")
+SET(INSTR "AVX")
 
 #convert to YASK codes
 if(TARGET_ARCHITECTURE STREQUAL "knl")
     set(TARGET_ARCH "knl")  # Knights Landing
+    set(INSTR "AVX512")
 elseif(TARGET_ARCHITECTURE STREQUAL "skylake-avx512")
     set(TARGET_ARCH "skx")  # SKYLAKE
+    set(INSTR "AVX512")
 elseif(TARGET_ARCHITECTURE STREQUAL "skylake")
     set(TARGET_ARCH "hsw")  # SKYLAKE-256 or HASWELL
 elseif(TARGET_ARCHITECTURE STREQUAL "haswell" OR TARGET_ARCHITECTURE STREQUAL "broadwell")
@@ -456,16 +459,21 @@ ExternalProject_Add(LDST-bench
     INSTALL_COMMAND ""
 )
 
-
 add_custom_command(TARGET calibrate
     POST_BUILD
     COMMAND ${LIB_TOOL_DIR}/read_mc_file.sh ${LIB_TOOL_DIR}/mc_file.txt
+    COMMAND ${LIB_TOOL_DIR}/isMachineBenchmarkStable.sh
     COMMAND cd ${LIB_TOOL_DIR}/yamlParser && CXX=${CMAKE_CXX_COMPILER_SHORT} LIB_INC=${CMAKE_INSTALL_PREFIX}/include LIBS=${CMAKE_INSTALL_PREFIX}/lib/libyaml-cpp.a make
-    COMMAND mkdir -p ${TEMP_DIR}/bench_results && ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} 1 10 ${TEMP_DIR}/bench_results/bw_load_ratio.txt
-    COMMAND mkdir -p ${TEMP_DIR}/bench_results/latency
-    COMMAND cp -r ${TOOL_DIR}/latency_bench/wrapper/* ${LIB_TOOL_DIR}/MLC/mlc/. && cp ${TOOL_DIR}/latency_bench/latency_scan.sh ${LIB_TOOL_DIR}/MLC/.
-    COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${TEMP_DIR}/bench_results/latency
+    COMMAND mkdir -p ${TEMP_DIR}/bench_results
+    COMMAND ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 1 10 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
+    COMMAND ${LIB_TOOL_DIR}/latency_bench/latency_scan.sh ${TEMP_DIR}/bench_results ${TEMP_DIR}/bench_results/latency
     COMMAND ${LIB_TOOL_DIR}/prefetcher/prefetch_dist.sh ${LIKWID_INCLUDE_DIR} ${LIKWID_LIBRARIES}
+    COMMAND ${LIB_TOOL_DIR}/data_path_bw/measure.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 1 6 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
+
+    #not used
+    #COMMAND mkdir -p ${TEMP_DIR}/bench_results/latency
+    # COMMAND cp -r ${TOOL_DIR}/latency_bench/wrapper/* ${LIB_TOOL_DIR}/MLC/mlc/. && cp ${TOOL_DIR}/latency_bench/latency_scan.sh ${LIB_TOOL_DIR}/MLC/.
+    #COMMAND ${LIB_TOOL_DIR}/MLC/latency_scan.sh ${TEMP_DIR}/bench_results ${LIB_TOOL_DIR}/licences/mlc_lic_agree.txt ${TEMP_DIR}/bench_results/latency
     )
 
 add_dependencies(calibrate LDST-bench)

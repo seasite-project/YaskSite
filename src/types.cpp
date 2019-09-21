@@ -35,7 +35,7 @@ bool EQ_GROUP::finalize()
         int curr_dim = read_grids[i].dim;
         if( ( (curr_dim != 0)&&(curr_dim!=3) ) && (curr_dim!=4) )
         {
-            ERROR_PRINT("Grid Dimension not compatible check : eq. Group %s", name.c_str());
+            ERROR_PRINT("Grid Dimension not compatible check, dimension = %d : eq. Group %s", curr_dim, name.c_str());
             /*ret = false;
             break;*/
         }
@@ -187,13 +187,26 @@ cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheI
     cores=cacheCores;
     if(cores > 1)
     {
-        shared=true;
+        shared = true;
+    }
+    else
+    {
+        shared = false;
     }
 
-    char* lat_file;
-    STRINGIFY(lat_file, "%s/bench_results/latency/%d", TEMP_DIR, cacheId);
+    penalty = 0;
+    POPEN(sysLogFileName, tmp, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;penalty cycles per mem cy\"", TOOL_DIR, mc_file, hierarchy);
+    penalty = readDoubleVar(tmp);
+    printf("%s penalty = %f\n", name.c_str(), penalty);
+    PCLOSE(tmp);
+
+    victim = false;
+    //char* lat_file;
+    //STRINGIFY(lat_file, "%s/bench_results/latency/%d", TEMP_DIR, cacheId);
     readLatency(mc_file);//lat_file);
-    free(lat_file);
+    //free(lat_file);
+    //
+    readBytePerCycle(mc_file);
 
     POPEN(sysLogFileName, tmp, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;prefetch distance\"", TOOL_DIR, mc_file, name.c_str());
     prefetch_cl = readDoubleVar(tmp);
@@ -201,7 +214,41 @@ cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheI
     PCLOSE(tmp);
 }
 
-double cache_info::getLatency(int nthreads)
+double cache_info::getBytePerCycle(int rwRatio, int nthreads)
+{
+    if(bytePerCycle.empty())
+    {
+        return 0;
+    }
+    else
+    {
+        int numRW = (int)bytePerCycle.size();
+        int numThreads = (int)bytePerCycle[0].size();
+
+        if(rwRatio > numRW)
+        {
+            rwRatio = numRW;
+        }
+        if(rwRatio < 1)
+        {
+            rwRatio = 1;
+            //ERROR_PRINT("Wrong rw ratio");
+        }
+
+        if(nthreads > numThreads)
+        {
+            nthreads = numThreads;
+        }
+        if(nthreads < 1)
+        {
+            ERROR_PRINT("Could not retrieve bandwidth informations\n");
+        }
+        return bytePerCycle[rwRatio-1][nthreads-1];
+    }
+}
+
+
+double cache_info::getLatency(int rwRatio, int nthreads)
 {
     if(latency.empty())
     {
@@ -209,33 +256,134 @@ double cache_info::getLatency(int nthreads)
     }
     else
     {
-        if(latency.size()==1)
+        int numRW = (int)latency.size();
+        if(rwRatio > numRW)
         {
-            //Increasing thread should not change anything
-            //for eg. in caches
-            return latency[0];
+            rwRatio = numRW;
+        }
+        if(rwRatio < 1)
+        {
+            rwRatio = 1;
+            //ERROR_PRINT("Wrong rw ratio");
+        }
+        return latency[rwRatio-1][nthreads-1];
+    }
+}
+
+void cache_info::readBytePerCycle(char* mc_file)
+{
+    FILE *file;
+    char *sysLogFileName = NULL;
+
+    bool success = false;
+
+    if(hierarchy == 0)
+    {
+        success = true;
+    }
+    else if(isMEM)
+    {
+        POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;MEM;1;LDST;BW\"| sed -e \"s@GB/s@@g\" | sed -e \"s@\\[@@g\" | sed -e \"s@\\]@@g\"", TOOL_DIR, mc_file);
+        char *bw_str = readStrVar(file);
+        std::vector<double> bw_table = split_double(bw_str, ',');
+        PCLOSE(file);
+        if(!std::string(bw_str).empty())
+        {
+            success=true;
+        }
+
+        POPEN(sysLogFileName, file, "%s/getFreq.sh %s", TOOL_DIR, mc_file);
+        double cpu_freq = readDoubleVar(file);
+        PCLOSE(file);
+
+        printf("MEM values\n");
+        for(unsigned i=0; i<bw_table.size(); ++i)
+        {
+            printf("%f\n",bw_table[i]/(cpu_freq));
+            bytePerCycle.push_back({bw_table[i]/(cpu_freq)});
+        }
+
+        free(bw_str);
+    }
+    else
+    {
+        if(!shared)
+        {
+
+            POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;upstream throughput;0\" |  grep -Eo '[+-]?[0-9]+([.][0-9]+)?'", TOOL_DIR, mc_file, hierarchy);
+            double value = readDoubleVar(file);
+
+            if(value>0)
+            {
+                success = true;
+            }
+
+            printf("%s hierarchy = %d values\n %f\n", name.c_str(),hierarchy, value);
+            bytePerCycle.push_back({value});
+            PCLOSE(file);
+
+            POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;upstream throughput;1\"", TOOL_DIR, mc_file, hierarchy);
+            std::string duplexity(readStrVar(file));
+            printf("check duplexity = %s\n", duplexity.c_str());
+            if(duplexity.find("half-duplex") == std::string::npos)
+            {
+                ERROR_PRINT("Currently %s cache with only half-duplexity treated, setting the cache as half-duplex", name.c_str());
+            }
+            PCLOSE(file);
         }
         else
         {
-            return latency[nthreads-1];
+            POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;data path bw\" | wc -l", TOOL_DIR, mc_file, name.c_str());
+            int numRW = readIntVar(file);
+            PCLOSE(file);
+            printf("Num rw = %d\n", numRW);
+            printf("%s values\n", name.c_str());
+            for(int i=1; i<=numRW; ++i)
+            {
+                success = true;
+                POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;data path bw;%d\" | sed -e \"s@B/cy@@g\" | sed -e \"s@\\[@@g\" | sed -e \"s@\\]@@g\"", TOOL_DIR, mc_file, name.c_str(), i);
+                char* bw_str = readStrVar(file);
+                bytePerCycle.push_back(split_double(bw_str, ','));
+                for(int j=0; j<(bytePerCycle.back()).size(); ++j)
+                {
+                    printf("%f \t", bytePerCycle.back()[j]);
+                }
+                printf("\n");
+                PCLOSE(file);
+                free(bw_str);
+            }
         }
+    }
+    if(!success)
+    {
+        ERROR_PRINT("Missing bandwidth informations, please go to build directory of YASKSITE and execute 'make calibrate', and make sure cache upstream throughputs are entered");
+
     }
 }
 
 void cache_info::readLatency(char* mc_file)
 {
-    bool success = true;
     FILE *file;
     char *sysLogFileName = NULL;
-    POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;latency\" | sed -e \"s@cy@@g\" | sed -e \"s@\\[@@g\" | sed -e \"s@\\]@@g\"", TOOL_DIR, mc_file, name.c_str());
-    char* latency_str = readStrVar(file);
-    //success = readTable(file, latency, 1, cores, 1, 1);
-    latency=split_double(latency_str, ',');
+    POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;latency\" | wc -l", TOOL_DIR, mc_file, name.c_str());
+    int numRW = readIntVar(file);
     PCLOSE(file);
 
-    if(!success)
+    for(int i=1; i<=numRW; ++i)
     {
-        printf("Latency measurements not done, please go to build directory of YASKSITE and execute 'make calibrate'\n");
+        bool success = true;
+        POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;latency;%d\" | sed -e \"s@ns@@g\" | sed -e \"s@\\[@@g\" | sed -e \"s@\\]@@g\"", TOOL_DIR, mc_file, name.c_str(), i);
+        char* latency_str = readStrVar(file);
+        //success = readTable(file, latency, 1, cores, 1, 1);
+        latency.push_back(split_double(latency_str, ','));
+
+        PCLOSE(file);
+
+        if(!success)
+        {
+            printf("Latency measurements not done, please go to build directory of YASKSITE and execute 'make calibrate'\n");
+
+        }
     }
 }
 
@@ -274,10 +422,62 @@ void initializeCaches()
     }
 
     CACHES.push_back(cache_info(numCaches, mc_file, true));
-    free(mc_file);
+
+    for(int cacheId=0; cacheId<numCaches; ++cacheId)
+    {
+        //check for any victim caches
+        POPEN(sysLogFileName, tmp, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;cache per group;victims_to\"", TOOL_DIR, mc_file, cacheId);
+        char* vict_cache = readStrVar(tmp);
+        if(strcmp(vict_cache,"L1")==0)
+        {
+            CACHES[0].victim=true;
+        }
+        else if(strcmp(vict_cache,"L2")==0)
+        {
+            CACHES[1].victim=true;
+        }
+        else if(strcmp(vict_cache,"L3")==0)
+        {
+            CACHES[2].victim=true;
+        }
+
+        PCLOSE(tmp);
+    }
+
+#if 1
+    //remove latency of previous cache from current one
+    for(int cacheId=numCaches; cacheId>=1; --cacheId)
+    {
+        cache_info* currCache = &(CACHES[cacheId]);
+        cache_info* prevCache = &(CACHES[cacheId-1]);
+
+/*        int ctr=1;
+        //because the currCache is loaded to prev-prev
+        while(prevCache->victim && ((cacheId-1-ctr)>=0))
+        {
+            prevCache = &(CACHES[cacheId-1-ctr]);
+            ++ctr;
+        }
+*/
+        for(int rw=0; rw<(int)(currCache->latency.size()); ++rw)
+        {
+            for(int thread=0; thread<(int)(currCache->latency[rw].size()); ++thread)
+            {
+                if(currCache->latency[rw][thread] > prevCache->latency[rw][thread])
+                {
+                    currCache->latency[rw][thread] =  currCache->latency[rw][thread] - prevCache->latency[rw][thread];
+                }
+            }
+        }
+    }
+#endif
 
     printf("prefetch dist L1 = %f\n", CACHES[0].prefetch_cl);
     printf("prefetch dist MEM = %f\n", CACHES[3].prefetch_cl);
+
+    free(mc_file);
+
+
 }
 
 cache_info CACHE(char* str)

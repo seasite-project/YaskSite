@@ -76,13 +76,18 @@ struct cache_info
     int ways;
     int cl_size;
     int cores;
-    std::vector<double> latency; //latency in ns as a function of threads
+    std::vector<std::vector<double>> latency; //latency in ns as a function of threads and ld:st pattern
+    std::vector<std::vector<double>> bytePerCycle; //bytePerCycle as a function of threads and ld:st pattern
     double sf;
     double prefetch_cl;
     int bytePerWord;
     int isMEM;
-    double getLatency(int threads);
+    double getLatency(int rwRatio, int threads);
+    double getBytePerCycle(int rwRatio, int threads);
     void readLatency(char* file);
+    void readBytePerCycle(char* file);
+    bool victim;
+    double penalty;
     //cache_info(char* name_, char* details_, int hierarchy_, int set_size=-1, int ways=-1, std::vector<double> latency_={}, int prefetch_cl_=0, double sf_=1, int bytePerWord=8);
     cache_info(int hierarchy_, char *mc_file, int isMEM_=false);
 

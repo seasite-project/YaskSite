@@ -151,6 +151,8 @@ char** str_split(char* a_str, const char a_delim);
 //x------z--------------y
 double interpolate(double f_y, double f_x, double y, double x, double z);
 
+int tolCeil(double num, double tol=0.24);
+
 #define DOUBLE(a)\
     static_cast<double>(a)
 

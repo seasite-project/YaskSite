@@ -79,6 +79,9 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     dx = -1;
     dy = -1;
     dz = -1;
+    bx_min = 4;
+    by_min = 4;
+    bz_min = 32;
     s = -1;
     maxNumStencils = -1;
     totalTime = 0;
@@ -96,6 +99,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     prefetch = prefetch_;
     cacheStale = false;
     dl_handle = NULL;
+    cpu_freq = 0;
 
     dynInit = &YASKinit;
     dynFinalize = &YASKfinalize;
@@ -274,12 +278,22 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
 
     models.clear();
 
+    char *mc_file_loc;
+    STRINGIFY(mc_file_loc, "%s/mc_file.txt", TOOL_DIR);
+
+    FILE *file = fopen(mc_file_loc, "r");
+    char *mc_file = readStrVar(file);
+    fclose(file);
+    free(mc_file_loc);
+
+
     //find cpu frequency
     FILE *cpuFreqFile;
-    POPEN(sysLogFileName, cpuFreqFile, "%s/getFreq.sh", TOOL_DIR);
-    double cpu_freq = readDoubleVar(cpuFreqFile);
-    cpu_freq=cpu_freq/1000; //Convert to GHz
+    POPEN(sysLogFileName, cpuFreqFile, "%s/getFreq.sh %s", TOOL_DIR, mc_file);
+    cpu_freq = readDoubleVar(cpuFreqFile);
+    cpu_freq=cpu_freq; //Convert to GHz
     PCLOSE(cpuFreqFile);
+    free(mc_file);
 
     printf("CPU freq = %f GHz\n", cpu_freq);
     for(int i=0; i<numMainEqns; ++i)
@@ -355,10 +369,14 @@ void yaskSite::cleanDir()
     "make -C %s EXTRA_CXXFLAGS=-fPIC stencil=%s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=8 SUB_BLOCK_LOOP_INNER_MODS=\"%s\" SUB_BLOCK_LOOP_OUTER_MODS=\"%s\" likwid=%d EXTRA_LOOP_OPTS=\"-innerMod '_Pragma(\\\"ivdep\\\") _Pragma(\\\"unroll(4)\\\")'\"", yaskDir, stencil, arch, fold_x, fold_y, fold_z, (prefetch)?"prefetch(L2)":"", path, (int) buildWithLikwid\
 */
 
+
+#define BUILD_CMD\
+    "make -C %s EXTRA_CXXFLAGS=\"-fPIC -D__PURE_INTEL_C99_HEADERS__\" %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=8 SUB_BLOCK_LOOP_INNER_MODS=\"%s\" SUB_BLOCK_LOOP_OUTER_MODS=\"%s\" BLOCK_LOOP_OPTS=\"-dims 'bw,bx,by,bz' -ompConstruct ''\" layout_txyz=Layout_1234 layout_twxyz=Layout_12345 likwid=%d halo=%d", yaskDir, stencil_with_radius, arch, fold_x, fold_y, fold_z, (prefetch)?"prefetch(L2)":"", path, (int) buildWithLikwid, radius\
+
+/*
 #define BUILD_CMD\
     "make -C %s EXTRA_CXXFLAGS=\"-fPIC -D__PURE_INTEL_C99_HEADERS__\" %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=8 SUB_BLOCK_LOOP_INNER_MODS=\"%s\" SUB_BLOCK_LOOP_OUTER_MODS=\"%s\" layout_txyz=Layout_1234 likwid=%d halo=%d", yaskDir, stencil_with_radius, arch, fold_x, fold_y, fold_z, (prefetch)?"prefetch(L2)":"", path, (int) buildWithLikwid, radius\
-
-
+*/
 void yaskSite::build()
 {
     SYNC_WITH_DIM(fold_z, fold_y, fold_x, "fold");
@@ -650,25 +668,54 @@ void yaskSite::setDefaultBlock()
     }
 }
 
-//not used now
-//This function assumes LC all are satisfied 
-//only thread division would be done
-bool yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_ilc)
+int makeGoodNumber(int bigNum, int smallNum, int totCtr)
+{
+
+    int ctr = 0;
+    double minRem = bigNum%smallNum;
+    int min_smallNum = smallNum;
+
+    //make n_scale_down_olc good multiple of ry
+    while((bigNum%smallNum != 0)&&(ctr<totCtr))
+    {
+        ++smallNum;
+        ++ctr;
+        double currRem = static_cast<double>(bigNum%smallNum);
+
+        printf("smallNum = %d, bigNum = %d, currRem = %f\n", smallNum, bigNum, currRem);
+        if(currRem < minRem)
+        {
+            min_smallNum = smallNum;
+            minRem = currRem;
+        }
+    }
+
+    return min_smallNum;
+}
+
+//Returns threads in x,y, and z dimension
+std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_ilc, char* temporal_str)
 {
     blockUpdated = true;
     bool found = false;
+    //First element flag for checking if blocking carried out, the rest three
+    //are thread count in each 3 dimensions
+    std::vector<int> retThreads(4,1);
+    retThreads[0] = 0;
 
     if(dim==1)
     {
         bx = 1;
         by = 1;
         bz = static_cast<int>(round(threadPerBlock*rz_p/((double)nthreads)));
+        found = true;
+        retThreads[3] = nthreads;
     }
     else if(dim==2)
     {
         bx = 1;
-        int by_min = std::min(ry, (16 + 4*static_cast<int>(fold_y/4.0)*fold_y));
-        int bz_min = std::min(rz, 128 + 0*static_cast<int>(fold_z/4.0)*fold_z);
+        by_min = std::min(ry, (16 + 4*static_cast<int>(fold_y/4.0)*fold_y));
+        bz_min = std::min(rz, 128 + 0*static_cast<int>(fold_z/4.0)*fold_z);
 
         //Similar to OMP on outer-most loop
         //TODO inner shouldn't in priciple hurt in yask if loop size is big
@@ -692,10 +739,11 @@ bool yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_il
         }
 
         int curr_by, curr_bz;
-        std::vector<int> reminder_size;
+        std::vector<double> reminder_size;
         std::vector<int> select_by;
         std::vector<int> select_bz;
-
+        std::vector<int> select_ty;
+        std::vector<int> select_tz;
 
         while(!found)
         {
@@ -714,6 +762,8 @@ bool yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_il
                     reminder_size.push_back( ((curr_by*out)-ry_p)*rz_p + (curr_bz*in-rz_p) );
                     select_by.push_back(curr_by);
                     select_bz.push_back(curr_bz);
+                    select_ty.push_back(out);
+                    select_tz.push_back(in);
                     found = true;
                     //select this break
                     //break;
@@ -739,6 +789,8 @@ bool yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_il
         //The first one should have lowest reminder
         by=select_by[perm[0]];
         bz=select_bz[perm[0]];
+        retThreads[2] = select_ty[perm[0]];
+        retThreads[3] = select_tz[perm[0]];
    }
     else if(dim==3)
     {
@@ -756,9 +808,9 @@ bool yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_il
 
         //int bx_min = std::min(rx, 16 + static_cast<int>(fold_x/4.0)*fold_x);
         //int by_min = std::min(ry, 8 + 2*static_cast<int>(fold_y/4.0)*fold_y);
-        int bx_min = std::min(rx, std::max(4,static_cast<int>(3*radius_x)));
-        int by_min = std::min(ry, std::max(4,static_cast<int>(3*radius_y)));
-        int bz_min = std::min(rz, 64 + 8*static_cast<int>(fold_z/4.0)*fold_z);
+        bx_min = std::min(rx, std::max(5,static_cast<int>(3*radius_x)));
+        by_min = std::min(ry, std::max(5,static_cast<int>(3*radius_y)));
+        bz_min = std::min(rz, 64 + 8*static_cast<int>(fold_z/4.0)*fold_z);
 
         printf("min %dx%dx%d\n",bx_min,by_min,bz_min);
 
@@ -767,10 +819,15 @@ bool yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_il
         std::vector<int> middle_threads;
         std::vector<int> inner_threads;
 
-        std::vector<int> reminder_size;
+        std::vector<double> reminder_size;
         std::vector<int> select_bx;
         std::vector<int> select_by;
         std::vector<int> select_bz;
+
+        std::vector<int> select_tx;
+        std::vector<int> select_ty;
+        std::vector<int> select_tz;
+
 
         while(!found)
         {
@@ -801,11 +858,14 @@ bool yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_il
                 }
             }
 
-            printf("olc_scale = %d, ilc_scale = %d\n", n_scale_down_olc, n_scale_down_ilc);
             //find good multiple of scale factor
             std::vector<int> outer_multiple;
             std::vector<int> inner_multiple;
 
+            //make n_scale_down_olc good multiple of ry
+            n_scale_down_olc = makeGoodNumber(ry_p, n_scale_down_olc, 20);
+
+            printf("olc_scale = %d, ilc_scale = %d\n", n_scale_down_olc, n_scale_down_ilc);
             for(int i=1; i<=n_scale_down_olc; ++i)
             {
                 /*In the order outer has more threads first*/
@@ -866,10 +926,28 @@ bool yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_il
                         printf("out_b = %d, middle_b = %d, in_b =  %d\n", curr_bx, curr_by, curr_bz);
                         //will have to rank based on reminder; this makes to select the
                         //block with good load balancing
-                        reminder_size.push_back(  ((curr_bx*out)-rx_p)*ry_p*rz_p + ((curr_by*out)-ry_p)*rz_p + (curr_bz*in-rz_p) );
+                        //reminder_size.push_back(  std::abs(((curr_bx*out)-rx_p)*ry_p*rz_p + ((curr_by*middle)-ry_p)*rz_p + (curr_bz*in-rz_p)) );
+                        //latency added to z dimension to make sure it is
+                        //hurtful
+                        cache_info temporalCache = CACHE(temporal_str);
+                        double lat = temporalCache.getLatency(1,nthreads);
+                        double cy_lup = 5; //just an assumption
+                        //2.2 freq., assumption
+                        double lup_per_lat = lat*2.2/cy_lup;
+                        double lat_penalty = 0;
+                        if(in>1)
+                        {
+                            lat_penalty = lup_per_lat/curr_bz;
+                        }
+                        reminder_size.push_back(  std::abs(((curr_bx*out)-rx_p)/rx_p + ((curr_by*middle)-ry_p)/ry_p + (curr_bz*in-rz_p)/rz_p + lat_penalty) );
+                        printf("lat_penalty = %f, reminder = %f\n", lat_penalty, reminder_size.back());
                         select_bx.push_back(curr_bx);
                         select_by.push_back(curr_by);
                         select_bz.push_back(curr_bz);
+
+                        select_tx.push_back(out);
+                        select_ty.push_back(middle);
+                        select_tz.push_back(in);
 
                         //select this
                         found = true;
@@ -896,17 +974,43 @@ bool yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_scale_down_il
         //select the one with lowest reminder
         std::stable_sort(perm.begin(), perm.end(), [&] (const int &a, const int &b) { return (reminder_size[a] < reminder_size[b]); } );
 
-        bx = select_bx[perm[0]];
-        by = select_by[perm[0]];
-        bz = select_bz[perm[0]];
+        int lowest_rem = (int)reminder_size[perm[0]];
+        int lowest_threads = select_tx[perm[0]]*select_ty[perm[0]]*select_tz[perm[0]];
+        int highest_bz = select_bz[perm[0]];
+        int idx=0;
+        int select_idx=0;
+        while((idx<(int)reminder_size.size()) && ((int)reminder_size[perm[idx]]==lowest_rem))
+        {
+            int curr_threads = select_tx[perm[idx]]*select_ty[perm[idx]]*select_tz[perm[idx]];
+            int curr_bz = select_bz[perm[idx]];
+
+            printf("idx = %d, size = %d, curr_bz = %d, highest_bz = %d\n", idx, (int)reminder_size.size(), curr_bz, highest_bz);
+            if((curr_threads < lowest_threads) && (curr_bz >= highest_bz))
+            {
+                select_idx = idx;
+                lowest_threads = curr_threads;
+                highest_bz = curr_bz;
+            }
+            idx++;
+        }
+
+        printf("settled \n");
+        bx = select_bx[perm[select_idx]];
+        by = select_by[perm[select_idx]];
+        bz = select_bz[perm[select_idx]];
+
+        retThreads[1] = select_tx[perm[select_idx]];
+        retThreads[2] = select_ty[perm[select_idx]];
+        retThreads[3] = select_tz[perm[select_idx]];
 
         if(!found)
         {
             WARNING_PRINT("Ideal parameter not found- performance degradation to be expected");
         }
     }
+    retThreads[0] = found;
 
-    return found;
+    return retThreads;
 }
 
 void yaskSite::setDefaultSubBlock()
@@ -954,11 +1058,14 @@ void yaskSite::setDefaultSubBlock()
 #define f(b_)\
     (ry_p*rz_p)/(n*((double)b_))\
 
-bool yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_OBC_inp, double sf_IBC_inp)
+std::vector<int> yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_OBC_inp, double sf_IBC_inp, char* temporal_str)
 {
+    bool blocked = false;
+    std::vector<int> retThreads(4,1);
+
     if(dim==1)
     {
-        return true;
+        blocked = true;
     }
 
     else if(dim==2)
@@ -981,29 +1088,27 @@ bool yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_OBC_inp, dou
         if(n_z>1)
         {
             bz = static_cast<int>(round(rz_p/n));
+            retThreads[3] = nthreads;
             setDefaultSubBlock();
             INFO_PRINT("Found: bx=%d by=%d, bz=%d", bx, by, bz);
         }
         else
         {
             //setDefaultBlock();
-            setDefaultBlock_min_rem();
+            retThreads = setDefaultBlock_min_rem(1,1,temporal_str);
             setDefaultSubBlock();
             INFO_PRINT("Spatial Blocking not carried out, dim fits in cache");
         }
 
-        return true;
+        blocked = true;
     }
     else
     {
         //don't make bz very small since its the inner dimension
-        int by_min = std::min(ry_p, 4 + 2*static_cast<int>(fold_y/8.0)*fold_y);
-        int bz_min = std::min(rz_p, 64 + 16*static_cast<int>(fold_z/8.0)*fold_z);
+        by_min = std::min(ry_p, 4 + 2*static_cast<int>(fold_y/8.0)*fold_y);
+        bz_min = std::min(rz_p, 64 + 16*static_cast<int>(fold_z/8.0)*fold_z);
 
         printf("spatial min %dx%dx%d\n",0,by_min,bz_min);
-
-
-        bool blocked = false;
 
         double layer_outer;// = (2*radius+1+(s-1)); //layer width
         getMaxLayers(layer_outer, stencilDetails, OUTER);
@@ -1018,6 +1123,7 @@ bool yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_OBC_inp, dou
         double sf_OBC = (sf_OBC_inp < 0) ? OBC.sf : sf_OBC_inp;
         double sf_IBC = (sf_IBC_inp < 0) ? IBC.sf : sf_IBC_inp;
 
+        printf("check OBC words = %f, sf = %f, shared = %s\n", OBC.words, sf_OBC, OBC.shared?"shared":"not shared");
         //TODO: determine how many threads are currently sharing the resources
         //if its in shared mode
         double OBC_words = (OBC.shared)?(OBC.words*sf_OBC)/nthreads:(OBC.words*sf_OBC);
@@ -1044,7 +1150,11 @@ bool yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_OBC_inp, dou
         if(n_z>1)
         {
             printf("n_z = %f, start = %d\n", n_z, bz_ratio_start);
-            bool found = setDefaultBlock_min_rem(static_cast<int>(ceil(n_z)), static_cast<int>(bz_ratio_start));
+            retThreads = setDefaultBlock_min_rem(static_cast<int>(ceil(n_z)), static_cast<int>(bz_ratio_start), temporal_str);
+            if(retThreads[0] == 1)
+            {
+                blocked = true;
+            }
             setDefaultSubBlock();
             /*
             for(int bz_ratio = bz_ratio_start; bz_ratio <= bz_ratio_end; ++bz_ratio)
@@ -1060,17 +1170,11 @@ bool yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_OBC_inp, dou
                 }
             }*/
 
-            if(found)
-            {
-                blocked = true;
-               // break;
-            }
-
             if(!blocked)
             {
                 INFO_PRINT("Spatial Blocking not carried out, size smaller than minimums");
                 //setDefaultBlock();
-                setDefaultBlock_min_rem();
+                retThreads = setDefaultBlock_min_rem(1,1,temporal_str);
                 setDefaultSubBlock();
             }
             else
@@ -1089,13 +1193,13 @@ bool yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_OBC_inp, dou
         {
             INFO_PRINT("Spatial Blocking not carried out, dim fits in cache");
             //setDefaultBlock();
-            setDefaultBlock_min_rem();
+            retThreads = setDefaultBlock_min_rem(1,1,temporal_str);
             setDefaultSubBlock();
             blocked = true;
         }
-
-        return blocked;
     }
+    retThreads[0]=blocked;
+    return retThreads;
 }
 
 bool yaskSite::temporalTuner(char  *cacheStr, double sf_inp)
@@ -1105,10 +1209,30 @@ bool yaskSite::temporalTuner(char  *cacheStr, double sf_inp)
         WARNING_PRINT("Temporal blocking might degrade performance, since temporal dimension is 1");
     }
 
-    int rx_min = std::min(dx,30);
-    int ry_min = std::min(dy,16);
+    int rx_min = std::min(dx,20);
+    int min_y = 16;
+    if(nthreads == 3 || nthreads ==5)
+    {
+        min_y = 15;
+    }
+    else if(nthreads == 7)
+    {
+        min_y = 14;
+    }
+    else if(nthreads == 9)
+    {
+        min_y = 9;
+    }
+    else if( (nthreads != 1) && ((nthreads%2) != 0) )
+    {
+        min_y = 10; //put it as a low value so it can cut in other dimensions if required
+    }
+
+
+    int ry_min = std::min(dy,min_y);
     int rz_min = std::min(dz,128);
-/*
+
+        /*
     if(dim<3)
     {
         ry_min = 128;
@@ -1196,6 +1320,66 @@ bool yaskSite::temporalTuner(char  *cacheStr, double sf_inp)
         }
     }
 
+    //make rt good multiple of nthreads
+    //1. find multiples of nthreads
+    std::vector<int> outer_threads;
+    std::vector<int> middle_threads;
+    std::vector<int> inner_threads;
+    for(int i=nthreads; i>=1; --i)
+    {
+        int out=i;
+        int rest=nthreads/i;
+
+        if(out*rest == nthreads)
+        {
+            for(int j=rest; j>=1; --j)
+            {
+                int middle=j;
+                int in = rest/j;
+
+                if(middle*in == rest)
+                {
+                    outer_threads.push_back(out);
+                    middle_threads.push_back(middle);
+                    inner_threads.push_back(in);
+                }
+            }
+        }
+    }
+
+    double radius_x, radius_y;
+    getRadiusFolded(radius_x, this, x);
+    getRadiusFolded(radius_y, this, y);
+
+    bx_min = std::min(rx, std::max(5,static_cast<int>(3*radius_x)));
+    by_min = std::min(ry, std::max(5,static_cast<int>(3*radius_y)));
+    bz_min = std::min(rz, 64 + 8*static_cast<int>(fold_z/4.0)*fold_z);
+
+    for(int i=0; i<(int)outer_threads.size(); ++i)
+    {
+        printf("checking %d x %d x %d\n", outer_threads[i], middle_threads[i], inner_threads[i]);
+        int out_rem = rx%outer_threads[i];
+        int mid_rem = ry%middle_threads[i];
+        int in_rem = rz%inner_threads[i];
+
+        if((out_rem < 6) && (mid_rem < 12) && (in_rem < 20))
+        {
+            if( (((rx-out_rem)>=rx_min) && ((ry-mid_rem)>=ry_min)) && ((rz-in_rem)>=rz_min) )
+            {
+                if( ((rx-out_rem)/outer_threads[i] >= bx_min) && ((ry-mid_rem)/middle_threads[i] >= by_min) && ((rz-in_rem)/inner_threads[i] >= bz_min) )
+                {
+                    rx = rx-out_rem;
+                    rx_p = rx;
+                    ry = ry-mid_rem;
+                    ry_p = ry;
+                    rz = rz-in_rem;
+                    rz_p = rz;
+
+                    break;
+                }
+            }
+        }
+    }
     //Right now we use all the time available for
     //blocking; might need to restrict it;
     //to say max 50;
@@ -1211,8 +1395,29 @@ bool yaskSite::blockTuner(char* temporalCache, char* spatialOBC, char* spatialIB
 {
     if(temporalTuner(temporalCache, sf_temporal))
     {
-        if(spatialTuner(spatialOBC, spatialIBC, sf_OBC, sf_IBC))
+        std::vector<int> retThreads = spatialTuner(spatialOBC, spatialIBC, sf_OBC, sf_IBC, temporalCache);
+
+        if(retThreads[0]==1)
         {
+            int new_rz = retThreads[3]*bz;
+            int new_ry = retThreads[2]*by;
+            int new_rx = retThreads[1]*bx;
+
+            if(std::abs(new_rz-dz_p)<10)
+            {
+                new_rz=rz;
+            }
+            if(std::abs(new_ry-dy_p)<10)
+            {
+                new_ry=ry;
+            }
+            if(std::abs(new_rx-dx_p)<10)
+            {
+                new_rx=rx;
+            }
+
+            //make regional block multiple of block and nthreads
+            setRegion(new_rz, new_ry, new_rx, dt, false);
             return true;
         }
     }
@@ -1729,6 +1934,47 @@ std::vector<double> yaskSite::getECM(bool data)
     }
 }
 
+std::vector<double> yaskSite::getECM_boundary(bool data)
+{
+    if(data)
+    {
+        return overallModel.ECM_boundary;
+    }
+    else
+    {
+        return overallModel.ECM_boundary_cy;
+    }
+}
+
+std::vector<double> yaskSite::getECM_prefetch(bool data)
+{
+    if(data)
+    {
+        return overallModel.ECM_prefetch;
+    }
+    else
+    {
+        return overallModel.ECM_prefetch_cy;
+    }
+}
+
+std::vector<double> yaskSite::getECM_assoc(bool data)
+{
+    if(data)
+    {
+        return overallModel.ECM_assoc;
+    }
+    else
+    {
+        return overallModel.ECM_assoc_cy;
+    }
+}
+
+std::vector<double> yaskSite::getECM_latency()
+{
+    return overallModel.ECM_latency;
+}
+
 std::vector<double> yaskSite::getECM_validate(bool data)
 {
     if(data)
@@ -1744,6 +1990,21 @@ std::vector<double> yaskSite::getECM_validate(bool data)
 double yaskSite::getPerfECM()
 {
     return overallModel.getPerf();
+}
+
+double yaskSite::getECM_BurstPenalty()
+{
+    return overallModel.ECM_penalty;
+}
+
+double yaskSite::getCpuFreq()
+{
+    return cpu_freq;
+}
+
+std::vector<double> yaskSite::getSaturation()
+{
+    return overallModel.getSaturation();
 }
 
 void yaskSite::write2dFile(const char *filename, char* grid_name, char* dim_str, bool halo)

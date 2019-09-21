@@ -11,6 +11,7 @@
 #include "perfModel.h"
 #include <string.h>
 
+int makeGoodNumber(int bigNum, int smallNum, int ctr);
 
 struct Grid;
 
@@ -67,6 +68,9 @@ class yaskSite
         int dy_p;
         int dz_p;
 
+        int bx_min;
+        int by_min;
+        int bz_min;
 
         int s; //If there is dependency within a stencil;
                // a single sweep of stencil calculates for 's' timesteps
@@ -76,6 +80,8 @@ class yaskSite
         int totalTime; //total time steps done
         int radius;
         int dim;
+
+        double cpu_freq;
 
         bool buildWithLikwid;
         //current options
@@ -112,7 +118,7 @@ class yaskSite
         //if user does not define
         void setDefaultRegion();
         void setDefaultBlock();
-        bool setDefaultBlock_min_rem(int n_scale_down_olc=1, int n_scale_down_ilc=1);
+        std::vector<int> setDefaultBlock_min_rem(int n_scale_down_olc=1, int n_scale_down_ilc=1, char *temporal_str="MEM");
         void setDefaultSubBlock();
         bool needUpdate();
         void assignUpdate(bool val);
@@ -168,7 +174,7 @@ class yaskSite
         void setThread(int nthreads_, int threadPerBlock_=1, bool resetOthers=true);
 
         //tunes block size and subBlock size
-        bool spatialTuner(char* OBC_str, char* IBC_str="L2", double sf_OBC=-1, double sf_IBC=-1);
+        std::vector<int> spatialTuner(char* OBC_str, char* IBC_str="L2", double sf_OBC=-1, double sf_IBC=-1, char* temporal_str="MEM");
 
         bool temporalTuner(char* cache, double sf=-1);
 
@@ -219,10 +225,19 @@ class yaskSite
         void calcECM(bool validate=false);
         void printECM();
         contribution getECMContributions();
+
         std::vector<double> getECM(bool data=false);
+        std::vector<double> getECM_boundary(bool data=false);
+        std::vector<double> getECM_prefetch(bool data=false);
+        std::vector<double> getECM_assoc(bool data=false);
+        std::vector<double> getECM_latency();
+
         std::vector<double> getECM_validate(bool data=false);
 
         double getPerfECM();
+        double getECM_BurstPenalty();
+        std::vector<double> getSaturation();
+        double getCpuFreq();
 
         void write2dFile(const char *filename, char* grid_name, char* dim_str, bool halo);
 };

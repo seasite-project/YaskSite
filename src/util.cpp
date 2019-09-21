@@ -5,6 +5,7 @@
 #include "print.h"
 #include "macros.h"
 #include <iostream>
+#include <math.h>
 
 void systemCallUtil(char* cmd, char* sysLogFileName)
 {
@@ -80,7 +81,7 @@ int find_string(std::vector<const char*> arr, const char* val)
 
 int readIntVar(FILE* filename)
 {
-    int var;
+    int var = 0;
     fscanf(filename, "%d", &var);
 
     return var;
@@ -88,7 +89,7 @@ int readIntVar(FILE* filename)
 
 double readDoubleVar(FILE* filename)
 {
-    float var;
+    float var=0;
     fscanf(filename, "%f", &var);
 
     return ((double)var);
@@ -224,4 +225,25 @@ char** str_split(char* a_str, const char a_delim)
 double interpolate(double f_y, double f_x, double y, double x, double z)
 {
     return ( ( (z-x)*( (f_y-f_x)/(y-x) ) ) + f_x );
+}
+
+int tolCeil(double num, double tol)
+{
+    int highInt = static_cast<int>(num)+1;
+    int lowInt = static_cast<int>(num);
+
+    if((highInt-num) < tol)
+    {
+        num = highInt;
+    }
+    else if((num-lowInt) < tol)
+    {
+        num = lowInt;
+    }
+    else
+    {
+        num = ceil(num);
+    }
+
+    return static_cast<int>(num);
 }

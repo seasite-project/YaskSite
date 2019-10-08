@@ -15,13 +15,13 @@ struct my_option
 
 char** str_split(char* a_str, const char a_delim);
 std::vector<int> getRange(char* range);
-std::vector<char*> splitChar(char* range);
+std::vector<char*> splitChar(char* range, const char delim=':');
 int findChar(std::vector<char*> vec, const char* str);
 
 struct os_parser
 {
     int iter;
-    int cores;
+    char* cores;
     int smt;
     char* size;
     int radius;
@@ -32,6 +32,8 @@ struct os_parser
     char* opt;
     char *prgname;
     char *mode;
+    char *mcFile;
+    bool dp;
     int numOptions;
     my_option *long_options;
     option *gnuOptions;

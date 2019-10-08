@@ -13,15 +13,18 @@
     double cl = CACHE("MEM").cl_size/(double)CACHE("MEM").bytePerWord;\
     if(strcmp(__mode,"ECM")==0)\
     {\
+        __stencil->init(true);\
         __stencil->calcECM();\
         __stencil->printECM();\
         double ecm_mlups = __stencil->getPerfECM();\
-        double cy_cl = freq*1000.0*cl/ecm_mlups;\
+        double ecm_cy_cl = freq*1000.0*cl/ecm_mlups;\
         printf("ECM performance = %f MLUP/s\n", ecm_mlups);\
-        printf("ECM cycle prediction = %f cy/CL\n", cy_cl);\
+        printf("ECM cycle prediction = %f cy/CL\n", ecm_cy_cl);\
+        ecm_cy_cl_vec.push_back(ecm_cy_cl);\
     }\
     else if(strcmp(__mode,"BENCH")==0)\
     {\
+        __stencil->init();\
         INIT_TIME(stencil_run);\
         START_TIME(stencil_run);\
         __stencil->run();\
@@ -32,9 +35,11 @@
         printf("Benchmark performance = %f MLUP/s\n", mlups*1e-6/time);\
         printf("Benchamrk time = %f s\n", time);\
         printf("Benchmark cycle prediction = %f cy/CL\n", cy_cl);\
+        cy_cl_vec.push_back(cy_cl);\
     }\
     else if(strcmp(__mode,"VALIDATE")==0)\
     {\
+        __stencil->init();\
         __stencil->calcECM(true);\
         __stencil->printECM();\
         double ecm_mlups = __stencil->getPerfECM();\
@@ -51,6 +56,8 @@
         printf("Benchmark performance = %f MLUP/s\n", mlups*1e-6/time);\
         printf("Benchamrk time = %f s\n", time);\
         printf("Benchmark cycle prediction = %f cy/CL\n", cy_cl);\
+        ecm_cy_cl_vec.push_back(ecm_cy_cl);\
+        cy_cl_vec.push_back(cy_cl);\
     }\
     else\
     {\
@@ -58,6 +65,26 @@
     }\
 }\
 
+void print_vec(std::vector<double> vec, int thread_start, int thread_end, char* desc)
+{
+    if(vec.size()>0)
+    {
+        printf("%25s ||", "cores");
+        for(int thread=thread_start; thread<thread_end; ++thread)
+        {
+            printf("%8d |", thread);
+        }
+        printf("%8d", thread_end);
+        printf("\n");
+        printf("%25s ||", desc);
+        for(int thread=0; thread<(int)vec.size()-1; ++thread)
+        {
+            printf("%8.2f |", vec[thread]);
+        }
+        printf("%8.2f", vec[(int)vec.size()-1]);
+    }
+    printf("\n");
+}
 
 //This measures the performance of different versions of heat3d
 void main(int argc, char** argv)
@@ -104,10 +131,14 @@ void main(int argc, char** argv)
 
     free(codeStr);
 
-    MPI_Manager mpiMan(&argc, &argv);
-
     os_parser optParse;
     optParse.parse_arg(argc, argv);
+
+    char* mc_file = optParse.mcFile;
+
+    //mc_file optional is passed to initialize with machine configuration
+    MPI_Manager mpiMan(&argc, &argv, mc_file);
+
 
     std::vector<int> size = getRange(optParse.size);
     int dim = (int)size.size();
@@ -132,13 +163,41 @@ void main(int argc, char** argv)
         fold = getRange(optParse.fold);
     }
 
-    int threads = optParse.cores;
+    std::vector<char*> threads_char;
+
+    if(optParse.cores == NULL)
+    {
+        FILE *tmp;
+        POPEN(NULL, tmp, "%s/threadPerSocket.sh %s", TOOL_DIR, glb_mc_file);
+        int totCores = readIntVar(tmp);
+        char *thread_str;
+        STRINGIFY(thread_str, "1:%d", totCores);
+        printf("thread_str = %s\n", thread_str);
+        optParse.cores = thread_str;
+        PCLOSE(tmp);
+    }
+    threads_char = splitChar(optParse.cores);
+    if(threads_char.size() == 0)
+    {
+        printf("Number of threads not provided\n");
+    }
+    int thread_start = atoi(threads_char[0]);
+    int thread_end = thread_start;
+    if(threads_char.size() == 2)
+    {
+        thread_end = atoi(threads_char[1]);
+    }
+    else if(threads_char.size() > 2)
+    {
+        printf("Thread string incompatible\n");
+    }
 
     int dt = optParse.iter;
 
     int radius = optParse.radius;
 
     bool prefetch = optParse.prefetch;
+    bool dp = optParse.dp;
 
     char* mode = optParse.mode;
 
@@ -161,24 +220,34 @@ void main(int argc, char** argv)
     printf("dim = %d\n", dim);
 
     printf("stencilName = %s\n", stencilName);
-    yaskSite* stencil = new yaskSite(&mpiMan, derivedStencilName, dim, -1, fold[0], fold[1], fold[2], prefetch);
+    yaskSite* stencil = new yaskSite(&mpiMan, derivedStencilName, dim, -1, fold[0], fold[1], fold[2], dp, prefetch);
     stencil->setDim(size[0], size[1], size[2]);
-    stencil->setThread(threads, 1);
 
-    for(int opt_idx=0; opt_idx<2; ++opt_idx)
+    std::vector<double> ecm_cy_cl_vec;
+    std::vector<double> cy_cl_vec;
+    for (int threads=thread_start; threads<=thread_end; ++threads)
     {
-        if(opt_bool[opt_idx])
+        stencil->setThread(threads, 1);
+
+        for(int opt_idx=0; opt_idx<2; ++opt_idx)
         {
-            if(opt_idx == 1)
+            if(opt_bool[opt_idx])
             {
-                stencil->spatialTuner("L3", "L2", 0.5, 0.5);
+                if(opt_idx == 1)
+                {
+                    stencil->spatialTuner("L3", "L2", 0.5, 0.5);
+                }
+                else if(opt_idx == 2)
+                {
+                    stencil->blockTuner("L3","L2","L1", 0.5,0.5,0.5);
+                }
+                RUN(stencil, mode);
             }
-            else if(opt_idx == 2)
-            {
-                stencil->blockTuner("L3","L2","L1", 0.5,0.5,0.5);
-            }
-            stencil->init();
-            RUN(stencil, mode);
         }
     }
+
+    printf("\nRESULTS\n\n");
+    print_vec(ecm_cy_cl_vec, thread_start, thread_end, "ECM perf. (cy/CL)");
+    printf("\n");
+    print_vec(cy_cl_vec, thread_start, thread_end, "BENCHMARK perf. (cy/CL)");
 }

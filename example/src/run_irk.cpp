@@ -20,7 +20,7 @@ void main(int argc, char** argv)
 
 
     char *codeStr, *codeStr_cpy;
-    STRINGIFY(codeStr,  "GRID_ARRAY F[4];\n"
+    STRINGIFY(codeStr,  "GRID_ARRAY Y[4];\n"
             "GRID_POINT tmp;\n"
             "GRID_POINT_ARRAY tmp[4];\n"
             "PARAM dt;\n");
@@ -35,19 +35,20 @@ void main(int argc, char** argv)
 
     for(int l=0; l<4; ++l)
     {
-        STRINGIFY_ADD(codeStr, "F[%d]<0> = tmp[%d]*dt + DATA<0>;\n", l, l);
+        STRINGIFY_ADD(codeStr, "Y[%d]<0> = tmp[%d]*dt + DATA<0>;\n", l, l);
     }
 
     codeGen code1("heat2d_irk_1", "heat2d", codeStr);
+    printf("Gen code 1 = \n%s\n", codeStr);
     free(codeStr);
 
-    STRINGIFY(codeStr,  "GRID_ARRAY F[4];\n"
+    STRINGIFY(codeStr,  "GRID_ARRAY Y[4];\n"
             "GRID_POINT tmp;\n"
             "GRID_POINT_ARRAY tmp[4];\n"
             "PARAM dt;\n");
     for(int i=0; i<4; ++i)
     {
-        STRINGIFY_ADD(codeStr,"tmp = STENCIL(F[%d]<0>);\n", i);
+        STRINGIFY_ADD(codeStr,"tmp = STENCIL(Y[%d]<0>);\n", i);
         for(int l=0; l<4; ++l)
         {
             STRINGIFY_ADD(codeStr, "tmp[%d] += %f*tmp;\n", l, A[l][i]);
@@ -56,24 +57,25 @@ void main(int argc, char** argv)
 
     for(int l=0; l<4; ++l)
     {
-        STRINGIFY_ADD(codeStr, "F[%d]<1> = tmp[%d]*dt + DATA<0>;\n", l, l);
+        STRINGIFY_ADD(codeStr, "Y[%d]<1> = tmp[%d]*dt + DATA<0>;\n", l, l);
     }
 
     codeGen code2("heat2d_irk_2", "heat2d", codeStr);
 
+    printf("Generated code = \n%s\n", codeStr);
 
     free(codeStr);
     ////////////////////////////////////////////////////////////////////
     double b[4] = {0.22046221117677, 0.38819346884317, 0.32884431998006, 1.0 / 16.0};
 
-    STRINGIFY(codeStr, "GRID_ARRAY F[4];\n"
+    STRINGIFY(codeStr, "GRID_ARRAY Y[4];\n"
             "GRID_POINT tmp;\n"
             "PARAM dt;\n"
-            "tmp = %f*STENCIL(F[0]<0>);\n", b[0]);
+            "tmp = %f*STENCIL(Y[0]<0>);\n", b[0]);
 
     for(int l=1; l<4; ++l)
     {
-        STRINGIFY_ADD(codeStr,"tmp = tmp +  %f*STENCIL(F[%d]<0>);\n", b[l], l);
+        STRINGIFY_ADD(codeStr,"tmp = tmp +  %f*STENCIL(Y[%d]<0>);\n", b[l], l);
     }
 
     STRINGIFY_ADD(codeStr, "DATA<1> = DATA<0> + dt*tmp;\n");
@@ -147,7 +149,7 @@ void main(int argc, char** argv)
         free(file_path);
     }
 
-    int const_m = 5
+    int const_m = 5;
     //taking care size always fits only in memory
     //(here 200 times L3 is the total size)
     cache_info L3 = CACHE("L3"); //L3_cache macro defined by yaskSite library
@@ -173,7 +175,7 @@ void main(int argc, char** argv)
     for(int i=0; i<4; ++i)
     {
         char *grid_name;
-        STRINGIFY(grid_name, "F_%d",i);
+        STRINGIFY(grid_name, "Y_%d",i);
 
         (*stencil_1)[grid_name][0] << (*stencil_2)[grid_name][0];
         (*stencil_3)[grid_name][0] << (*stencil_2)[grid_name][1];

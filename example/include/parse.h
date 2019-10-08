@@ -28,6 +28,7 @@ struct parser
     int radius;
     char* fold;
     bool prefetch;
+    bool dp;
     char* path;
     char* outDir;
     char* opt;

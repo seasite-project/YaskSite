@@ -13,21 +13,23 @@ my_option::my_option()
 {
 }
 
-os_parser::os_parser():iter(100), cores(1), smt(1), size(NULL), fold("auto"), prefetch(false), path("default"), opt("plain:spatial:temporal"), prgname("a.out"), mode("VALIDATE"), numOptions(10)
+os_parser::os_parser():iter(100), cores(NULL), smt(1), size(NULL), fold("auto"), prefetch(false), path("default"), opt("plain:spatial:temporal"), prgname("a.out"), mode("VALIDATE"), dp(true), mcFile(NULL), numOptions(12)
 {
     long_options = new my_option[numOptions+1];
 
     long_options[0]  = {"iter",    required_argument, 0,  'i', "Iterations to be carried out" };
-    long_options[1]  = {"cores",   required_argument, 0,  'c', "Number of cores to be used" };
+    long_options[1]  = {"cores",   required_argument, 0,  'c', "Number of cores to be used, range specified as 1:10" };
     long_options[2]  = {"smt",     required_argument, 0,  't', "Number of threads per core to be used (recommended 1)" };
     long_options[3]  = {"size",   required_argument, 0,  's', "Domain size inner:middle:outer " };
     long_options[4]  = {"fold",    required_argument, 0,  'f', "Vector Folding fold_x:fold_y:fold_z " };
     long_options[5]  = {"prefetch",no_argument,       0,  'P', "Enable prefetching" };
-    long_options[6]  = {"path",    required_argument, 0,  'p', "Path valid values default or serpentine" };
-    long_options[7] = {"opt",     required_argument, 0,  'o', "Optimisations [options: plain,spatial,temporal]; use ':' for combining"};
-    long_options[8] = {"mode",     required_argument, 0,  'm', "Mode : available options: ECM, BENCH, VALIDATE"};
-    long_options[9] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
-    long_options[10] = {0,         0,                 0,   0 ,  0 };
+    long_options[6]  = {"single prec.",no_argument, 0,  'S', "Enable for calculating in single precision" };
+    long_options[7]  = {"path",    required_argument, 0,  'p', "Path valid values default or serpentine" };
+    long_options[8] = {"opt",     required_argument, 0,  'o', "Optimisations [options: plain,spatial,temporal]; use ':' for combining"};
+    long_options[9] = {"mc_file", required_argument, 0,  'm', "Machine file for ECM prediction"};
+    long_options[10] = {"mode",     required_argument, 0,  'M', "Mode : available options: ECM, BENCH, VALIDATE"};
+    long_options[11] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
+    long_options[12] = {0,         0,                 0,   0 ,  0 };
 
     gnuOptions = new option[numOptions+1];
 
@@ -48,7 +50,7 @@ bool os_parser::parse_arg(int argc, char **argv)
     prgname = argv[0];
     while (1) {
         int option_index = 0, c;
-        c = getopt_long(argc, argv, "0:i:c:t:s:f:p:o:m:hP",
+        c = getopt_long(argc, argv, "0:i:c:t:s:f:p:o:m:M:hPS",
                 gnuOptions, &option_index);
 
         if (c == -1)
@@ -68,7 +70,7 @@ bool os_parser::parse_arg(int argc, char **argv)
                 }
             case 'c':
                 {
-                    cores = atoi(optarg);
+                    cores = optarg;
                     break;
                 }
             case 't':
@@ -101,9 +103,19 @@ bool os_parser::parse_arg(int argc, char **argv)
                     opt = optarg;
                     break;
                 }
-            case  'm':
+            case  'M':
                 {
                     mode = optarg;
+                    break;
+                }
+            case 'm':
+                {
+                    mcFile = optarg;
+                    break;
+                }
+            case 'S':
+                {
+                    dp = false;
                     break;
                 }
             case 'h':
@@ -189,10 +201,10 @@ std::vector<int> getRange(char* range)
     return rangeVec;
 }
 
-std::vector<char*> splitChar(char* range)
+std::vector<char*> splitChar(char* range, const char delim)
 {
     char* range_dup = strdup(range);
-    char** splitted_range = str_split(range_dup, ':');
+    char** splitted_range = str_split(range_dup, delim);
 
     std::vector<char*> rangeVec;
 

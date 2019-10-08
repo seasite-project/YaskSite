@@ -31,7 +31,7 @@
 {\
     FILE* writeFile;\
     writeFile = (file!=NULL) ?fopen(file,"a"):stdout;\
-    fprintf(writeFile, "%3s, %5s, %5s, %5s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s\n", "dt", "dx", "dy", "dz",  "s", "mlups", "L2", "L3", "MEM", "ECMmlups", "ECML2", "ECML3", "ECMMEM", "Lat(%)", "Bound(%)", "Pref(%)", "Assoc(%)");\
+    fprintf(writeFile, "%6s, %3s, %5s, %5s, %5s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s\n", "Threads", "dt", "dx", "dy", "dz",  "s", "mlups", "L2", "L3", "MEM", "ECMmlups", "ECML2", "ECML3", "ECMMEM", "Lat(%)", "Bound(%)", "Pref(%)", "Assoc(%)");\
     if(file!=NULL) fclose(writeFile);\
 }
 
@@ -56,7 +56,7 @@
     double mlups=dt*dx*(dy*dz*1e-6);\
     double time=GET_TIME(stencil_);\
     contribution ecm_contrib = stencil->getECMContributions();\
-    fprintf(writeFile, "%3d, %5d, %5d, %5d, %8.5f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.4f, %8.4f, %8.4f, %8.4f\n", stencil->dt, stencil->dx, stencil->dy, stencil->dz, time,mlups/time, ECM_validate[0], ECM_validate[1], ECM_validate[2], ECM_mlups, ECM[0], ECM[1], ECM[2], ecm_contrib.latency*100, ecm_contrib.boundary*100, ecm_contrib.prefetch*100, ecm_contrib.associativity*100);\
+    fprintf(writeFile, "%6d, %3d, %5d, %5d, %5d, %8.5f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.4f, %8.4f, %8.4f, %8.4f\n", stencil->nthreads, stencil->dt, stencil->dx, stencil->dy, stencil->dz, time,mlups/time, ECM_validate[0], ECM_validate[1], ECM_validate[2], ECM_mlups, ECM[0], ECM[1], ECM[2], ecm_contrib.latency*100, ecm_contrib.boundary*100, ecm_contrib.prefetch*100, ecm_contrib.associativity*100);\
     if(file!=NULL) fclose(writeFile);\
 }\
 
@@ -107,6 +107,7 @@ void main(int argc, char** argv)
     int dt = optParse.iter;
 
     int radius = optParse.radius;
+    bool dp = optParse.dp;
 
     char* opt_range = optParse.opt;
     std::vector<char*> opt = splitChar(opt_range);
@@ -180,7 +181,7 @@ void main(int argc, char** argv)
             printf("Unknown stencil dimension\n");
         }
 
-        yaskSite* stencil_1 = new yaskSite(&mpiMan, kernel, dimension, radius, f_z, f_y, f_x, prefetch);
+        yaskSite* stencil_1 = new yaskSite(&mpiMan, kernel, dimension, radius, f_z, f_y, f_x, dp, prefetch);
         stencil_1->setDim(dim_z, dim_y, dim_x, dt);
         stencil_1->setThread(threads,1);
         stencil_1->init();//init goes here, warm-up
@@ -197,9 +198,9 @@ void main(int argc, char** argv)
         //spatial blocked
         if(opt_bool[1])
         {
-            //stencil_1->spatialTuner("L3", "L2",0.5, 0.5);
+            stencil_1->spatialTuner("L3", "L2",0.25, 0.5);
             //stencil_1->setSubBlock(750,5,512);
-            stencil_1->setBlock(600,30,200);
+            //stencil_1->setBlock(600,30,200);
             PERF_RUN(stencil_1, files[1]);
         }
 
@@ -214,7 +215,7 @@ void main(int argc, char** argv)
             {
                 stencil_1->blockTuner("L3","L2","L1", 0.5,0.8,0.8);
             }
-            // stencil_1->setBlock(66,32,16);
+            //stencil_1->ry = 15;
             PERF_RUN(stencil_1, files[2]);
         }
 

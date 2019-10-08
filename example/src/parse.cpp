@@ -13,7 +13,7 @@ my_option::my_option()
 {
 }
 
-parser::parser():kernel(NULL), iter(100), cores(1), smt(1), innerDim(NULL), radius(1), fold("1:1:1"), prefetch(false), path("default"), outDir(NULL), opt("plain:spatial:temporal"), prgname("a.out"), numOptions(12)
+parser::parser():kernel(NULL), iter(100), cores(1), smt(1), innerDim(NULL), radius(1), fold("1:1:1"), dp(true), prefetch(false), path("default"), outDir(NULL), opt("plain:spatial:temporal"), prgname("a.out"), numOptions(13)
 {
     long_options = new my_option[numOptions+1];
 
@@ -23,13 +23,14 @@ parser::parser():kernel(NULL), iter(100), cores(1), smt(1), innerDim(NULL), radi
     long_options[3]  = {"smt",     required_argument, 0,  't', "Number of threads per core to be used (recommended 1)" };
     long_options[4]  = {"Range",   required_argument, 0,  'R', "Inner dimension range start:inc:end " };
     long_options[5]  = {"radius",  required_argument, 0,  'r', "stencil radius (only for stencils defined with radius)" };
-    long_options[6]  = {"fold",    required_argument, 0,  'f', "Vector Folding fold_x:fold_y:fold_z " };
-    long_options[7]  = {"prefetch",no_argument,       0,  'P', "Enable prefetching" };
-    long_options[8]  = {"path",    required_argument, 0,  'p', "Path valid values default or serpentine" };
-    long_options[9]  = {"out",     required_argument, 0,  'o', "Output directory (if not provided output to stdout)" };
-    long_options[10] = {"opt",     required_argument, 0,  'O', "Optimisations [options: plain,spatial,temporal]; use ':' for combining"};
-    long_options[11] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
-    long_options[12] = {0,         0,                 0,   0 ,  0 };
+    long_options[6]  = {"fold",    required_argument, 0,  'f', "Vector Folding fold_x:fold_y:fold_z" };
+    long_options[7]  = {"sp",    required_argument, 0,  's', "Use single precision" };
+    long_options[8]  = {"prefetch",no_argument,       0,  'P', "Enable prefetching" };
+    long_options[9]  = {"path",    required_argument, 0,  'p', "Path valid values default or serpentine" };
+    long_options[10]  = {"out",     required_argument, 0,  'o', "Output directory (if not provided output to stdout)" };
+    long_options[11] = {"opt",     required_argument, 0,  'O', "Optimisations [options: plain,spatial,temporal]; use ':' for combining"};
+    long_options[12] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
+    long_options[13] = {0,         0,                 0,   0 ,  0 };
 
     gnuOptions = new option[numOptions+1];
 
@@ -50,7 +51,7 @@ bool parser::parse_arg(int argc, char **argv)
     prgname = argv[0];
     while (1) {
         int option_index = 0, c;
-        c = getopt_long(argc, argv, "0:k:i:c:t:R:r:f:p:o:O:hP",
+        c = getopt_long(argc, argv, "0:k:i:c:t:R:r:f:p:o:O:hPs",
                 gnuOptions, &option_index);
 
         if (c == -1)
@@ -102,6 +103,11 @@ bool parser::parse_arg(int argc, char **argv)
             case 'P':
                 {
                     prefetch = true;
+                    break;
+                }
+            case 's':
+                {
+                    dp = false;
                     break;
                 }
             case 'p':

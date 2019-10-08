@@ -23,7 +23,7 @@ struct MPI_Manager
     int comm;
 #endif
 
-    MPI_Manager(int* argc, char*** argv, int printRank=yaskSite_PRINT_RANK);
+    MPI_Manager(int* argc, char*** argv, char* mcFile=NULL, int printRank=yaskSite_PRINT_RANK);
     ~MPI_Manager();
 
     void global_barrier();

@@ -15,7 +15,7 @@
     #include <likwid.h>
 #endif
 
-MPI_Manager::MPI_Manager(int* argc_, char*** argv_, int printRank_):argc(argc_), argv(argv_), nRanks(1), myRank(0), printRank(printRank_)
+MPI_Manager::MPI_Manager(int* argc_, char*** argv_, char* mcFile, int printRank_):argc(argc_), argv(argv_), nRanks(1), myRank(0), printRank(printRank_)
 {
 #ifdef yaskSite_HAVE_MPI
     int provided = 0;
@@ -63,7 +63,7 @@ MPI_Manager::MPI_Manager(int* argc_, char*** argv_, int printRank_):argc(argc_),
 #endif
 #endif
 
-    initializeCaches();
+    initializeCaches(mcFile);
 }
 
 MPI_Manager::~MPI_Manager()

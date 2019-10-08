@@ -25,7 +25,7 @@ using namespace yask;
 
 extern "C" {
     //TODO:split alloc and init
-    int YASKinit(yaskSite* opt)
+    int YASKinit(yaskSite* opt, bool noAlloc)
     {
 
         //Right now new allocation is done only if
@@ -115,9 +115,12 @@ extern "C" {
 
         if(needAlloc)
         {
-            // Alloc memory, create lists of grids, etc.
-            context->allocAll();
-            context->initData();
+            if(!noAlloc)
+            {
+                // Alloc memory, create lists of grids, etc.
+                context->allocAll();
+                context->initData();
+            }
 
             int totalParams = ((int) opt->paramName.size());
 
@@ -129,13 +132,13 @@ extern "C" {
 
             for(auto it = context->paramMap.begin(); it != context->paramMap.end(); ++it) {
                 opt->paramName.push_back(it->first.c_str());
-                double* param = it->second->get_storage();
+                void* param = (void*)it->second->get_storage();
                 opt->paramList.push_back(param);
             }
 
             //reallocate opt->grids
-           opt->gridName.clear();
-           opt->gridIdx.clear();
+            opt->gridName.clear();
+            opt->gridIdx.clear();
 
             //now copy grid names
             for(auto it = context->gridMap.begin(); it != context->gridMap.end(); ++it) {
@@ -166,7 +169,7 @@ extern "C" {
             }
         }
 
-        if (context->tot_numpts_dt < 1) {
+        if (!noAlloc && (context->tot_numpts_dt < 1)) {
             ERROR_PRINT("Exiting because there are zero points to evaluate.");
             exit_yask(1);
         }
@@ -202,7 +205,7 @@ extern "C" {
         return 0;
     }
 
-    double* YASKgetElPtr(yaskSite* opt, const char* data, int t, int x, int y, int z, bool checkBounds)
+    void* YASKgetElPtr(yaskSite* opt, const char* data, int t, int x, int y, int z, bool checkBounds)
     {
         CAST_Grid_TXYZ_ptr(opt, data, return, ->getElemPtr(t,x,y,z,checkBounds));
     }
@@ -256,9 +259,10 @@ extern "C" {
 
 extern "C"
 {
-    int YASKinit(yaskSite* opt)
+    int YASKinit(yaskSite* opt, bool noAlloc)
     {
         UNUSED(opt);
+        UNUSED(noAlloc);
         return -1;
     }
 
@@ -275,7 +279,7 @@ extern "C"
         return -1;
     }
 
-    double* YASKgetElPtr(yaskSite*opt, const char* data, int t, int x, int y, int z, bool checkBounds)
+    void* YASKgetElPtr(yaskSite*opt, const char* data, int t, int x, int y, int z, bool checkBounds)
     {
         UNUSED(opt);
         UNUSED(data);

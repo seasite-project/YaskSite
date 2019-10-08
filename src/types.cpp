@@ -7,6 +7,7 @@
 #include "config.h"
 
 std::vector<cache_info> CACHES;
+char* glb_mc_file = NULL;
 
 GRID::GRID(int idx_, std::string name_, int dim_):idx(idx_),name(name_), dim(dim_)
 {
@@ -65,7 +66,7 @@ bool EQ_GROUP::finalize()
     return ret;
 }
 
-STENCIL::STENCIL():name(NULL),dim(0),radius(-1),fold_x(1),fold_y(1),fold_z(1),prefetch(false),path(NULL),folder(NULL),data(NULL)
+STENCIL::STENCIL():name(NULL),dim(0),radius(-1),fold_x(1),fold_y(1),fold_z(1),dp(true),prefetch(false),path(NULL),folder(NULL),data(NULL)
 {
 }
 
@@ -132,6 +133,7 @@ cache_info::cache_info(char* name_, char* details_, int hierarchy_, int set_size
 */
 cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheId), isMEM(isMEM_)
 {
+    stencilInit = false;
     char* sysLogFileName = NULL;
     FILE *tmp;
     POPEN(sysLogFileName, tmp, "%s/cacheInfo/getCacheInfo.sh %s %d name", TOOL_DIR, mc_file, cacheId);
@@ -178,9 +180,8 @@ cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheI
         cl_size = cache_cl_size;
     }
 
-    words = bytes/bytePerWord;
-
-    printf("%s words = %f\n", name.c_str(), words);
+    //words = bytes/bytePerWord;
+    //printf("%s words = %f\n", name.c_str(), words);
     POPEN(sysLogFileName, tmp, "%s/cacheInfo/getCacheInfo.sh %s %d cores", TOOL_DIR, mc_file, cacheId);
     int cacheCores = readIntVar(tmp);
     PCLOSE(tmp);
@@ -212,6 +213,15 @@ cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheI
     prefetch_cl = readDoubleVar(tmp);
     printf("Prefetch dist = %f\n", prefetch_cl);
     PCLOSE(tmp);
+}
+
+double cache_info::getWords()
+{
+    if(!stencilInit)
+    {
+        WARNING_PRINT("Stencil not intialized: bytePerWord cannot be determined");
+    }
+    return bytes/(double)bytePerWord;
 }
 
 double cache_info::getBytePerCycle(int rwRatio, int nthreads)
@@ -399,15 +409,25 @@ cache_info::~cache_info()
 }*/
 
 //Parsing from yaml machine file
-void initializeCaches()
+void initializeCaches(char *mcFile_user)
 {
-    char *mc_file_loc;
-    STRINGIFY(mc_file_loc, "%s/mc_file.txt", TOOL_DIR);
+    char *mc_file = NULL;
+    if(mcFile_user == NULL)
+    {
+        char *mc_file_loc;
+        STRINGIFY(mc_file_loc, "%s/mc_file.txt", TOOL_DIR);
 
-    FILE *file = fopen(mc_file_loc, "r");
-    char *mc_file = readStrVar(file);
-    fclose(file);
-    free(mc_file_loc);
+        FILE *file = fopen(mc_file_loc, "r");
+        mc_file = readStrVar(file);
+        fclose(file);
+        free(mc_file_loc);
+    }
+    else
+    {
+        mc_file = mcFile_user;
+    }
+
+    glb_mc_file = mc_file;
 
     char *sysLogFileName = NULL;
     FILE *tmp;
@@ -475,9 +495,6 @@ void initializeCaches()
     printf("prefetch dist L1 = %f\n", CACHES[0].prefetch_cl);
     printf("prefetch dist MEM = %f\n", CACHES[3].prefetch_cl);
 
-    free(mc_file);
-
-
 }
 
 cache_info CACHE(char* str)
@@ -502,5 +519,14 @@ cache_info CACHE(char* str)
     {
         ERROR_PRINT("Unknown Cache hierarchy");
         return CACHES[3];
+    }
+}
+
+void updateBytePerWord(int bytePerWord_)
+{
+    for(int i=0; i<(int)CACHES.size(); ++i)
+    {
+        CACHES[i].bytePerWord = bytePerWord_;
+        CACHES[i].stencilInit = true;
     }
 }

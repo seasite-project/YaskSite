@@ -56,6 +56,7 @@ struct STENCIL
     int fold_x;
     int fold_y;
     int fold_z;
+    bool dp;
     bool prefetch;
     char* path;
     char* folder; //folder in which the stencil is cached
@@ -67,7 +68,6 @@ struct STENCIL
 struct cache_info
 {
     double bytes;
-    double words;
     std::string name;
     //std::string details;
     bool shared;
@@ -88,6 +88,8 @@ struct cache_info
     void readBytePerCycle(char* file);
     bool victim;
     double penalty;
+    double getWords();
+    bool stencilInit;
     //cache_info(char* name_, char* details_, int hierarchy_, int set_size=-1, int ways=-1, std::vector<double> latency_={}, int prefetch_cl_=0, double sf_=1, int bytePerWord=8);
     cache_info(int hierarchy_, char *mc_file, int isMEM_=false);
 
@@ -101,6 +103,7 @@ struct cache_info
 
 //static std::vector<cache_info> CACHES{(cache_info(L1_cache,1,{1.83},1,0.5)), (cache_info(L2_cache,2,{5.44},20,0.5)), (cache_info(L3_cache,3,{21},20,0.5)), (cache_info(MEM,4,{84,84.27,87.57,92.21,97.07,101.90,107.08,112.50,118.95,124.34}))};
 
+extern char* glb_mc_file;
 
 //IVB
 extern std::vector<cache_info> CACHES;//{(cache_info("L1",L1_cache,0,64,8,{},0,0.75)),(cache_info("L2",L2_cache,1,512,8,{},2.215,0.75)),(cache_info("L3",L3_cache,2,25600,16,{},7.61,0.75)), (cache_info("MEM",MEM,3,-1,-1,{},18.95))};
@@ -111,7 +114,9 @@ extern std::vector<cache_info> CACHES;//{(cache_info("L1",L1_cache,0,64,8,{},0,0
 
 //static std::vector<cache_info> CACHES{(cache_info(L1_cache,1,{0},0,0.5)), (cache_info(L2_cache,2,{0},0,0.5)), (cache_info(L3_cache,3,{0},0,0.5)), (cache_info(MEM,4,{0}))};
 
-void initializeCaches();
+void initializeCaches(char *mcFile_user=NULL);
+
+void updateBytePerWord(int bytePerWord_);
 
 cache_info CACHE(char* str);
 

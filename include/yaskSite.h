@@ -43,6 +43,8 @@ class yaskSite
         int sby;
         int sbz;
 
+        bool dp;
+
         int bx;
         int by;
         int bz;
@@ -112,7 +114,7 @@ class yaskSite
         std::vector<int> mainEqGroups;
 
     private:
-        void initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, int radius, int fold_z_, int fold_y_, int fold_x_, bool prefetch, char* path_, bool likwid);
+        void initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, int radius, int fold_z_, int fold_y_, int fold_x_, bool dp, bool prefetch, char* path_, bool likwid);
 
         //sets dimension dependent parameters
         //if user does not define
@@ -131,12 +133,13 @@ class yaskSite
         //For YASK
         //dynamically loaded fns
         //fn type
+        typedef int (*fn0_t) (yaskSite*,bool);
+        fn0_t dynInit;
         typedef int (*fn1_t) (yaskSite*);
-        fn1_t dynInit;
         fn1_t dynFinalize;
         typedef int (*fn2_t) (yaskSite*,int);
         fn2_t dynStencil;
-        typedef double* (*fn3_t) (yaskSite*,const char*,int,int,int,int,bool);
+        typedef void* (*fn3_t) (yaskSite*,const char*,int,int,int,int,bool);
         fn3_t dynGetPtr;
         typedef void* (*fn4_t) (yaskSite*,const char*);
         fn4_t dynGetGridPtr;
@@ -159,11 +162,11 @@ class yaskSite
         std::vector<const char*> gridName;
         std::vector<std::vector<int>> gridIdx;
         std::vector<const char*> paramName;
-        std::vector<double*> paramList;
+        std::vector<void*> paramList;
 
         //TODO specify a architecture or will compile for current architecture
         yaskSite(MPI_Manager* mpi_man_, STENCIL* stencil); //preferred constructor
-        yaskSite(MPI_Manager* mpi_man_, char* stencilName_, int dim_, int radius=-1, int fold_z_=1, int fold_y_=1, int fold_x_=1, bool prefetch=false, char* path_="", bool likwid=false);
+        yaskSite(MPI_Manager* mpi_man_, char* stencilName_, int dim_, int radius=-1, int fold_z_=1, int fold_y_=1, int fold_x_=1, bool dp = true, bool prefetch=false, char* path_="", bool likwid=false);
         ~yaskSite();
         void cleanDir();
         void setS(int s_val);
@@ -186,11 +189,11 @@ class yaskSite
 
         //init creates proper domain decomposition
         //and makes a new context for YASK to run properly
-        void init();
+        void init(bool noAlloc=false);
         void run();
 
         //access fns
-        inline double* getPtrAt(const char* grid_name, int t, int x, int y, int z, bool checkBounds=false)
+        inline void* getPtrAt(const char* grid_name, int t, int x, int y, int z, bool checkBounds=false)
         {
              return (dynGetPtr(this, grid_name, t, x, y, z, checkBounds));
         }
@@ -198,17 +201,48 @@ class yaskSite
         /*Specialized such that only data from newest grid is the output*/
         inline double getOutputAt(const char* grid_name, int x, int y, int z, bool checkBounds=false)
         {
-            return (*dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds));
+            if(dp)
+            {
+                return *((double*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds)));
+            }
+            else
+            {
+                return *((float*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds)));
+            }
         }
 
         inline void setInputAt(double val, const char* grid_name, int x, int y, int z, bool checkBounds=false)
         {
-            (*dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds)) = val;
+            if(dp)
+            {
+                *((double*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds))) = val;
+            }
+            else
+            {
+                *((float*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds))) = (float)val;
+            }
+        }
+
+        inline void setInputAt(float val, const char* grid_name, int x, int y, int z, bool checkBounds=false)
+        {
+            if(dp)
+            {
+                *((double*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds))) = val;
+            }
+            else
+            {
+                *((float*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds))) = val;
+            }
         }
 
         int getOutput(double* val, const char* grid_name);
+        int getOutput(float* val, const char* grid_name);
+
         int setInputScalar(double val, const char* grid_name, bool halo=false);
+        int setInputScalar(float val, const char* grid_name, bool halo=false);
+
         int setInput(double* val, const char* grid_name);
+        int setInput(float* val, const char* grid_name);
 
         void* getGridPtr(const char* grid);
         Grid operator[] (char* grid_name);
@@ -219,7 +253,7 @@ class yaskSite
 
         int transferData(yaskSite* stencilOther, char* data, int ts=0);
 
-        double* getParam(const char* param_name);
+        void* getParam(const char* param_name);
 
 
         void calcECM(bool validate=false);

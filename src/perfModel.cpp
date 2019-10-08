@@ -340,7 +340,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         double by = stencil->data->by;
         double bz = stencil->data->bz;
         double totThreads = stencil->data->nthreads;
-        if(currCache.shared && (totalGrids+numStencils)*bz*by*bx*totThreads > currCache.words)
+        if(currCache.shared && (totalGrids+numStencils)*bz*by*bx*totThreads > currCache.getWords())
         {
             boundary_oh = spatialOh[1];
         }
@@ -597,17 +597,17 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
         data_xy  += face*cl_avg_z*(bx)*(by);
         printf("cl_avg_z = %f\n", cl_avg_z);
         //Should be if ILC satisfied
-        /*if(cache.shared && (radius_y+rest_contrib)*bz*totThreads < cache.words) //shouldn't it be (radius_y+rest_contrib)*bz*thread_z
+        /*if(cache.shared && (radius_y+rest_contrib)*bz*totThreads < cache.getWords()) //shouldn't it be (radius_y+rest_contrib)*bz*thread_z
         {
             data_xy = data_xy/thread_z;
         }
         //Should be if OLC satisfied
-        if(cache.shared && (radius_x+rest_contrib)*bz*by*totThreads < cache.words)
+        if(cache.shared && (radius_x+rest_contrib)*bz*by*totThreads < cache.getWords())
         {
             data_zx = data_zx/thread_y;
         }
         //Should be if temporal satisfied
-        if(cache.shared && (rest_contrib+1)*bz*by*bx*totThreads < cache.words)
+        if(cache.shared && (rest_contrib+1)*bz*by*bx*totThreads < cache.getWords())
         {
             data_zy = data_zy/thread_x;
         }*/
@@ -642,11 +642,11 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
         double data_y = face*radius_z*(by);
 
         data_y += face*cl_avg_z*(by);
-        if(cache.shared && (radius_y+rest_contrib)*bz*totThreads < cache.words)
+        if(cache.shared && (radius_y+rest_contrib)*bz*totThreads < cache.getWords())
         {
             data_y = data_y/thread_z;
         }
-        if(cache.shared && (1+rest_contrib)*bz*by*totThreads < cache.words)
+        if(cache.shared && (1+rest_contrib)*bz*by*totThreads < cache.getWords())
         {
             data_z = data_z/thread_y;
         }
@@ -759,7 +759,7 @@ double perfModel::getPrefetchEffects(cache_info currCache, blockDetails* opt)
             //goes into private cache, and the very next block is assigned to next thread
             if(stencil->data->nthreads == 1)
             {
-                if( ((((bx*by+1)*(bz)))*totalGrids) < (prevCache.words*prevCache.sf) )
+                if( ((((bx*by+1)*(bz)))*totalGrids) < (prevCache.getWords()*prevCache.sf) )
                 {
                     //no prefetch oh
                     reuseFactor = 1;
@@ -775,12 +775,12 @@ double perfModel::getPrefetchEffects(cache_info currCache, blockDetails* opt)
             {
                 reuseFactor = 1;
             }
-            else if( ((((bx*by+1)*(bz)))*totalGrids*actualThreads) < (prevCache.words*prevCache.sf) )
+            else if( ((((bx*by+1)*(bz)))*totalGrids*actualThreads) < (prevCache.getWords()*prevCache.sf) )
             {
                 reuseFactor = 1;
             }
             //if ILC satisfied
-            //else if(totalGrids*bz*actualThreads < prevCache.words)
+            //else if(totalGrids*bz*actualThreads < prevCache.getWords())
             else if(currCache.hierarchy > opt->spatialIBC->hierarchy)
             {
                 //for dynamic scheduling on region loop
@@ -890,7 +890,7 @@ bool perfModel::LC_violated(cache_info currCache, LC  type)
 
     int nThreads = stencil->data->nthreads;
 
-    double curr_cache_size = currCache.words*currCache.sf;
+    double curr_cache_size = currCache.getWords()*currCache.sf;
     if(currCache.shared)
     {
         curr_cache_size=curr_cache_size/((double)nThreads);
@@ -936,7 +936,7 @@ blockDetails perfModel::determineBlockDetails()
     //scan through caches to find the smallest cache that fits entire domain
     for(int i=0; i<((int)CACHES.size()); ++i)
     {
-        double curr_cache_size = CACHES[i].words*CACHES[i].sf;
+        double curr_cache_size = CACHES[i].getWords()*CACHES[i].sf;
 
         if( totalGrids*(dx*dy*dz) <= curr_cache_size )
         {
@@ -952,7 +952,7 @@ blockDetails perfModel::determineBlockDetails()
     //scan through caches to find the smallest cache that fits regions
     for(int i=0; i<((int)CACHES.size()); ++i)
     {
-        double curr_cache_size = CACHES[i].words*CACHES[i].sf;
+        double curr_cache_size = CACHES[i].getWords()*CACHES[i].sf;
         //or if private the entire cache size has to fit
         if(!CACHES[i].shared)
         {
@@ -1299,7 +1299,7 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
     if((cache.hierarchy-1) >= 0)
     {
         prevPrevHierarchy = cache.hierarchy-1;
-        double ratio = 1-CACHES[prevPrevHierarchy].words/(double)cache.words;
+        double ratio = 1-CACHES[prevPrevHierarchy].getWords()/(double)cache.getWords();
         set_size=static_cast<int>(set_size*ratio);
     }
     if(cache.shared)
@@ -1896,6 +1896,9 @@ double perfModel::calcTemporalExtraWork()
 //returns the MEM->L3 bw chosen
 void perfModel::calc_ECM(int scale, int temporalStoreMode)
 {
+
+    int bytePerWord = CACHES[0].bytePerWord;
+
     blockDetails opt = determineBlockDetails();
 
 //    spatialOh = addBlockBoundaryEffects();
@@ -1938,9 +1941,9 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
     std::vector<double> l2_l1_data = getDataContrib("L2",&opt,temporalStoreMode);
     double l2_l1_transfer_rate = CACHE("L2").getBytePerCycle((int)l2_l1_data[1], nthreads); //bytePerCycle["L2"][0];
     bytePerCycle["L2"].push_back(l2_l1_transfer_rate);
-    double l2_l1 = (l2_l1_data[0]*8)/l2_l1_transfer_rate;
+    double l2_l1 = (l2_l1_data[0]*bytePerWord)/l2_l1_transfer_rate;
     ECM.push_back((l2_l1/data_factor)*scale);
-    ECM_data.push_back(l2_l1_data[0]*8);
+    ECM_data.push_back(l2_l1_data[0]*bytePerWord);
     ECM_prefetch_cy.push_back(ECM_prefetch[1]*scale/l2_l1_transfer_rate);
     ECM_boundary_cy.push_back(ECM_boundary[1]*scale/l2_l1_transfer_rate);
     ECM_assoc_cy.push_back(ECM_assoc[1]*scale/l2_l1_transfer_rate);
@@ -1951,9 +1954,9 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
     double l3_l2_transfer_rate = CACHE("L3").getBytePerCycle((int)l3_l2_data[1], nthreads);//bytePerCycle["L3"][0];
     bytePerCycle["L3"].push_back(l3_l2_transfer_rate);
     printf("L3 transfer rate = %f\n", l3_l2_transfer_rate);
-    double l3_l2 = (l3_l2_data[0]*8)/l3_l2_transfer_rate;
+    double l3_l2 = (l3_l2_data[0]*bytePerWord)/l3_l2_transfer_rate;
     ECM.push_back((l3_l2/data_factor)*scale);
-    ECM_data.push_back(l3_l2_data[0]*8);
+    ECM_data.push_back(l3_l2_data[0]*bytePerWord);
     ECM_prefetch_cy.push_back(ECM_prefetch[2]*scale/l3_l2_transfer_rate);
     ECM_boundary_cy.push_back(ECM_boundary[2]*scale/l3_l2_transfer_rate);
     ECM_assoc_cy.push_back(ECM_assoc[2]*scale/l3_l2_transfer_rate);
@@ -1968,9 +1971,9 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
     chosen_mem_l3_bw = CACHE("MEM").getBytePerCycle((int)mem_l3_data[1], nthreads);
     double mem_l3_transfer_rate = chosen_mem_l3_bw;//bytePerCycle["MEM"][bw_idx];
     bytePerCycle["MEM"].push_back(mem_l3_transfer_rate);
-    double mem_l3 = (mem_l3_data[0]*8)/mem_l3_transfer_rate;
+    double mem_l3 = (mem_l3_data[0]*bytePerWord)/mem_l3_transfer_rate;
     ECM.push_back((mem_l3/data_factor)*scale);
-    ECM_data.push_back(mem_l3_data[0]*8);
+    ECM_data.push_back(mem_l3_data[0]*bytePerWord);
     ECM_prefetch_cy.push_back(ECM_prefetch[3]*scale/mem_l3_transfer_rate);
     ECM_boundary_cy.push_back(ECM_boundary[3]*scale/mem_l3_transfer_rate);
     ECM_assoc_cy.push_back(ECM_assoc[3]*scale/mem_l3_transfer_rate);

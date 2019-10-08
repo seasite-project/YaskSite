@@ -4,10 +4,10 @@
 
 extern "C"
 {
-    int YASKinit(yaskSite* opt);
+    int YASKinit(yaskSite* opt, bool noAlloc);
     int YASKfinalize(yaskSite* opt);
     int YASKstencil(yaskSite* opt, int timeOffset);
-    double* YASKgetElPtr(yaskSite* opt, const char* data, int t, int x, int y, int z, bool checkBounds);
+    void* YASKgetElPtr(yaskSite* opt, const char* data, int t, int x, int y, int z, bool checkBounds);
     void* YASKgetGridPtr(yaskSite* opt, const char* grid);
     void YASKsetGridPtr(yaskSite* opt, const char* grid, void *ptr);
     int YASKgetHalo(yaskSite* opt, const char* grid, int dim);

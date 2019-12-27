@@ -126,7 +126,6 @@ void main(int argc, char** argv)
     }
 
     printf("code = %s", codeStr);
-
     codeGen code(derivedStencilName, stencilName, codeStr);
 
     free(codeStr);
@@ -165,16 +164,18 @@ void main(int argc, char** argv)
 
     std::vector<char*> threads_char;
 
+    FILE *tmp;
+    POPEN(NULL, tmp, "%s/threadPerSocket.sh %s", TOOL_DIR, glb_mc_file);
+    int thread_per_socket = readIntVar(tmp);
+    PCLOSE(tmp);
+
     if(optParse.cores == NULL)
     {
-        FILE *tmp;
-        POPEN(NULL, tmp, "%s/threadPerSocket.sh %s", TOOL_DIR, glb_mc_file);
-        int totCores = readIntVar(tmp);
+        int totCores = thread_per_socket;
         char *thread_str;
         STRINGIFY(thread_str, "1:%d", totCores);
         printf("thread_str = %s\n", thread_str);
         optParse.cores = thread_str;
-        PCLOSE(tmp);
     }
     threads_char = splitChar(optParse.cores);
     if(threads_char.size() == 0)
@@ -190,6 +191,12 @@ void main(int argc, char** argv)
     else if(threads_char.size() > 2)
     {
         printf("Thread string incompatible\n");
+    }
+
+    if(thread_end > thread_per_socket)
+    {
+        thread_end = thread_per_socket;
+        printf("Only 1 ccNUMA domain supported, setting threads to range %d:%d\n", thread_start, thread_end);
     }
 
     int dt = optParse.iter;

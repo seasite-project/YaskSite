@@ -225,13 +225,13 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     std::vector<std::string> writeGrids;
     std::vector<int> n_reads;
     std::vector<int> n_writes;
-    std::vector<int> n_stencils;
+    //std::vector<int> n_stencils;
     readTable(eqGroupFile, eqGroupName, 0, -1, 0, 0);
     readTable(eqGroupFile, readGrids, 0, -1, 1, 1);
     readTable(eqGroupFile, writeGrids, 0, -1, 2, 2);
     readTable(eqGroupFile, n_reads, 0, -1, 3, 3);
     readTable(eqGroupFile, n_writes, 0, -1, 4, 4);
-    readTable(eqGroupFile, n_stencils, 0, -1, 5, 5);
+    // readTable(eqGroupFile, n_stencils, 0, -1, 5, 5); // this one is wrong
     free(eqGroupFile);
 
     num_eqns=(int)eqGroupName.size();
@@ -249,11 +249,29 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
         std::vector<std::string> readGridVec = split(readGrids[i],',');
         std::vector<std::string> writeGridVec = split(writeGrids[i],',');
 
+        int n_stencils = 0;
         //mapped indices of read grids
         for(int j=0; j<(int)readGridVec.size(); ++j)
         {
             int idx = gridMap[readGridVec[j]];
             curr_eq_group.read_grids.push_back(grids[idx]);
+
+            int halo_flag = 0;
+            std::vector<int> curr_halos = grids[idx].halo;
+            //if no halo it means there is no stencil operation
+            for(int k=0; k<(int)curr_halos.size(); ++k)
+            {
+                if(curr_halos[k] != 0)
+                {
+                    halo_flag = 1;
+                    break;
+                }
+            }
+
+            if(halo_flag != 0)
+            {
+                n_stencils++;
+            }
         }
 
         //mapped indices of write grids
@@ -267,7 +285,9 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
 
         //max is the value of s
         s=std::max(s, curr_eq_group.num_spatial_reads+curr_eq_group.num_spatial_writes);
-        curr_eq_group.num_stencils=std::min(n_stencils[i],curr_eq_group.num_spatial_reads);
+        curr_eq_group.num_stencils=std::min(n_stencils,curr_eq_group.num_spatial_reads);
+        //printf("...-----...---Reads = %d, Writes = %d, Stencils = %d\n", curr_eq_group.num_spatial_reads, curr_eq_group.num_spatial_writes, curr_eq_group.num_stencils);
+
         maxNumStencils=std::max(maxNumStencils, curr_eq_group.num_stencils);
         eqGroups.push_back(curr_eq_group);
     }
@@ -297,6 +317,12 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     free(mc_file_loc);
 */
     char *mc_file = glb_mc_file;
+
+    FILE *threadPerSocketFile;
+    POPEN(sysLogFileName, threadPerSocketFile, "%s/threadPerSocket.sh %s", TOOL_DIR, mc_file);
+    thread_per_socket = readIntVar(threadPerSocketFile);
+    PCLOSE(threadPerSocketFile);
+
 
     //find cpu frequency
     FILE *cpuFreqFile;
@@ -600,6 +626,11 @@ void yaskSite::setDim(int z, int y, int x, int t, bool resetOthers)
 void yaskSite::setThread(int nthreads_, int threadPerBlock_, bool resetOthers)
 {
     nthreads = nthreads_;
+    if(nthreads > thread_per_socket)
+    {
+        nthreads = thread_per_socket;
+        ERROR_PRINT("Currently the framework only supports 1 ccNUMA domain, setting nthreads to %d\n", nthreads);
+    }
     threadPerBlock = threadPerBlock_;
     if(resetOthers)
     {

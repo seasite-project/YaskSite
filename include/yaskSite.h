@@ -83,6 +83,7 @@ class yaskSite
         int radius;
         int dim;
 
+        int thread_per_socket;
         double cpu_freq;
 
         bool buildWithLikwid;

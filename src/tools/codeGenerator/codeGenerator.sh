@@ -11,17 +11,13 @@ tempDir=$5
 code_file="$tempDir/tmp_ys_InpCode_dup.txt"
 generated_file="$tempDir/generated_temp.hpp" #this is the generated file will only
                                              #be pushed to real destination if
-
 #code_file lines would be deleted once its processing is over
 cp $real_code_file $code_file
-
 #1. Get Base class name
 stencil_name=$($toolDir/getBtwString.sh "BASE_STENCIL=" ";" $code_file)
 $toolDir/rmLine.sh "BASE_STENCIL=" $code_file
-
 #check if it is a radius defined stencil
 isRadius=$($toolDir/isStencilRadius.sh $stencil_name $generateDir "$toolDirBase")
-
 default_template_file="$toolDir/template.h"
 
 if [[ $isRadius == 1 ]]; then
@@ -33,7 +29,6 @@ template_file=${6:-"$default_template_file"}
 
 
 cp $template_file $generated_file
-
 base_file_w_path=$($toolDir/getStencilFile.sh $stencil_name $generateDir)
 base_file=`basename $base_file_w_path`
 $toolDir/substitute.sh "BASE_STENCIL_FILE" "$base_file" $generated_file
@@ -45,7 +40,6 @@ class=$($toolDir/getBtwString.sh "DERIVED_STENCIL=" ";" $code_file)
 $toolDir/rmLine.sh "DERIVED_STENCIL=" $code_file
 
 $toolDir/substitute.sh "DERIVED_STENCIL" "$class" $generated_file
-
 #2. Grid generation
 grids=$($toolDir/getObj.sh GRID $code_file)
 $toolDir/rmLine.sh "GRID .*" $code_file

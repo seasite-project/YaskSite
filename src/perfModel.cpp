@@ -208,14 +208,14 @@ void perfModel::getBytePerCycles()
     std::vector<double> bw_table;
 
     /*char* bw_file;
-    STRINGIFY(bw_file, "%s/bench_results/bw_load_ratio.txt", TEMP_DIR);
-    bool success = readTable(bw_file, bw_table, 1, 10, 2, 2);
-    if(success==false)
-    {
-        ERROR_PRINT("Memory bandwidth not calibrated, please go to build directory of YASKSITE and execute make calibrate");
-    }
-    delete[] bw_file;
-    */
+      STRINGIFY(bw_file, "%s/bench_results/bw_load_ratio.txt", TEMP_DIR);
+      bool success = readTable(bw_file, bw_table, 1, 10, 2, 2);
+      if(success==false)
+      {
+      ERROR_PRINT("Memory bandwidth not calibrated, please go to build directory of YASKSITE and execute make calibrate");
+      }
+      delete[] bw_file;
+      */
 
     char *sysLogFileName = NULL;
     POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;MEM;1;LDST;BW\"| sed -e \"s@GB/s@@g\" | sed -e \"s@\\[@@g\" | sed -e \"s@\\]@@g\"", TOOL_DIR, mc_file);
@@ -271,7 +271,6 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
     double prefetch_oh_per_LUP = getPrefetchEffects(currCache, opt);
 
     spatialOh = addBlockBoundaryEffects(currCache);
-
     temporalOh = addBlockBoundaryEffects(currCache,true);
 
     //if it's greater than temporal blocked cache;
@@ -317,15 +316,15 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         //since L3 cache is busy by all threads latency with all threads have to 
         //be accounted
         //But this is only required if LLC prefetcher is off
-/*        int  prevId = currCache.hierarchy-1;
+        /*        int  prevId = currCache.hierarchy-1;
 
-        while(prevId>=0)
-        {
-            cache_info prev_cache = CACHES[prevHierarchy];
-            double prev_latency_oh_per_LUP_temp = getLatencyEffects(prev_cache, rwRatio, true, 1)*(stencil->data->dt-1.0)/((double)stencil->data->dt);
-            ECM_latency[prev_cache.hierarchy] += prev_latency_oh_per_LUP_temp;
-            --prevId;
-        }*/
+                  while(prevId>=0)
+                  {
+                  cache_info prev_cache = CACHES[prevHierarchy];
+                  double prev_latency_oh_per_LUP_temp = getLatencyEffects(prev_cache, rwRatio, true, 1)*(stencil->data->dt-1.0)/((double)stencil->data->dt);
+                  ECM_latency[prev_cache.hierarchy] += prev_latency_oh_per_LUP_temp;
+                  --prevId;
+                  }*/
         double latency_oh_per_LUP = getLatencyEffects(currCache, rwRatio);
         ECM_latency[currCache.hierarchy] = latency_oh_per_LUP_temp + latency_oh_per_LUP/static_cast<double>(stencil->data->dt);
         return { victim_scale*(((totalSpatialContrib)/static_cast<double>(stencil->data->dt))+(1+rest_contrib)*temporalOh[0]), ((totalSpatialContrib-numWriteGrids)/(double)numWriteGrids) };
@@ -380,7 +379,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         ECM_boundary[currCache.hierarchy] = victim_scale*boundary_oh*currCache.bytePerWord;
         ECM_assoc[currCache.hierarchy] = assoc_oh*currCache.bytePerWord;
 
-//        printf("....total Grids = %d, numWriteGrids = %d\n", totalGrids, numWriteGrids);
+        //        printf("....total Grids = %d, numWriteGrids = %d\n", totalGrids, numWriteGrids);
         double latency_oh = getLatencyEffects(currCache, rwRatio);
         ECM_latency[currCache.hierarchy] = latency_oh;
         return { victim_scale*totalData, (totalData-numWriteGrids)/((double)numWriteGrids) };
@@ -508,13 +507,13 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
     double fold_y = stencil->data->fold_y;
     double fold_z = stencil->data->fold_z;
 
-    bz = bz*fold_x*fold_y;
-    by = ceil(by/fold_y);
-    bx = ceil(bx/fold_x);
+    bz = std::max(1.0,bz*fold_x*fold_y);
+    by = std::max(1.0,ceil(by/fold_y));
+    bx = std::max(1.0,ceil(bx/fold_x));
 
-    rz = rz*fold_x*fold_y;
-    ry = ceil(ry/fold_y);
-    rx = ceil(rx/fold_x);
+    rz = std::max(1.0,rz*fold_x*fold_y);
+    ry = std::max(1.0,ceil(ry/fold_y));
+    rx = std::max(1.0,ceil(rx/fold_x));
 
     int num_block_z = (int)ceil(stencil->data->dz/bz);
 
@@ -581,11 +580,11 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
 
     //temporal blocking has radius 1
     /*if(temporal)
-    {
-        radius_x = 1;
-        radius_y = 1;
-        radius_z = 1;
-    }*/
+      {
+      radius_x = 1;
+      radius_y = 1;
+      radius_z = 1;
+      }*/
 
     if(dim==3)
     {
@@ -598,18 +597,18 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
         printf("cl_avg_z = %f\n", cl_avg_z);
         //Should be if ILC satisfied
         /*if(cache.shared && (radius_y+rest_contrib)*bz*totThreads < cache.getWords()) //shouldn't it be (radius_y+rest_contrib)*bz*thread_z
-        {
-            data_xy = data_xy/thread_z;
-        }
+          {
+          data_xy = data_xy/thread_z;
+          }
         //Should be if OLC satisfied
         if(cache.shared && (radius_x+rest_contrib)*bz*by*totThreads < cache.getWords())
         {
-            data_zx = data_zx/thread_y;
+        data_zx = data_zx/thread_y;
         }
         //Should be if temporal satisfied
         if(cache.shared && (rest_contrib+1)*bz*by*bx*totThreads < cache.getWords())
         {
-            data_zy = data_zy/thread_x;
+        data_zy = data_zy/thread_x;
         }*/
 
         //TODO: this works if and only if spatial blocking and temporal blocking are
@@ -717,7 +716,7 @@ double perfModel::getPrefetchEffects(cache_info currCache, blockDetails* opt)
     double prefetch_oh = 0;
     double fold_factor = stencil->data->fold_x*stencil->data->fold_y;
 
-//    double lhs_boundary_prefetched = std::min(2*stencil->data->radius, currCache.prefetch_cl*8)/dz; //due to lhs
+    //    double lhs_boundary_prefetched = std::min(2*stencil->data->radius, currCache.prefetch_cl*8)/dz; //due to lhs
     double reuseFactor = 0;
 
     int thread_x = 1;
@@ -831,20 +830,20 @@ double perfModel::getLatencyEffects(cache_info currCache, int rwRatio, bool temp
 
     double fold_factor = stencil->data->fold_x*stencil->data->fold_y;
 
-   /* bool temporalPass = false;
+    /* bool temporalPass = false;
     //Since with temporal blocking dimension reduces for each time step
     if( ((stencil->data->rx != stencil->data->dx) || (stencil->data->ry != stencil->data->dy) ) || (stencil->data->rz != stencil->data->dz) )
     {
-        temporalPass = true;
+    temporalPass = true;
     }*/
     //if num_block_z == 1 it implies no latency; since it  wraps around
     //correctly
     //temporary will have compulsary latency since the next timestep with next
     //array (alternate between 2 arrays)
-   // if((num_block_z>1 || temporal) || temporalPass)
-   // if(num_block_z>1)
-   //  if( (num_block_z>1) || temporalPass)
-   // if((num_block_z>1) || (temporalPass && !temporal))
+    // if((num_block_z>1 || temporal) || temporalPass)
+    // if(num_block_z>1)
+    //  if( (num_block_z>1) || temporalPass)
+    // if((num_block_z>1) || (temporalPass && !temporal))
     if(num_block_z>1)
     {
         if(stencil->dim==3)
@@ -1190,20 +1189,20 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
     printf("\n");
 
 
-/*    for(int i=1; i<=olc_layer_cl; ++i)
-    {
-        for(int j=0; j<(int)cl_olc.size(); ++j)
-        {
-            cl_olc[j]=(cl_olc[j]+1)%set_size;
-            if(hit_ctr_olc[cl_olc[j]]>assoc)
-            {
-                extra_cl_olc++;
-                ctr_olc++;
-            }
-            hit_ctr_olc[cl_olc[j]] += 1;
-        }
-    }
-*/
+    /*    for(int i=1; i<=olc_layer_cl; ++i)
+          {
+          for(int j=0; j<(int)cl_olc.size(); ++j)
+          {
+          cl_olc[j]=(cl_olc[j]+1)%set_size;
+          if(hit_ctr_olc[cl_olc[j]]>assoc)
+          {
+          extra_cl_olc++;
+          ctr_olc++;
+          }
+          hit_ctr_olc[cl_olc[j]] += 1;
+          }
+          }
+          */
 
     printf("extra cl olc = %f\n", extra_cl_olc);
     double outer_fold = (stencil->dim==3)?stencil->fold_x:stencil->fold_y;
@@ -1215,12 +1214,12 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
         extra_cl_olc = (stencil_contrib_outer*olc_layer_cl);
     }
     printf("extra cl olc = %f\n", extra_cl_olc);
- 
+
     //LC broken: naive analytical should have switched at this point
-   /* if(ctr_olc == set_size)
-    {
-        extra_cl_olc = 0;
-    }*/
+    /* if(ctr_olc == set_size)
+       {
+       extra_cl_olc = 0;
+       }*/
 
     //printf("Cache = %s, ways = %d, sets = %d\n", cache.name.c_str(), cache.ways, (int)hit_ctr_olc.size());
     //count extra cl for olc
@@ -1248,9 +1247,9 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
 
 
     /*if(ctr_ilc == set_size)
-    {
-        extra_cl_ilc = 0;
-    }*/
+      {
+      extra_cl_ilc = 0;
+      }*/
 
     printf("%f, %f, %f\n", extra_cl_olc, extra_cl_ilc, extra_cl_nlc);
     //extra words per LUP
@@ -1268,496 +1267,512 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
 std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jump, cache_info currCache, double shrink_size)
 {
 #ifdef MODEL_ASSOCIATIVITY_EFFECT
-    ilc_jump = false;
-    olc_jump = false;
-
-    int prevHierarchy;
-
-    if((currCache.hierarchy-1) < 0)
-    {
-        return {0,0,0};
-    }
-    prevHierarchy = currCache.hierarchy-1;
-    cache_info cache = CACHES[prevHierarchy];
-
-    double dx = stencil->data->dx;
-    double dy = stencil->data->dy;
-    double dz = stencil->data->dz;
-
-    double by = stencil->data->by;
-    double bz = stencil->data->bz;
-
-    double fold_y = stencil->data->fold_y;
-    double fold_x = stencil->data->fold_x;
-
-    int set_size = cache.set_size;
-
-    //decrese set size to contain it's prev cache elements; because they  will
-    //be  already cached
-    int prevPrevHierarchy;
-
-    if((cache.hierarchy-1) >= 0)
-    {
-        prevPrevHierarchy = cache.hierarchy-1;
-        double ratio = 1-CACHES[prevPrevHierarchy].getWords()/(double)cache.getWords();
-        set_size=static_cast<int>(set_size*ratio);
-    }
-    if(cache.shared)
-    {
-        set_size = static_cast<int>(set_size/(double)stencil->data->nthreads);
-    }
-
-    set_size = static_cast<int>(set_size*shrink_size);
-
-    int assoc = cache.ways;
-
-    double centre = dx*dy*dz;
+    double extra_cl_olc = 0;
+    double extra_cl_ilc = 0;
+    double extra_cl_nlc = 0;
     int r = stencil->radius;
-    double centre_rhs = (dx+2*r)*(dy+2*r)*(dz+2*r)+dx*dy*dz;
 
-    //separate different words, in order to avoid counting cache hits as misses
-    std::vector<double> words_nlc, words_ilc, words_olc;
-    std::vector<double> words_miss_nlc, words_miss_ilc, words_miss_olc;
-    std::vector<double> words_hit_nlc, words_hit_ilc, words_hit_olc;
-    std::vector<double> words_drop_nlc, words_drop_ilc, words_drop_olc;
-
-    words_miss_nlc.push_back(centre_rhs);
-    words_miss_ilc.push_back(centre_rhs);
-    words_miss_olc.push_back(centre_rhs);
-
-    int dim = stencil->data->dim;
-    double radius_x = (dim > 2)?( static_cast<int>((stencil->radius-1)/(fold_x)) + 1 ):0;
-    double centre_next = dx*dy*dz + dy*dz;
-    double extreme_x = dz*dy*(radius_x)*static_cast<int>(fold_x) + centre_next;
-    double min_x = -1.0*dz*dy*radius_x*static_cast<int>(fold_x) + centre;
-
-    printf("radius_x = %f\n", radius_x);
-
-    if(dim >2)
+    if(r != 0) //if not streaming code
     {
-        for(int i=(int)(-radius_x); i<=(int)radius_x; ++i)
+        ilc_jump = false;
+        olc_jump = false;
+
+        int prevHierarchy;
+
+        if((currCache.hierarchy-1) < 0)
+        {
+            return {0,0,0};
+        }
+        prevHierarchy = currCache.hierarchy-1;
+        cache_info cache = CACHES[prevHierarchy];
+
+        double dx = stencil->data->dx;
+        double dy = stencil->data->dy;
+        double dz = stencil->data->dz;
+
+        double by = stencil->data->by;
+        double bz = stencil->data->bz;
+
+        double fold_y = stencil->data->fold_y;
+        double fold_x = stencil->data->fold_x;
+
+        int set_size = cache.set_size;
+
+        //decrese set size to contain it's prev cache elements; because they  will
+        //be  already cached
+        int prevPrevHierarchy;
+
+        if((cache.hierarchy-1) >= 0)
+        {
+            prevPrevHierarchy = cache.hierarchy-1;
+            double ratio = 1-CACHES[prevPrevHierarchy].getWords()/(double)cache.getWords();
+            set_size=static_cast<int>(set_size*ratio);
+        }
+        if(cache.shared)
+        {
+            set_size = static_cast<int>(set_size/(double)stencil->data->nthreads);
+        }
+
+        set_size = static_cast<int>(set_size*shrink_size);
+
+        int assoc = cache.ways;
+
+        double centre = dx*dy*dz;
+        //int r = stencil->radius;
+        double centre_rhs = (dx+2*r)*(dy+2*r)*(dz+2*r)+dx*dy*dz;
+
+        //separate different words, in order to avoid counting cache hits as misses
+        std::vector<double> words_nlc, words_ilc, words_olc;
+        std::vector<double> words_miss_nlc, words_miss_ilc, words_miss_olc;
+        std::vector<double> words_hit_nlc, words_hit_ilc, words_hit_olc;
+        std::vector<double> words_drop_nlc, words_drop_ilc, words_drop_olc;
+
+        words_miss_nlc.push_back(centre_rhs);
+        words_miss_ilc.push_back(centre_rhs);
+        words_miss_olc.push_back(centre_rhs);
+
+        int dim = stencil->data->dim;
+        double radius_x = (dim > 2)?( static_cast<int>((stencil->radius-1)/(fold_x)) + 1 ):0;
+        double centre_next = dx*dy*dz + dy*dz;
+        double extreme_x = dz*dy*(radius_x)*static_cast<int>(fold_x) + centre_next;
+        double min_x = -1.0*dz*dy*radius_x*static_cast<int>(fold_x) + centre;
+
+        printf("radius_x = %f\n", radius_x);
+
+        if(dim >2)
+        {
+            for(int i=(int)(-radius_x); i<=(int)radius_x; ++i)
+            {
+                if(i!=0)
+                {
+                    double curr_word = dz*dy*i*static_cast<int>(fold_x) + centre;
+                    //            words_nlc.push_back(curr_word);
+                    //            words_ilc.push_back(curr_word);
+                    //           words_drop_nlc.push_back(curr_word);
+                    //            words_drop_ilc.push_back(curr_word);
+                    words_olc.push_back(curr_word);
+
+                    if(i>(int)(-radius_x))
+                    {
+                        words_hit_olc.push_back(curr_word);
+                    }
+                }
+            }
+            words_drop_olc.push_back(min_x);
+
+            for(int i=(int)(-radius_x); i<=(int)radius_x; ++i)
+            {
+                if(i!=0)
+                {
+                    double curr_word = dz*dy*i*static_cast<int>(fold_x) + centre_next;
+                    words_miss_nlc.push_back(curr_word);
+                    words_miss_ilc.push_back(curr_word);
+                }
+            }
+            words_miss_olc.push_back(extreme_x);
+        }
+
+        double radius_y = ( static_cast<int>((stencil->radius-1)/(fold_y)) + 1 );
+        centre_next = centre + dz;
+        double extreme_y = dz*radius_y*static_cast<int>(fold_y*fold_x) + centre;
+        double extreme_y_next = dz*radius_y*static_cast<int>(fold_y*fold_x) + centre_next;
+        double min_y = -1.0*dz*radius_y*static_cast<int>(fold_y*fold_x) + centre;
+        for(int i=(int)(-radius_y); i<=(int)radius_y; ++i)
         {
             if(i!=0)
             {
-                double curr_word = dz*dy*i*static_cast<int>(fold_x) + centre;
+                double curr_word = dz*i*static_cast<int>(fold_y*fold_x) + centre;
                 //            words_nlc.push_back(curr_word);
-                //            words_ilc.push_back(curr_word);
-                //           words_drop_nlc.push_back(curr_word);
-                //            words_drop_ilc.push_back(curr_word);
-                words_olc.push_back(curr_word);
+                //            words_drop_nlc.push_back(curr_word);
+                words_ilc.push_back(curr_word);
 
-                if(i>(int)(-radius_x))
+                if(i>(int)(-radius_y))
                 {
-                    words_hit_olc.push_back(curr_word);
+                    words_hit_ilc.push_back(curr_word);
                 }
             }
         }
-        words_drop_olc.push_back(min_x);
+        if(dim > 2)
+        {
+            words_hit_olc.push_back(extreme_y);
+            words_olc.push_back(extreme_y);
+        }
+        words_drop_ilc.push_back(min_y);
 
-        for(int i=(int)(-radius_x); i<=(int)radius_x; ++i)
+        for(int i=(int)(-radius_y); i<=(int)radius_y; ++i)
         {
             if(i!=0)
             {
-                double curr_word = dz*dy*i*static_cast<int>(fold_x) + centre_next;
+                double curr_word = dz*i*static_cast<int>(fold_y*fold_x) + centre_next;
                 words_miss_nlc.push_back(curr_word);
-                words_miss_ilc.push_back(curr_word);
             }
         }
-        words_miss_olc.push_back(extreme_x);
-    }
+        words_miss_ilc.push_back(extreme_y_next);
 
-    double radius_y = ( static_cast<int>((stencil->radius-1)/(fold_y)) + 1 );
-    centre_next = centre + dz;
-    double extreme_y = dz*radius_y*static_cast<int>(fold_y*fold_x) + centre;
-    double extreme_y_next = dz*radius_y*static_cast<int>(fold_y*fold_x) + centre_next;
-    double min_y = -1.0*dz*radius_y*static_cast<int>(fold_y*fold_x) + centre;
-    for(int i=(int)(-radius_y); i<=(int)radius_y; ++i)
-    {
-        if(i!=0)
+        //due to x leg you would load one more cache line till radius 7; after that
+        //one more cache line
+        int radius_z = stencil->radius*static_cast<int>(fold_y*fold_x);
+        double extreme_z = centre+radius_z;
+        for(int i=0; i<(int)(radius_z/8); i++)
         {
-            double curr_word = dz*i*static_cast<int>(fold_y*fold_x) + centre;
-//            words_nlc.push_back(curr_word);
-//            words_drop_nlc.push_back(curr_word);
-            words_ilc.push_back(curr_word);
+            words_nlc.push_back(centre+i*8);
+        }
+        words_nlc.push_back(extreme_z);
+        words_hit_ilc.push_back(extreme_z);
+        words_ilc.push_back(extreme_z);
 
-            if(i>(int)(-radius_y))
+        double word_per_cl = 8;
+        std::vector<int> cl_ilc;
+        std::vector<int> cl_olc;
+        std::vector<int> cl_miss_ilc;
+        std::vector<int> cl_miss_olc;
+        std::vector<int> cl_hit_ilc;
+        std::vector<int> cl_hit_olc;
+        std::vector<int> cl_drop_ilc;
+        std::vector<int> cl_drop_olc;
+
+        std::vector<int> way_ctr_nlc(set_size,1);
+        std::vector<int> way_ctr_olc(set_size,1);
+        std::vector<int> way_ctr_ilc(set_size,1);
+
+        //Setup initial cache line status for nlc
+        for(int i=0; i<(int)words_nlc.size(); ++i)
+        {
+            int curr_cl = static_cast<int>(words_nlc[i]/word_per_cl)%set_size;
+            way_ctr_nlc[curr_cl] += 1;
+        }
+
+        //Setup initial cache line status for ilc
+        for(int i=0; i<(int)words_ilc.size(); ++i)
+        {
+            int curr_cl = static_cast<int>(words_ilc[i]/word_per_cl)%set_size;
+            cl_ilc.push_back(curr_cl);
+            way_ctr_ilc[curr_cl] += 1;
+        }
+        for(int i=0; i<(int)words_miss_ilc.size(); ++i)
+        {
+            int curr_cl = static_cast<int>(words_miss_ilc[i]/word_per_cl)%set_size;
+            cl_miss_ilc.push_back(curr_cl);
+        }
+        for(int i=0; i<(int)words_hit_ilc.size(); ++i)
+        {
+            int curr_cl = static_cast<int>(words_hit_ilc[i]/word_per_cl)%set_size;
+            cl_hit_ilc.push_back(curr_cl);
+        }
+        for(int i=0; i<(int)words_drop_ilc.size(); ++i)
+        {
+            int curr_cl = static_cast<int>(words_drop_ilc[i]/word_per_cl)%set_size;
+            cl_drop_ilc.push_back(curr_cl);
+        }
+
+        //Setup initial cache line status for olc
+        for(int i=0; i<(int)words_olc.size(); ++i)
+        {
+            int curr_cl = static_cast<int>(words_olc[i]/word_per_cl)%set_size;
+            cl_olc.push_back(curr_cl);
+            way_ctr_olc[curr_cl] += 1;
+        }
+        for(int i=0; i<(int)words_miss_olc.size(); ++i)
+        {
+            int curr_cl = static_cast<int>(words_miss_olc[i]/word_per_cl)%set_size;
+            cl_miss_olc.push_back(curr_cl);
+        }
+        for(int i=0; i<(int)words_hit_olc.size(); ++i)
+        {
+            int curr_cl = static_cast<int>(words_hit_olc[i]/word_per_cl)%set_size;
+            cl_hit_olc.push_back(curr_cl);
+        }
+        for(int i=0; i<(int)words_drop_olc.size(); ++i)
+        {
+            int curr_cl = static_cast<int>(words_drop_olc[i]/word_per_cl)%set_size;
+            cl_drop_olc.push_back(curr_cl);
+        }
+
+        //count extra if no layer condition is satisfied
+        //double extra_cl_nlc = 0;
+        int ctr_nlc = 0;
+        for(int i=0; i<(int)way_ctr_nlc.size(); ++i)
+        {
+            if(way_ctr_nlc[i] > assoc)
             {
-                words_hit_ilc.push_back(curr_word);
+                extra_cl_nlc += (way_ctr_nlc[i]-assoc);
+                ctr_nlc++;
             }
         }
-    }
-    if(dim > 2)
-    {
-        words_hit_olc.push_back(extreme_y);
-        words_olc.push_back(extreme_y);
-    }
-    words_drop_ilc.push_back(min_y);
 
-    for(int i=(int)(-radius_y); i<=(int)radius_y; ++i)
-    {
-        if(i!=0)
+        if(ctr_nlc > 0)
         {
-            double curr_word = dz*i*static_cast<int>(fold_y*fold_x) + centre_next;
-            words_miss_nlc.push_back(curr_word);
+            PERFWARNING_PRINT("The given dimension might have thrashing effects, please consider to pad them");
         }
-    }
-    words_miss_ilc.push_back(extreme_y_next);
 
-    //due to x leg you would load one more cache line till radius 7; after that
-    //one more cache line
-    int radius_z = stencil->radius*static_cast<int>(fold_y*fold_x);
-    double extreme_z = centre+radius_z;
-    for(int i=0; i<(int)(radius_z/8); i++)
-    {
-        words_nlc.push_back(centre+i*8);
-    }
-    words_nlc.push_back(extreme_z);
-    words_hit_ilc.push_back(extreme_z);
-    words_ilc.push_back(extreme_z);
 
-    double word_per_cl = 8;
-    std::vector<int> cl_ilc;
-    std::vector<int> cl_olc;
-    std::vector<int> cl_miss_ilc;
-    std::vector<int> cl_miss_olc;
-    std::vector<int> cl_hit_ilc;
-    std::vector<int> cl_hit_olc;
-    std::vector<int> cl_drop_ilc;
-    std::vector<int> cl_drop_olc;
+        int ilc_layer_cl = static_cast<int>(fold_y*fold_x*(bz/(8.0))+1);
+        int olc_layer_cl = static_cast<int>(fold_x*((bz*by)/8.0)+1);
 
-    std::vector<int> way_ctr_nlc(set_size,1);
-    std::vector<int> way_ctr_olc(set_size,1);
-    std::vector<int> way_ctr_ilc(set_size,1);
-
-    //Setup initial cache line status for nlc
-    for(int i=0; i<(int)words_nlc.size(); ++i)
-    {
-        int curr_cl = static_cast<int>(words_nlc[i]/word_per_cl)%set_size;
-        way_ctr_nlc[curr_cl] += 1;
-    }
-
-    //Setup initial cache line status for ilc
-    for(int i=0; i<(int)words_ilc.size(); ++i)
-    {
-        int curr_cl = static_cast<int>(words_ilc[i]/word_per_cl)%set_size;
-        cl_ilc.push_back(curr_cl);
-        way_ctr_ilc[curr_cl] += 1;
-    }
-    for(int i=0; i<(int)words_miss_ilc.size(); ++i)
-    {
-        int curr_cl = static_cast<int>(words_miss_ilc[i]/word_per_cl)%set_size;
-        cl_miss_ilc.push_back(curr_cl);
-    }
-    for(int i=0; i<(int)words_hit_ilc.size(); ++i)
-    {
-        int curr_cl = static_cast<int>(words_hit_ilc[i]/word_per_cl)%set_size;
-        cl_hit_ilc.push_back(curr_cl);
-    }
-    for(int i=0; i<(int)words_drop_ilc.size(); ++i)
-    {
-        int curr_cl = static_cast<int>(words_drop_ilc[i]/word_per_cl)%set_size;
-        cl_drop_ilc.push_back(curr_cl);
-    }
-
-    //Setup initial cache line status for olc
-    for(int i=0; i<(int)words_olc.size(); ++i)
-    {
-        int curr_cl = static_cast<int>(words_olc[i]/word_per_cl)%set_size;
-        cl_olc.push_back(curr_cl);
-        way_ctr_olc[curr_cl] += 1;
-    }
-    for(int i=0; i<(int)words_miss_olc.size(); ++i)
-    {
-        int curr_cl = static_cast<int>(words_miss_olc[i]/word_per_cl)%set_size;
-        cl_miss_olc.push_back(curr_cl);
-    }
-    for(int i=0; i<(int)words_hit_olc.size(); ++i)
-    {
-        int curr_cl = static_cast<int>(words_hit_olc[i]/word_per_cl)%set_size;
-        cl_hit_olc.push_back(curr_cl);
-    }
-    for(int i=0; i<(int)words_drop_olc.size(); ++i)
-    {
-        int curr_cl = static_cast<int>(words_drop_olc[i]/word_per_cl)%set_size;
-        cl_drop_olc.push_back(curr_cl);
-    }
-
-    //count extra if no layer condition is satisfied
-    double extra_cl_nlc = 0;
-    int ctr_nlc = 0;
-    for(int i=0; i<(int)way_ctr_nlc.size(); ++i)
-    {
-        if(way_ctr_nlc[i] > assoc)
+        for(int i=1; i<=ilc_layer_cl; ++i)
         {
-            extra_cl_nlc += (way_ctr_nlc[i]-assoc);
-            ctr_nlc++;
-        }
-    }
-
-    if(ctr_nlc > 0)
-    {
-        PERFWARNING_PRINT("The given dimension might have thrashing effects, please consider to pad them");
-    }
-
-
-    int ilc_layer_cl = static_cast<int>(fold_y*fold_x*(bz/(8.0))+1);
-    int olc_layer_cl = static_cast<int>(fold_x*((bz*by)/8.0)+1);
-
-    for(int i=1; i<=ilc_layer_cl; ++i)
-    {
-        for(int j=0; j<(int)cl_ilc.size(); ++j)
-        {
-            cl_ilc[j]=(cl_ilc[j]+1)%set_size;
-            way_ctr_ilc[cl_ilc[j]] += 1;
-        }
-    }
-
-    double extra_cl_ilc =  0;
-    int ctr_ilc = 0;
-
-   // std::vector<int> cl_dropped_list_ilc;
-    for(int i=0; i<ilc_layer_cl; ++i)
-    {
-        for(int j=0; j<(int)cl_drop_ilc.size(); ++j)
-        {
-            //cl_dropped_list_ilc.push_back(cl_drop_ilc[j]+i);
-            int curr_cl = cl_drop_ilc[j];
-            way_ctr_ilc[curr_cl] -= 1;
-            cl_drop_ilc[j]=(cl_drop_ilc[j]+1)%set_size;
-        }
-    }
-
-   //std::sort(cl_dropped_list_ilc.begin(), cl_dropped_list_ilc.end());
-
-    for(int i=1; i<=ilc_layer_cl; ++i)
-    {
-        for(int j=0; j<(int)cl_miss_ilc.size(); ++j)
-        {
-            int curr_cl = cl_miss_ilc[j];
-           /* if(way_ctr_ilc[curr_cl] == (assoc))
+            for(int j=0; j<(int)cl_ilc.size(); ++j)
             {
-                std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_ilc.begin(), cl_dropped_list_ilc.end(), curr_cl);
-                if(pos != cl_dropped_list_ilc.end())
-                {
-                    //drop this element
-                    cl_dropped_list_ilc.erase(pos);
+                cl_ilc[j]=(cl_ilc[j]+1)%set_size;
+                way_ctr_ilc[cl_ilc[j]] += 1;
+            }
+        }
+
+        //double extra_cl_ilc =  0;
+        int ctr_ilc = 0;
+
+        // std::vector<int> cl_dropped_list_ilc;
+        for(int i=0; i<ilc_layer_cl; ++i)
+        {
+            for(int j=0; j<(int)cl_drop_ilc.size(); ++j)
+            {
+                //cl_dropped_list_ilc.push_back(cl_drop_ilc[j]+i);
+                int curr_cl = cl_drop_ilc[j];
+                way_ctr_ilc[curr_cl] -= 1;
+                cl_drop_ilc[j]=(cl_drop_ilc[j]+1)%set_size;
+            }
+        }
+
+        //std::sort(cl_dropped_list_ilc.begin(), cl_dropped_list_ilc.end());
+
+        for(int i=1; i<=ilc_layer_cl; ++i)
+        {
+            for(int j=0; j<(int)cl_miss_ilc.size(); ++j)
+            {
+                int curr_cl = cl_miss_ilc[j];
+                /* if(way_ctr_ilc[curr_cl] == (assoc))
+                   {
+                   std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_ilc.begin(), cl_dropped_list_ilc.end(), curr_cl);
+                   if(pos != cl_dropped_list_ilc.end())
+                   {
+                //drop this element
+                cl_dropped_list_ilc.erase(pos);
                 }
                 else
                 {
-                    way_ctr_ilc[curr_cl] += 1;
+                way_ctr_ilc[curr_cl] += 1;
+                ++extra_cl_ilc;
+                ++ctr_ilc;
+                }
+                }*/
+                if(way_ctr_ilc[curr_cl] >= (assoc))
+                {
+                    /*
+                       std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_ilc.begin(), cl_dropped_list_ilc.end(), curr_cl);
+                       if(pos != cl_dropped_list_ilc.end())
+                       {
+                    //drop this element
+                    cl_dropped_list_ilc.erase(pos);
+                    }
+                    else*/
+                    {
+                        way_ctr_ilc[curr_cl] += 1;
+                    }
                     ++extra_cl_ilc;
                     ++ctr_ilc;
                 }
-            }*/
-            if(way_ctr_ilc[curr_cl] >= (assoc))
-            {
-                /*
-                std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_ilc.begin(), cl_dropped_list_ilc.end(), curr_cl);
-                if(pos != cl_dropped_list_ilc.end())
-                {
-                    //drop this element
-                    cl_dropped_list_ilc.erase(pos);
-                }
-                else*/
+                else
                 {
                     way_ctr_ilc[curr_cl] += 1;
                 }
-                ++extra_cl_ilc;
-                ++ctr_ilc;
-            }
-            else
-            {
-                way_ctr_ilc[curr_cl] += 1;
+
+                cl_miss_ilc[j]=(cl_miss_ilc[j]+1)%set_size;
             }
 
-            cl_miss_ilc[j]=(cl_miss_ilc[j]+1)%set_size;
-        }
-
-        for(int j=0; j<(int)cl_hit_ilc.size(); ++j)
-        {
-            int curr_cl = cl_hit_ilc[j];
-            if(way_ctr_ilc[curr_cl] > assoc)
+            for(int j=0; j<(int)cl_hit_ilc.size(); ++j)
             {
-          /*      std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_ilc.begin(), cl_dropped_list_ilc.end(), curr_cl);
-                if(pos != cl_dropped_list_ilc.end())
+                int curr_cl = cl_hit_ilc[j];
+                if(way_ctr_ilc[curr_cl] > assoc)
                 {
+                    /*      std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_ilc.begin(), cl_dropped_list_ilc.end(), curr_cl);
+                            if(pos != cl_dropped_list_ilc.end())
+                            {
                     //drop this element
                     cl_dropped_list_ilc.erase(pos);
+                    }
+                    else*/
+                    {
+                        way_ctr_ilc[curr_cl] += 1;
+                    }
+                    ++extra_cl_ilc;
+                    ++ctr_ilc;
                 }
-                else*/
-                {
-                    way_ctr_ilc[curr_cl] += 1;
-                }
-                ++extra_cl_ilc;
-                ++ctr_ilc;
+                cl_hit_ilc[j]=(cl_hit_ilc[j]+1)%set_size;
             }
-            cl_hit_ilc[j]=(cl_hit_ilc[j]+1)%set_size;
-        }
-        int stencil_contrib_inner = 2*( static_cast<int>((stencil->radius-1)/((double)stencil->fold_y)) +1 );
-        //if more than LC break; record as LC break
-        if(extra_cl_ilc/static_cast<double>(ilc_layer_cl) > stencil_contrib_inner)
-        {
-            extra_cl_ilc = (stencil_contrib_inner*ilc_layer_cl);
-            ilc_jump = true;
-        }
-    }
-    printf("extra cl ilc = %f\n", extra_cl_ilc);
-
-
-    for(int i=1; i<=olc_layer_cl; ++i)
-    {
-        for(int j=0; j<(int)cl_olc.size(); ++j)
-        {
-            cl_olc[j]=(cl_olc[j]+1)%set_size;
-            way_ctr_olc[cl_olc[j]] += 1;
-        }
-    }
-
-    double extra_cl_olc =  0;
-    int ctr_olc = 0;
-
-    if(dim > 2)
-    {
-        //std::vector<int> cl_dropped_list_olc;
-        for(int i=0; i<olc_layer_cl; ++i)
-        {
-            for(int j=0; j<(int)cl_drop_olc.size(); ++j)
+            int stencil_contrib_inner = 2*( static_cast<int>((stencil->radius-1)/((double)stencil->fold_y)) +1 );
+            //if more than LC break; record as LC break
+            if(extra_cl_ilc/static_cast<double>(ilc_layer_cl) > stencil_contrib_inner)
             {
-                // cl_dropped_list_olc.push_back(cl_drop_olc[j]+i);
-                int curr_cl = cl_drop_olc[j];
-                way_ctr_olc[curr_cl] -= 1;
-                cl_drop_olc[j]=(cl_drop_olc[j]+1)%set_size;
+                extra_cl_ilc = (stencil_contrib_inner*ilc_layer_cl);
+                ilc_jump = true;
             }
         }
+        printf("extra cl ilc = %f\n", extra_cl_ilc);
 
-
-        //std::sort(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end());
 
         for(int i=1; i<=olc_layer_cl; ++i)
         {
-            for(int j=0; j<(int)cl_miss_olc.size(); ++j)
+            for(int j=0; j<(int)cl_olc.size(); ++j)
             {
-                int curr_cl = cl_miss_olc[j];
-                /*if(way_ctr_olc[curr_cl] == (assoc))
-                  {
-                  std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
-                  if(pos != cl_dropped_list_olc.end())
-                  {
-                //drop this element
-                cl_dropped_list_olc.erase(pos);
-                }
-                else
-                {
-                way_ctr_olc[curr_cl] += 1;
-                ++extra_cl_olc;
-                ++ctr_olc;
-                }
-                }*/
-                if(way_ctr_olc[curr_cl] >= (assoc))
-                {
-                    /* std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
-                       if(pos != cl_dropped_list_olc.end())
-                       {
-                    //drop this element
-                    cl_dropped_list_olc.erase(pos);
-                    }
-                    else*/
-                    {
-                        way_ctr_olc[curr_cl] += 1;
-                    }
-                    ++extra_cl_olc;
-                    ++ctr_olc;
-                }
-                else
-                {
-                    way_ctr_olc[curr_cl] += 1;
-                }
-                cl_miss_olc[j]=(cl_miss_olc[j]+1)%set_size;
-            }
-
-            for(int j=0; j<(int)cl_hit_olc.size(); ++j)
-            {
-                int curr_cl = cl_hit_olc[j];
-                if(way_ctr_olc[curr_cl] > assoc)
-                {
-                    /* std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
-                       if(pos != cl_dropped_list_olc.end())
-                       {
-                    //drop this element
-                    cl_dropped_list_olc.erase(pos);
-                    }
-                    else*/
-                    {
-                        way_ctr_olc[curr_cl] += 1;
-                    }
-                    ++extra_cl_olc;
-                    ++ctr_olc;
-                }
-                cl_hit_olc[j]=(cl_hit_olc[j]+1)%set_size;
-            }
-            double outer_fold = (stencil->dim==3)?stencil->fold_x:stencil->fold_y;
-            int stencil_contrib_outer = 2*( static_cast<int>((stencil->radius-1)/(outer_fold)) + 1 );
-            //printf("lhs = %f, rhs = %d\n", extra_cl_olc/static_cast<double>(olc_layer_cl), stencil_contrib_outer);
-            //if more than LC break; record as LC break
-            if(extra_cl_olc/static_cast<double>(olc_layer_cl) > stencil_contrib_outer)
-            {
-                extra_cl_olc = (stencil_contrib_outer*olc_layer_cl);
-                olc_jump = true;
-                break;
+                cl_olc[j]=(cl_olc[j]+1)%set_size;
+                way_ctr_olc[cl_olc[j]] += 1;
             }
         }
-    }
-    printf("extra cl olc = %f\n", extra_cl_olc);
 
+        //double extra_cl_olc =  0;
+        int ctr_olc = 0;
 
-    printf("Cache = %s, ways = %d, sets = %d\n", cache.name.c_str(), cache.ways, (int)way_ctr_olc.size());
-    //count extra cl for olc
-/*    double extra_cl_olc =  0;
-    int ctr_olc = 0;
-    for(int i=0; i<(int)way_ctr_olc.size(); ++i)
-    {
-        printf("%d ", way_ctr_olc[i]);
-        if(way_ctr_olc[i] > assoc)
+        if(dim > 2)
         {
-            extra_cl_olc += (way_ctr_olc[i]-assoc);
-            ctr_olc++;
+            //std::vector<int> cl_dropped_list_olc;
+            for(int i=0; i<olc_layer_cl; ++i)
+            {
+                for(int j=0; j<(int)cl_drop_olc.size(); ++j)
+                {
+                    // cl_dropped_list_olc.push_back(cl_drop_olc[j]+i);
+                    int curr_cl = cl_drop_olc[j];
+                    way_ctr_olc[curr_cl] -= 1;
+                    cl_drop_olc[j]=(cl_drop_olc[j]+1)%set_size;
+                }
+            }
+
+
+            //std::sort(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end());
+
+            for(int i=1; i<=olc_layer_cl; ++i)
+            {
+                for(int j=0; j<(int)cl_miss_olc.size(); ++j)
+                {
+                    int curr_cl = cl_miss_olc[j];
+                    /*if(way_ctr_olc[curr_cl] == (assoc))
+                      {
+                      std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
+                      if(pos != cl_dropped_list_olc.end())
+                      {
+                    //drop this element
+                    cl_dropped_list_olc.erase(pos);
+                    }
+                    else
+                    {
+                    way_ctr_olc[curr_cl] += 1;
+                    ++extra_cl_olc;
+                    ++ctr_olc;
+                    }
+                    }*/
+                    if(way_ctr_olc[curr_cl] >= (assoc))
+                    {
+                        /* std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
+                           if(pos != cl_dropped_list_olc.end())
+                           {
+                        //drop this element
+                        cl_dropped_list_olc.erase(pos);
+                        }
+                        else*/
+                        {
+                            way_ctr_olc[curr_cl] += 1;
+                        }
+                        ++extra_cl_olc;
+                        ++ctr_olc;
+                    }
+                    else
+                    {
+                        way_ctr_olc[curr_cl] += 1;
+                    }
+                    cl_miss_olc[j]=(cl_miss_olc[j]+1)%set_size;
+                }
+
+                for(int j=0; j<(int)cl_hit_olc.size(); ++j)
+                {
+                    int curr_cl = cl_hit_olc[j];
+                    if(way_ctr_olc[curr_cl] > assoc)
+                    {
+                        /* std::vector<int>::iterator pos = std::lower_bound(cl_dropped_list_olc.begin(), cl_dropped_list_olc.end(), curr_cl);
+                           if(pos != cl_dropped_list_olc.end())
+                           {
+                        //drop this element
+                        cl_dropped_list_olc.erase(pos);
+                        }
+                        else*/
+                        {
+                            way_ctr_olc[curr_cl] += 1;
+                        }
+                        ++extra_cl_olc;
+                        ++ctr_olc;
+                    }
+                    cl_hit_olc[j]=(cl_hit_olc[j]+1)%set_size;
+                }
+                double outer_fold = (stencil->dim==3)?stencil->fold_x:stencil->fold_y;
+                int stencil_contrib_outer = 2*( static_cast<int>((stencil->radius-1)/(outer_fold)) + 1 );
+                //printf("lhs = %f, rhs = %d\n", extra_cl_olc/static_cast<double>(olc_layer_cl), stencil_contrib_outer);
+                //if more than LC break; record as LC break
+                if(extra_cl_olc/static_cast<double>(olc_layer_cl) > stencil_contrib_outer)
+                {
+                    extra_cl_olc = (stencil_contrib_outer*olc_layer_cl);
+                    olc_jump = true;
+                    break;
+                }
+            }
         }
-    }
+        printf("extra cl olc = %f\n", extra_cl_olc);
 
-    printf("\n");
-    printf("extra cl olc = %f\n", extra_cl_olc);
-    */
-    //LC broken: naive analytical should have switched at this point
-   /* if(ctr_olc == set_size)
-    {
-        extra_cl_olc = 0;
-    }*/
 
-    //printf("Cache = %s, ways = %d, sets = %d\n", cache.name.c_str(), cache.ways, (int)way_ctr_olc.size());
-    //count extra cl for olc
-/*    double extra_cl_ilc =  0;
-    int ctr_ilc = 0;
-    for(int i=0; i<(int)way_ctr_ilc.size(); ++i)
-    {
+        printf("Cache = %s, ways = %d, sets = %d\n", cache.name.c_str(), cache.ways, (int)way_ctr_olc.size());
+        //count extra cl for olc
+        /*    double extra_cl_olc =  0;
+              int ctr_olc = 0;
+              for(int i=0; i<(int)way_ctr_olc.size(); ++i)
+              {
+              printf("%d ", way_ctr_olc[i]);
+              if(way_ctr_olc[i] > assoc)
+              {
+              extra_cl_olc += (way_ctr_olc[i]-assoc);
+              ctr_olc++;
+              }
+              }
+
+              printf("\n");
+              printf("extra cl olc = %f\n", extra_cl_olc);
+              */
+        //LC broken: naive analytical should have switched at this point
+        /* if(ctr_olc == set_size)
+           {
+           extra_cl_olc = 0;
+           }*/
+
+        //printf("Cache = %s, ways = %d, sets = %d\n", cache.name.c_str(), cache.ways, (int)way_ctr_olc.size());
+        //count extra cl for olc
+        /*    double extra_cl_ilc =  0;
+              int ctr_ilc = 0;
+              for(int i=0; i<(int)way_ctr_ilc.size(); ++i)
+              {
         //printf("%d ", way_ctr_ilc[i]);
         if(way_ctr_ilc[i] > assoc)
         {
-            extra_cl_ilc += (way_ctr_ilc[i]-assoc);
-            ctr_ilc++;
+        extra_cl_ilc += (way_ctr_ilc[i]-assoc);
+        ctr_ilc++;
         }
+        }
+        */
+        //printf("\n");
+
+
+        /*if(ctr_ilc == set_size)
+          {
+          extra_cl_ilc = 0;
+          }*/
+
+        printf("%f, %f, %f\n", extra_cl_olc, extra_cl_ilc, extra_cl_nlc);
+        //extra words per LUP
+        return {extra_cl_olc/static_cast<double>(olc_layer_cl), extra_cl_ilc/static_cast<double>(ilc_layer_cl), extra_cl_nlc/1.0};
     }
-*/
-    //printf("\n");
-
-    
-    /*if(ctr_ilc == set_size)
+    else
     {
+        extra_cl_olc = 0;
         extra_cl_ilc = 0;
-    }*/
+        extra_cl_nlc = 0;
 
-    printf("%f, %f, %f\n", extra_cl_olc, extra_cl_ilc, extra_cl_nlc);
-    //extra words per LUP
-    return {extra_cl_olc/static_cast<double>(olc_layer_cl), extra_cl_ilc/static_cast<double>(ilc_layer_cl), extra_cl_nlc/1.0};
+        return {0,0,0};
+    }
 #else
     UNUSED(currCache);
     UNUSED(ilc_jump);
@@ -1788,23 +1803,23 @@ double perfModel::calcTemporalExtraWork()
     int thread_x = 1, thread_y=1, thread_z=1;
 
     int actualThreads = stencil->data->nthreads;
-   // int remThreads = actualThreads;
+    // int remThreads = actualThreads;
 
     thread_z =  tolCeil(rz/bz);//std::min(remThreads, tolCeil(rz/bz));
     /*if((remThreads%thread_z)!=0)
-    {
-        thread_z = 1;
-    }*/
+      {
+      thread_z = 1;
+      }*/
     totThreads = thread_z;
-   // remThreads = actualThreads/totThreads;
+    // remThreads = actualThreads/totThreads;
 
     if((totThreads % actualThreads)!=0)
     {
         thread_y = tolCeil(ry/by);//std::min(remThreads, tolCeil(ry/by));
         /*if((remThreads%thread_y)!=0)
-        {
-            thread_y = 1;
-        }*/
+          {
+          thread_y = 1;
+          }*/
         totThreads *= thread_y;
         //remThreads = actualThreads/totThreads;
 
@@ -1812,9 +1827,9 @@ double perfModel::calcTemporalExtraWork()
         {
             thread_x = tolCeil(rx/bx);//std::min(remThreads, tolCeil(rx/bx));
             /*if((remThreads%thread_x)!=0)
-            {
-                thread_x = 1;
-            }*/
+              {
+              thread_x = 1;
+              }*/
             totThreads*=thread_x;
         }
     }
@@ -1901,8 +1916,8 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
 
     blockDetails opt = determineBlockDetails();
 
-//    spatialOh = addBlockBoundaryEffects();
-//    temporalOh = addBlockBoundaryEffects(true);
+    //    spatialOh = addBlockBoundaryEffects();
+    //    temporalOh = addBlockBoundaryEffects(true);
     //printf("Spatial Blocking o/h outer = %f inner = %f\n", spatialOh[0], spatialOh[1]);
     //printf("Temporal Blocking o/h outer = %f inner = %f\n", temporalOh[0], temporalOh[1]);
 
@@ -1949,7 +1964,7 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
     ECM_assoc_cy.push_back(ECM_assoc[1]*scale/l2_l1_transfer_rate);
     ECM_latency[1] += (ECM_latency[1]+l2_l1)*CACHE("L2").penalty;
 
-   //L3->L2
+    //L3->L2
     std::vector<double> l3_l2_data = getDataContrib("L3",&opt,temporalStoreMode);
     double l3_l2_transfer_rate = CACHE("L3").getBytePerCycle((int)l3_l2_data[1], nthreads);//bytePerCycle["L3"][0];
     bytePerCycle["L3"].push_back(l3_l2_transfer_rate);
@@ -2377,20 +2392,20 @@ double perfModel::readDataVol(int i)
 }
 
 /*double perfModel::readDataVol(int eOffsetId)
-{
-    int nthreads = stencil->data->nthreads;
-    double result = 0;
+  {
+  int nthreads = stencil->data->nthreads;
+  double result = 0;
 
-    for(int j = eventOffset[eOffsetId]; j < eventOffset[eOffsetId+1];  ++j)
-    {
-        for (int i = 0;i < nthreads; i++)
-        {
-            result += perfmon_getLastResult(gid, j, i);
-        }
-    }
-    result*=(64);
-    return result;
-}*/
+  for(int j = eventOffset[eOffsetId]; j < eventOffset[eOffsetId+1];  ++j)
+  {
+  for (int i = 0;i < nthreads; i++)
+  {
+  result += perfmon_getLastResult(gid, j, i);
+  }
+  }
+  result*=(64);
+  return result;
+  }*/
 
 void setCounter(std::string groupName, std::string metricName, int *curr_gid, int *curr_metric_id)
 {
@@ -2467,10 +2482,10 @@ void perfModel::validate()
 
         for(int mbox=1; mbox<num_mbox; ++mbox)
         {
-            STRINGIFY(mem_event,"%s,CAS_COUNT_RD:MBOX%dC0,CAS_COUNT_WR:MBOX%dC1",curr_str,mbox,mbox);
-            char* tmp = curr_str;
-            curr_str = mem_event;
-            mem_event = tmp;
+        STRINGIFY(mem_event,"%s,CAS_COUNT_RD:MBOX%dC0,CAS_COUNT_WR:MBOX%dC1",curr_str,mbox,mbox);
+        char* tmp = curr_str;
+        curr_str = mem_event;
+        mem_event = tmp;
         }
         free(mem_event);
         mem_event=curr_str;
@@ -2498,10 +2513,10 @@ void perfModel::validate()
             metric_id.push_back(curr_metric_id);
         }
 
-/*        free(mem_event);
-        free(l3_event);
-        free(l2_event);
-        free(event_str);*/
+        /*        free(mem_event);
+                  free(l3_event);
+                  free(l2_event);
+                  free(event_str);*/
     }
     ECM_validate.clear();
     ECM_validate.resize(5);
@@ -2521,24 +2536,24 @@ void perfModel::validate()
         stencil->data->run();
         perfmon_stopCounters();
 
-/*        if(i<((int)gid.size()-1))
-        {*/
-            ECM_validate[i+2]= (readDataVol(i)/LUP)/bytePerCycle[gName[i].c_str()][0];
-            ECM_validate_data[i] = (readDataVol(i)/LUP);
-       /* }
-        else
-        {
-            std::vector<double> freq_stat = readFreq(i);
-            printf("Freq stat [in MHz] = min : %f, avg : %f, max:%f\n", freq_stat[0], freq_stat[1], freq_stat[2]);
-        }*/
+        /*        if(i<((int)gid.size()-1))
+                  {*/
+        ECM_validate[i+2]= (readDataVol(i)/LUP)/bytePerCycle[gName[i].c_str()][0];
+        ECM_validate_data[i] = (readDataVol(i)/LUP);
+        /* }
+           else
+           {
+           std::vector<double> freq_stat = readFreq(i);
+           printf("Freq stat [in MHz] = min : %f, avg : %f, max:%f\n", freq_stat[0], freq_stat[1], freq_stat[2]);
+           }*/
     }
-/*
-    ECM_validate[3]= (readDataVol(1)/LUP)/bytePerCycle["L3"][0];
-    ECM_validate_data[1] = (readDataVol(1)/LUP);
+    /*
+       ECM_validate[3]= (readDataVol(1)/LUP)/bytePerCycle["L3"][0];
+       ECM_validate_data[1] = (readDataVol(1)/LUP);
 
-    ECM_validate[4]= (readDataVol(2)/LUP)/bytePerCycle["MEM"][0];
-    ECM_validate_data[2] = (readDataVol(2)/LUP);
-    */
+       ECM_validate[4]= (readDataVol(2)/LUP)/bytePerCycle["MEM"][0];
+       ECM_validate_data[2] = (readDataVol(2)/LUP);
+       */
 
 }
 
@@ -2609,9 +2624,9 @@ perfModel operator+(const perfModel& a, const perfModel& b)
     //automatically result
     // 1/(a.weight/a.perf + b.weight/b.perf)
     /*double a_perf = a.getPerf();
-    double b_perf = b.getPerf();
+      double b_perf = b.getPerf();
 
-    double out_perf = 1.0/ ( (a.weight/(double)a_perf) + (b.weight/(double)b_perf) );*/
+      double out_perf = 1.0/ ( (a.weight/(double)a_perf) + (b.weight/(double)b_perf) );*/
     out.chosen_mem_l3_bw = (out.ECM_data[2]/(double)out.ECM[4])*out.cpu_freq;
 
     return out;

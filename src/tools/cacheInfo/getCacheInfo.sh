@@ -60,6 +60,14 @@ getTotSize()
     mc_file=$1
     cache_id=$2
     totSize=$($tool_dir/yamlParser/yamlParser $mc_file "memory hierarchy;$cache_id;size per group")
+    if [ -z "$totSize" ]; then
+        ways=$(getWays "$mc_file" "$cache_id")
+        sets=$(getSets "$mc_file" "$cache_id")
+        cl_size=$(getClSize "$mc_file" "$cache_id")
+        totSize=$(echo "($ways*$sets*$cl_size)/1000.0" | bc -l)
+        totSize="${totSize} KB"
+    fi
+
     totSize=$($tool_dir/unitconvert.sh "$totSize")
     echo $totSize
 }

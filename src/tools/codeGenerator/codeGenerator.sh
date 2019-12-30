@@ -12,10 +12,12 @@ code_file="$tempDir/tmp_ys_InpCode_dup.txt"
 generated_file="$tempDir/generated_temp.hpp" #this is the generated file will only
                                              #be pushed to real destination if
 #code_file lines would be deleted once its processing is over
+
 cp $real_code_file $code_file
 #1. Get Base class name
 stencil_name=$($toolDir/getBtwString.sh "BASE_STENCIL=" ";" $code_file)
 $toolDir/rmLine.sh "BASE_STENCIL=" $code_file
+
 #check if it is a radius defined stencil
 isRadius=$($toolDir/isStencilRadius.sh $stencil_name $generateDir "$toolDirBase")
 default_template_file="$toolDir/template.h"
@@ -27,13 +29,21 @@ fi
 #detect if the base stencil has radius
 template_file=${6:-"$default_template_file"}
 
-
 cp $template_file $generated_file
+#echo "getting base file"
 base_file_w_path=$($toolDir/getStencilFile.sh $stencil_name $generateDir)
 base_file=`basename $base_file_w_path`
-$toolDir/substitute.sh "BASE_STENCIL_FILE" "$base_file" $generated_file
+#echo "got base"
 
-base_class=$($toolDir/getStencilClass.sh $stencil_name $base_file_w_path)
+if [ -z "$base_file" ]; then
+    base_file="Dummy.hpp"
+    base_class="Dummy"
+else
+    base_class=$($toolDir/getStencilClass.sh $stencil_name $base_file_w_path)
+fi
+
+$toolDir/substitute.sh "BASE_STENCIL_FILE" "$base_file" $generated_file
+#base_class=$($toolDir/getStencilClass.sh $stencil_name $base_file_w_path)
 $toolDir/substitute.sh "BASE_STENCIL" "$base_class" $generated_file
 
 class=$($toolDir/getBtwString.sh "DERIVED_STENCIL=" ";" $code_file)
@@ -194,7 +204,8 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
         if [[ $ts =~ ^-?[0-9]+$ ]]; then
             ts=$ts
         else
-            echo "Error no time-step stated for Grid $stencilInp_wo_t"
+            ts=0
+            echo "Warning no time-step stated for Grid ${stencilInp_wo_t}, considering as 0"
         fi
 
         #2. generate CODE
@@ -232,7 +243,8 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
                 if [[ $ts =~ ^-?[0-9]+$ ]]; then
                     var=$(echo "$var_wo_t(t+$ts,x,y,z)")
                 else
-                    echo "Error no time-step stated for Grid $var_wo_t"
+                    var=$(echo "$var_wo_t(t+0,x,y,z)")
+                    echo "Warning: no time-step stated for Grid ${var_wo_t}, considering as 0"
                 fi
                 #if [[ $left == "1" ]]; then
                 #    var=$(echo "$var(t+1,x,y,z)")

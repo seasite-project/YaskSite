@@ -36,11 +36,18 @@ nStencils=$(grep -E -o "RHS" $tmpFile | wc -l)
 
 params=$(grep -E -o -m1 "RHS(.*)" $tmpFile | grep -o "{{.*}}")
 sed -i "s@RHS\(.*\){{.*}}@RHS\1 param@g" $tmpFile
-stencil_name=$(grep -E -o -m1 "RHS(.*)" $tmpFile | cut -d"," -f3)
+cat $tmpFile
+
+if [ "$nStencils" -eq "0" ]; then
+    stencil_name="dummy"
+else
+    stencil_name=$(grep -E -o -m1 "RHS(.*)" $tmpFile | cut -d"," -f3)
+fi
+
 for (( idx=1; idx<=$nStencils; idx++ )); do
 #    curr_h_inv=$(grep -E -o -m$idx "RHS(.*)" $tmpFile | tail -n 1 | cut -d"," -f2)
 #    curr_h_inv=$(echo $curr_h_inv)
-    curr_stencil_name=$(grep -E -o -m1 "RHS(.*)" $tmpFile | cut -d"," -f3)
+    curr_stencil_name=$(grep -E -o -m${idx} "RHS(.*)" $tmpFile | cut -d"," -f3)
 
 #    if (( $(echo "$h_inv != $curr_h_inv" |bc -l) )); then
 #        echo "Currently all arguments to RHS under a file should be same"
@@ -57,5 +64,5 @@ sed  -i "s@RHS\([^,]*\)[^\)]*@STENCIL\1@g" $tmpFile
 key=$(basename $codeFile | cut -f1 -d '.')
 
 restArgs="${@:2}"
-echo $restArgs
+#echo "check ${tool_dir}/offsite_adapter $tmpFile $key ${params} $stencil_name $restArgs"
 ${tool_dir}/offsite_adapter $tmpFile $key "$params" $stencil_name $restArgs

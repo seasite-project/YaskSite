@@ -35,7 +35,9 @@ nStencils=$(grep -E -o "RHS" $tmpFile | wc -l)
 #h_inv=$(echo $h_inv)
 
 params=$(grep -E -o -m1 "RHS(.*)" $tmpFile | grep -o "{{.*}}")
-sed -i "s@RHS\(.*\){{.*}}@RHS\1 param@g" $tmpFile
+#sed -i "s@RHS\(.*\){{.*}}@RHS\1 param@g" $tmpFile
+
+sed -i "s@RHS\(.*\){.*}@RHS\1 param@g" $tmpFile
 cat $tmpFile
 
 if [ "$nStencils" -eq "0" ]; then

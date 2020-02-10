@@ -30,6 +30,7 @@ perfModel::perfModel(STENCIL* stencil_, double cpu_freq_, char* iacaOut):stencil
         //boxes known
         numReadGrids = stencil->s - 1;
         numWriteGrids = 1;
+        numReadWriteGrids = 0;
         //numStencils = 1;
 
         //default weight=1
@@ -63,10 +64,11 @@ perfModel::~perfModel()
     }
 }
 
-void perfModel::setReadWriteGrids(int numReadGrids_, int numWriteGrids_, int numStencils_)
+void perfModel::setReadWriteGrids(int numReadGrids_, int numWriteGrids_, int numReadWriteGrids_, int numStencils_)
 {
     numReadGrids = numReadGrids_;
     numWriteGrids = numWriteGrids_;
+    numReadWriteGrids = numReadWriteGrids_;
     numStencils = numStencils_;
 }
 
@@ -259,14 +261,15 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         victim_scale = 2;
     }
 
+    int numPureWriteGrids = numWriteGrids-numReadWriteGrids;
     //Right now assuming only one stencil per eqn. Group
-    double rest_contrib = (numReadGrids-numStencils)+2*numWriteGrids;//1.0+(stencil->s-1.0);
+    double rest_contrib = (numReadGrids-numStencils)+2*(numPureWriteGrids)+numReadWriteGrids;//1.0+(stencil->s-1.0);
     if(currCache.victim)
     {
-        rest_contrib = (numReadGrids-numStencils)+numWriteGrids;
+        rest_contrib = (numReadGrids-numStencils)+(numPureWriteGrids);
     }
-    printf("Read Grids = %d, writeGrids = %d\n", numReadGrids, numWriteGrids);
-    int totalGrids = numReadGrids+numWriteGrids;
+    printf("Read Grids = %d, writeGrids = %d, readWriteGrids = %d\n", numReadGrids, numPureWriteGrids, numReadWriteGrids);
+    int totalGrids = numReadGrids+numPureWriteGrids;
 
     double prefetch_oh_per_LUP = getPrefetchEffects(currCache, opt);
 
@@ -291,11 +294,11 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
 
         if(temporalStoreMode == 1)
         {
-            totalSpatialContrib-=numWriteGrids; //NO WA
+            totalSpatialContrib-=(numPureWriteGrids); //NO WA
         }
         else if(temporalStoreMode == 2)
         {
-            totalSpatialContrib=numWriteGrids; //only store
+            totalSpatialContrib=(numPureWriteGrids); //only store
         }
 
         //printf("##### Temporal pref of %s = %f\n", currCache.name.c_str(), prefetch_oh_per_LUP);
@@ -307,7 +310,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         ECM_prefetch[currCache.hierarchy] = victim_scale*(prefetch_oh_per_LUP*totalStreams*currCache.bytePerWord/static_cast<double>(stencil->data->dt));
         ECM_assoc[currCache.hierarchy] = assocOh[0]*currCache.bytePerWord/static_cast<double>(stencil->data->dt);
 
-        int rwRatio = static_cast<int>((totalStreams-numWriteGrids)/(double)numWriteGrids);
+        int rwRatio = static_cast<int>((totalStreams-(numPureWriteGrids))/(double)numWriteGrids);
         double latency_oh_per_LUP_temp = getLatencyEffects(currCache, rwRatio, true)*(stencil->data->dt-1.0)/((double)stencil->data->dt);
         //if prevCache is victim, then we have to add extra latency btw L3 and
         //L2 as this is not accounted by MEM latency measurement. This is the
@@ -327,7 +330,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
                   }*/
         double latency_oh_per_LUP = getLatencyEffects(currCache, rwRatio);
         ECM_latency[currCache.hierarchy] = latency_oh_per_LUP_temp + latency_oh_per_LUP/static_cast<double>(stencil->data->dt);
-        return { victim_scale*(((totalSpatialContrib)/static_cast<double>(stencil->data->dt))+(1+rest_contrib)*temporalOh[0]), ((totalSpatialContrib-numWriteGrids)/(double)numWriteGrids) };
+        return { victim_scale*(((totalSpatialContrib)/static_cast<double>(stencil->data->dt))+(1+rest_contrib)*temporalOh[0]), ((totalSpatialContrib-numPureWriteGrids)/(double)numWriteGrids) };
     }
     //if greater than Outer blocked LC
     else if(currCache.hierarchy > opt->spatialOBC->hierarchy)
@@ -351,7 +354,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         //double latency_oh = (totalGrids)*latency_oh_per_LUP;
         int dim = stencil->dim;
         bool jump = (dim>2)?olc_jump:ilc_jump;
-        int rwRatio = static_cast<int>((totalGrids - numWriteGrids)/(double)(numWriteGrids));
+        int rwRatio = static_cast<int>((totalGrids - numPureWriteGrids)/(double)(numWriteGrids));
         if(jump)
         {
             double outer_fold=1;
@@ -370,7 +373,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
             boundary_oh = spatialOh[2];
             extra_data = prefetch_oh + boundary_oh;
             //latency_oh = streams*latency_oh_per_LUP;
-            rwRatio = static_cast<int>((streams - numWriteGrids)/(double)numWriteGrids);
+            rwRatio = static_cast<int>((streams - numPureWriteGrids)/(double)numWriteGrids);
         }
 
         double assoc_oh = (dim>2)?assocOh[0]:assocOh[1];
@@ -382,7 +385,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         //        printf("....total Grids = %d, numWriteGrids = %d\n", totalGrids, numWriteGrids);
         double latency_oh = getLatencyEffects(currCache, rwRatio);
         ECM_latency[currCache.hierarchy] = latency_oh;
-        return { victim_scale*totalData, (totalData-numWriteGrids)/((double)numWriteGrids) };
+        return { victim_scale*totalData, (totalData-numPureWriteGrids)/((double)numWriteGrids) };
     }
     //TODO: only for symmetric stencils currently
     //if greater than Inner blocked LC
@@ -414,7 +417,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         std::vector<double> assocOh = simulateCache_assoc(ilc_jump, olc_jump, currCache, shrink_space);
         //double latency_oh = (numStencils*(stencil_contrib_outer + stencil_centre) + totalGrids - numStencils)*latency_oh_per_LUP;
         double streams = numStencils*(stencil_contrib_outer + stencil_centre) + totalGrids - numStencils;
-        int rwRatio = static_cast<int>((streams - numWriteGrids)/(double)numWriteGrids);
+        int rwRatio = static_cast<int>((streams - numPureWriteGrids)/(double)numWriteGrids);
 
         int dim =stencil->dim;
         bool jump = (dim>2)?ilc_jump:false;
@@ -428,7 +431,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
             boundary_oh = spatialOh[3];
             extra_data = prefetch_oh + boundary_oh;
             //    latency_oh = streams*latency_oh_per_LUP;
-            rwRatio = static_cast<int>((streams - numWriteGrids)/(double)numWriteGrids);
+            rwRatio = static_cast<int>((streams - numPureWriteGrids)/(double)numWriteGrids);
         }
 
         double assoc_oh = (dim>2)?assocOh[1]:assocOh[2];
@@ -440,7 +443,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
 
         double latency_oh = getLatencyEffects(currCache, rwRatio);
         ECM_latency[currCache.hierarchy] = latency_oh;
-        return {victim_scale*totalData, ((totalData-numWriteGrids)/(double)numWriteGrids)};
+        return {victim_scale*totalData, ((totalData-numPureWriteGrids)/(double)numWriteGrids)};
     }
     //no blocking condition
     else
@@ -463,11 +466,11 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         ECM_boundary[currCache.hierarchy] = victim_scale*spatialOh[3]*currCache.bytePerWord;
         ECM_assoc[currCache.hierarchy] = assocOh[2]*currCache.bytePerWord;
 
-        int rwRatio = static_cast<int>((streams - numWriteGrids)/(double)numWriteGrids);
+        int rwRatio = static_cast<int>((streams - numPureWriteGrids)/(double)numWriteGrids);
         double latency_oh = getLatencyEffects(currCache, rwRatio);
         ECM_latency[currCache.hierarchy] = latency_oh;
 
-        return {victim_scale*totalData, ((totalData-numWriteGrids)/(double)numWriteGrids)};
+        return {victim_scale*totalData, ((totalData-numPureWriteGrids)/(double)numWriteGrids)};
     }
 }
 
@@ -567,7 +570,8 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
         totThreads += thread_x;
     }
 
-    double rest_contrib = (numReadGrids-1.0)+numWriteGrids;
+    int numPureWriteGrids = numWriteGrids - numReadWriteGrids;
+    double rest_contrib = (numReadGrids-1.0)+numPureWriteGrids;
     double radius_x, radius_y, radius_z;
     getRadius(radius_x, stencil, x);
     getRadius(radius_y, stencil, y);
@@ -706,7 +710,8 @@ double perfModel::getPrefetchEffects(cache_info currCache, blockDetails* opt)
         bz = rz;
     }
 
-    int totalGrids = numReadGrids + numWriteGrids;
+    int numPureWriteGrids = numWriteGrids - numReadWriteGrids;
+    int totalGrids = numReadGrids + numPureWriteGrids;
 
     int num_block_z = (int)ceil(dz/(((dz-bz)<stencil->data->fold_z)?dz:bz));
 
@@ -929,7 +934,8 @@ blockDetails perfModel::determineBlockDetails()
     double dy = stencil->data->dy;
     double dz = stencil->data->dz;
 
-    int totalGrids = numReadGrids+numWriteGrids;
+    int numPureWriteGrids = numWriteGrids - numReadWriteGrids;
+    int totalGrids = numReadGrids+numPureWriteGrids;
 
 
     //scan through caches to find the smallest cache that fits entire domain

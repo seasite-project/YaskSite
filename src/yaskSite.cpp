@@ -1547,7 +1547,7 @@ void yaskSite::init(bool noAlloc)
         //Now tie mainEqGroup with their perf. model
         for(int i=0; i<numMainEqns; ++i)
         {
-            models[i]->setReadWriteGrids(eqGroups[mainEqGroups[i]].num_spatial_reads, eqGroups[mainEqGroups[i]].num_spatial_writes, eqGroups[mainEqGroups[i]].num_stencils);
+            models[i]->setReadWriteGrids(eqGroups[mainEqGroups[i]].num_spatial_reads, eqGroups[mainEqGroups[i]].num_spatial_writes,eqGroups[mainEqGroups[i]].num_spatial_read_write, eqGroups[mainEqGroups[i]].num_stencils);
             models[i]->setWeight( (eqGroups[mainEqGroups[i]].num_points / (double) total_spatial_size) );
             eqGroups[mainEqGroups[i]].model = models[i];
         }

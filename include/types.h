@@ -30,6 +30,7 @@ struct EQ_GROUP
     //with spatial dimension are included
     int num_spatial_reads;
     int num_spatial_writes;
+    int num_spatial_read_write;
     int num_stencils;
 
     std::vector<GRID> read_grids;

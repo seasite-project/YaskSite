@@ -47,6 +47,7 @@ bool EQ_GROUP::finalize()
     }
 
     num_spatial_writes=0;
+    num_spatial_read_write=0;
     for(int i=0; i<(int)write_grids.size(); ++i)
     {
         int curr_dim = write_grids[i].dim;
@@ -60,7 +61,23 @@ bool EQ_GROUP::finalize()
         {
             ++num_spatial_writes;
         }
+
+        std::string write_name = write_grids[i].name;
+        for(int j=0; j<(int)read_grids.size(); ++j)
+        {
+            std::string read_name = read_grids[j].name;
+            if(write_name.compare(read_name)==0)
+            {
+                if(write_grids[i].time_steps == 1)
+                {
+                    ++num_spatial_read_write;
+                }
+                //Else I cannot tell, so assuming WA is there
+            }
+        }
     }
+
+    printf("num read write = %d\n", num_spatial_read_write);
 
     //printf("spatial: read = %d, write = %d\n", num_spatial_reads, num_spatial_writes);
     return ret;

@@ -36,7 +36,7 @@ if (OPENMP_FOUND)
 endif()
 
 add_executable(perf src/perf.cpp src/parse.cpp)
-add_executable(perf_optimizer src/perf_optimizer.cpp src/parse.cpp)
+#add_executable(perf_optimizer src/perf_optimizer.cpp src/parse.cpp)
 add_executable(INSPECT src/INSPECT_adapt.cpp src/parse.cpp)
 add_executable(INSPECT_not_opt src/INSPECT_adapt_not_opt.cpp src/parse.cpp)
 add_executable(perf_irk src/perf_irk.cpp src/parse.cpp)

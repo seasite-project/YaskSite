@@ -52,13 +52,14 @@ perfModel::perfModel(STENCIL* stencil_, double cpu_freq_, char* iacaOut):stencil
 
         FILE *file;
         char *sysLogFileName = NULL;
-        POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"overlap hypothesis\"", TOOL_DIR, glb_mc_file);
+        POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"overlap hypothesis\" | sed -e \"s@T_OL@a@g\"| sed -e \"s@T_nOL@b@g\" | sed -e \"s@T_L2@c@g\" | sed -e \"s@T_L3@d@g\" | sed -e \"s@T_MEM@x@g\"", TOOL_DIR, glb_mc_file);
+
         overlap_hypothesis = readStrVar(file);
         PCLOSE(file);
         if(overlap_hypothesis.empty())
         {
             WARNING_PRINT("No overlap hypothesis provided, assuming no-overlap");
-            overlap_hypothesis = "max(T_OL, T_nOL + T_L2 + T_L3 + T_MEM)";
+            overlap_hypothesis = "max(a, b + c + d + x)";
         }
         printf("Overlap hypothesis = %s\n", overlap_hypothesis.c_str());
         //getBytePerCycles();
@@ -2308,8 +2309,6 @@ std::vector<double> perfModel::getSaturation()
 double perfModel::evalECM_str(std::vector<double> ECM_arr)
 {
     double nOL = 0;
-    FILE *file;
-    char *sysLogFileName = NULL;
     double T_OL = 0;
     int shift = 0;
     if(((int)ECM_arr.size()) == 5)
@@ -2322,18 +2321,36 @@ double perfModel::evalECM_str(std::vector<double> ECM_arr)
         T_OL = 0;
         shift = -1;
     }
-    POPEN(sysLogFileName, file, "echo \"%s\" | sed -e \"s@T_OL@%f@g\"| sed -e \"s@T_nOL@%f@g\" | sed -e \"s@T_L2@%f@g\" | sed -e \"s@T_L3@%f@g\" | sed -e \"s@T_MEM@%f@g\"", overlap_hypothesis.c_str(), T_OL, ECM_arr[1+shift], ECM_arr[2+shift], ECM_arr[3+shift], ECM_arr[4+shift]);
+    /*FILE *file;
+    char *sysLogFileName = NULL;*/
+    /*POPEN(sysLogFileName, file, "echo \"%s\" | sed -e \"s@T_OL@%f@g\"| sed -e \"s@T_nOL@%f@g\" | sed -e \"s@T_L2@%f@g\" | sed -e \"s@T_L3@%f@g\" | sed -e \"s@T_MEM@%f@g\"", overlap_hypothesis.c_str(), T_OL, ECM_arr[1+shift], ECM_arr[2+shift], ECM_arr[3+shift], ECM_arr[4+shift]);
     char* eval_str = readStrVar(file);
     PCLOSE(file);
+*/
 
+    _variable var1 = {"a", T_OL};
+    _variable var2 = {"b", ECM_arr[1+shift]};
+    _variable var3 = {"c", ECM_arr[2+shift]};
+    _variable var4 = {"d", ECM_arr[3+shift]};
+    _variable var5 = {"x", ECM_arr[4+shift]};
+    bindVariable(var1);
+    bindVariable(var2);
+    bindVariable(var3);
+    bindVariable(var4);
+    bindVariable(var5);
+
+    char *overlap_hypothesis_non_const = new char[overlap_hypothesis.size()];
+    strcpy(overlap_hypothesis_non_const, overlap_hypothesis.c_str());
     expressionInfo expressionState;
-    expressionState = evaluateExpression(eval_str, &nOL);
+    expressionState = evaluateExpression(overlap_hypothesis_non_const, &nOL);
 
     if(expressionState.status != VALID)
     {
         ERROR_PRINT("Expression error at position %d\n", expressionState.position);
     }
-    //freeVariables();
+    freeVariables();
+    delete[] overlap_hypothesis_non_const;
+
     //slow bash variant
     //POPEN(sysLogFileName, file, "%s/ecm_eval/eval.sh \"%s\"", TOOL_DIR, eval_str);
     //nOL = readDoubleVar(file);

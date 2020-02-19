@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <list>
 #include <float.h>
+#include "symee.h"
 
 //TODO:get cache hierarchies from hwloc
 perfModel::perfModel(STENCIL* stencil_, double cpu_freq_, char* iacaOut):stencil(stencil_), cpu_freq(cpu_freq_), likwidInited(false), cpus(NULL), ECM_latency(4,0), ECM_prefetch(4,0), ECM_boundary(4,0), ECM_assoc(4,0), ECM_penalty(0), ECM_extra_work_percent(0)
@@ -49,6 +50,17 @@ perfModel::perfModel(STENCIL* stencil_, double cpu_freq_, char* iacaOut):stencil
             setDerived(true);
         }
 
+        FILE *file;
+        char *sysLogFileName = NULL;
+        POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"overlap hypothesis\"", TOOL_DIR, glb_mc_file);
+        overlap_hypothesis = readStrVar(file);
+        PCLOSE(file);
+        if(overlap_hypothesis.empty())
+        {
+            WARNING_PRINT("No overlap hypothesis provided, assuming no-overlap");
+            overlap_hypothesis = "max(T_OL, T_nOL + T_L2 + T_L3 + T_MEM)";
+        }
+        printf("Overlap hypothesis = %s\n", overlap_hypothesis.c_str());
         //getBytePerCycles();
     }
 }
@@ -256,7 +268,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
     cache_info prevCache = CACHES[prevHierarchy];
 
     int victim_scale = 1;
-    if(currCache.victim)
+    if(currCache.victim && currCache.duplexity==2)
     {
         victim_scale = 2;
     }
@@ -1961,7 +1973,7 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
     //L2->L1
     std::vector<double> l2_l1_data = getDataContrib("L2",&opt,temporalStoreMode);
     double l2_l1_transfer_rate = CACHE("L2").getBytePerCycle((int)l2_l1_data[1], nthreads); //bytePerCycle["L2"][0];
-    bytePerCycle["L2"].push_back(l2_l1_transfer_rate);
+    bytePerCycle_map["L2"].push_back(l2_l1_transfer_rate);
     double l2_l1 = (l2_l1_data[0]*bytePerWord)/l2_l1_transfer_rate;
     ECM.push_back((l2_l1/data_factor)*scale);
     ECM_data.push_back(l2_l1_data[0]*bytePerWord);
@@ -1973,8 +1985,7 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
     //L3->L2
     std::vector<double> l3_l2_data = getDataContrib("L3",&opt,temporalStoreMode);
     double l3_l2_transfer_rate = CACHE("L3").getBytePerCycle((int)l3_l2_data[1], nthreads);//bytePerCycle["L3"][0];
-    bytePerCycle["L3"].push_back(l3_l2_transfer_rate);
-    printf("L3 transfer rate = %f\n", l3_l2_transfer_rate);
+    bytePerCycle_map["L3"].push_back(l3_l2_transfer_rate);
     double l3_l2 = (l3_l2_data[0]*bytePerWord)/l3_l2_transfer_rate;
     ECM.push_back((l3_l2/data_factor)*scale);
     ECM_data.push_back(l3_l2_data[0]*bytePerWord);
@@ -1991,7 +2002,7 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
     //bw_idx = std::min(9,bw_idx);
     chosen_mem_l3_bw = CACHE("MEM").getBytePerCycle((int)mem_l3_data[1], nthreads);
     double mem_l3_transfer_rate = chosen_mem_l3_bw;//bytePerCycle["MEM"][bw_idx];
-    bytePerCycle["MEM"].push_back(mem_l3_transfer_rate);
+    bytePerCycle_map["MEM"].push_back(mem_l3_transfer_rate);
     double mem_l3 = (mem_l3_data[0]*bytePerWord)/mem_l3_transfer_rate;
     ECM.push_back((mem_l3/data_factor)*scale);
     ECM_data.push_back(mem_l3_data[0]*bytePerWord);
@@ -2059,6 +2070,10 @@ void perfModel::model(int scale, bool validate_)
         {
             calc_ECM(scale);
         }
+    }
+    else
+    {
+
     }
 
     if(validate_)
@@ -2290,45 +2305,100 @@ std::vector<double> perfModel::getSaturation()
     return {sat, totalNOL/mem_l3, effThreads};
 }
 
+double perfModel::evalECM_str(std::vector<double> ECM_arr)
+{
+    double nOL = 0;
+    FILE *file;
+    char *sysLogFileName = NULL;
+    double T_OL = 0;
+    int shift = 0;
+    if(((int)ECM_arr.size()) == 5)
+    {
+        T_OL = ECM_arr[0];
+        shift = 0;
+    }
+    else
+    {
+        T_OL = 0;
+        shift = -1;
+    }
+    POPEN(sysLogFileName, file, "echo \"%s\" | sed -e \"s@T_OL@%f@g\"| sed -e \"s@T_nOL@%f@g\" | sed -e \"s@T_L2@%f@g\" | sed -e \"s@T_L3@%f@g\" | sed -e \"s@T_MEM@%f@g\"", overlap_hypothesis.c_str(), T_OL, ECM_arr[1+shift], ECM_arr[2+shift], ECM_arr[3+shift], ECM_arr[4+shift]);
+    char* eval_str = readStrVar(file);
+    PCLOSE(file);
+
+    expressionInfo expressionState;
+    expressionState = evaluateExpression(eval_str, &nOL);
+
+    if(expressionState.status != VALID)
+    {
+        ERROR_PRINT("Expression error at position %d\n", expressionState.position);
+    }
+    //freeVariables();
+    //slow bash variant
+    //POPEN(sysLogFileName, file, "%s/ecm_eval/eval.sh \"%s\"", TOOL_DIR, eval_str);
+    //nOL = readDoubleVar(file);
+    //PCLOSE(file);
+
+    return nOL;
+}
 
 //assumption: NOL
 double perfModel::applyNOL()
 {
     double nOL = 0;
+
+    /* FILE *file;
+    char *sysLogFileName = NULL;
+    POPEN(sysLogFileName, file, "echo \"%s\" | sed -e \"s@T_OL@%f@g\"| sed -e \"s@T_nOL@%f@g\" | sed -e \"s@T_L2@%f@g\" | sed -e \"s@T_L3@%f@g\" | sed -e \"s@T_MEM@%f@g\"", overlap_hypothesis.c_str(),ECM[0], ECM[1], ECM[2], ECM[3], ECM[4]);
+    char* eval_str = readStrVar(file);
+    PCLOSE(file);
+    POPEN(sysLogFileName, file, "%s/ecm_eval/eval.sh \"%s\"", TOOL_DIR, eval_str);
+    nOL = readDoubleVar(file);
+    PCLOSE(file);
     for(int i=1; i<((int)ECM.size()); ++i)
     {
         nOL+=ECM[i];
-    }
+    }*/
+    nOL = evalECM_str(ECM);
+    printf("nOL = %f\n", nOL);
     nOL+=ECM_penalty;
 
 
     double nOL_latency = 0;
     //add latency contributions
-    for(int i=0; i<((int)ECM_latency.size()); ++i)
+    /*for(int i=0; i<((int)ECM_latency.size()); ++i)
     {
         nOL_latency+=ECM_latency[i];
     }
+    */
+    nOL_latency = evalECM_str(ECM_latency);
 
     double nOL_prefetch = 0;
     //add prefetch contribution (this is just for getting statistics)
-    for(int i=0; i<((int)ECM_prefetch_cy.size()); ++i)
+    /*for(int i=0; i<((int)ECM_prefetch_cy.size()); ++i)
     {
         nOL_prefetch+=ECM_prefetch_cy[i];
     }
+    */
+
+    nOL_prefetch = evalECM_str(ECM_prefetch_cy);
 
     double nOL_boundary = 0;
     //add boundary contribution (this is just for getting statistics)
-    for(int i=0; i<((int)ECM_boundary_cy.size()); ++i)
+    /*for(int i=0; i<((int)ECM_boundary_cy.size()); ++i)
     {
         nOL_boundary+=ECM_boundary_cy[i];
     }
+    */
+    nOL_boundary = evalECM_str(ECM_boundary_cy);
 
     double nOL_assoc = 0;
     //add boundary contribution (this is just for getting statistics)
-    for(int i=0; i<((int)ECM_assoc_cy.size()); ++i)
+    /*for(int i=0; i<((int)ECM_assoc_cy.size()); ++i)
     {
         nOL_assoc+=ECM_assoc_cy[i];
-    }
+    }*/
+    nOL_assoc = evalECM_str(ECM_assoc_cy);
 
     double total_nOL = nOL+nOL_latency;
     double perf = 0;
@@ -2544,7 +2614,7 @@ void perfModel::validate()
 
         /*        if(i<((int)gid.size()-1))
                   {*/
-        ECM_validate[i+2]= (readDataVol(i)/LUP)/bytePerCycle[gName[i].c_str()][0];
+        ECM_validate[i+2]= (readDataVol(i)/LUP)/bytePerCycle_map[gName[i].c_str()][0];
         ECM_validate_data[i] = (readDataVol(i)/LUP);
         /* }
            else
@@ -2620,6 +2690,20 @@ perfModel operator+(const perfModel& a, const perfModel& b)
         out.ECM_assoc_cy.push_back(a.weight*a.ECM_assoc_cy[i]+b.weight*b.ECM_assoc_cy[i]);
     }
 
+    double sum_weights = a.weight + b.weight;
+    out.bytePerCycle_map.clear();
+    for(int i=0; i<(int)a.bytePerCycle_map.at("L2").size(); ++i)
+    {
+        out.bytePerCycle_map["L2"].push_back((a.weight*a.bytePerCycle_map.at("L2")[i] + b.weight*b.bytePerCycle_map.at("L2")[i])/sum_weights);
+    }
+    for(int i=0; i<(int)a.bytePerCycle_map.at("L3").size(); ++i)
+    {
+        out.bytePerCycle_map["L3"].push_back((a.weight*a.bytePerCycle_map.at("L3")[i] + b.weight*b.bytePerCycle_map.at("L3")[i])/sum_weights);
+    }
+    for(int i=0; i<(int)a.bytePerCycle_map.at("MEM").size(); ++i)
+    {
+        out.bytePerCycle_map["MEM"].push_back((a.weight*a.bytePerCycle_map.at("MEM")[i] + b.weight*b.bytePerCycle_map.at("MEM")[i])/sum_weights);
+    }
 
     out.ECM_penalty = a.weight*a.ECM_penalty + b.weight*b.ECM_penalty;
 

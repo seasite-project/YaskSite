@@ -86,7 +86,7 @@ sed -i "/#UNROLL_BEGIN(VAR_DUMMY)/,/#UNROLL_END#/c\ $var_dummy_unrolled" bench.c
 CXX=icpc LOAD=$nload STORE=$nstore SIZE=$size make
 
 if [[ $nthread == -1 ]]; then
-    nthread=$($tool_dir/threadPerSocket.sh)
+    nthread=$($tool_dir/threadPerNUMA.sh)
 fi
 OMP_NUM_THREADS=$nthread KMP_AFFINITY=granularity=fine,compact,1,0 taskset -c 0-$((nthread-1)) ./bench_exec $repeat
 

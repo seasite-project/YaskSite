@@ -4,23 +4,31 @@
 #include <algorithm>
 #include "timing.h"
 #include "offsite_parse.h"
+#include <sched.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define COUPLE_GRID
 
-#define RUN(__stencil, __mode)\
+#define RUN(__stencil, __mode, push)\
 {\
     double freq = __stencil->getCpuFreq();\
     double cl = CACHE("MEM").cl_size/(double)CACHE("MEM").bytePerWord;\
+    ecm_cy_cl = -1;\
+    cy_cl = -1;\
     if(strcmp(__mode,"ECM")==0)\
     {\
-        __stencil->init(true);\
+        __stencil->init();\
         __stencil->calcECM();\
         __stencil->printECM();\
         double ecm_mlups = __stencil->getPerfECM();\
-        double ecm_cy_cl = freq*1000.0*cl/ecm_mlups;\
+        ecm_cy_cl = freq*1000.0*cl/ecm_mlups;\
         printf("ECM performance = %f MLUP/s\n", ecm_mlups);\
         printf("ECM cycle prediction = %f cy/CL\n", ecm_cy_cl);\
-        ecm_cy_cl_vec.push_back(ecm_cy_cl);\
+        if(push)\
+        {\
+            ecm_cy_cl_vec.push_back(ecm_cy_cl);\
+        }\
     }\
     else if(strcmp(__mode,"BENCH")==0)\
     {\
@@ -31,19 +39,23 @@
         STOP_TIME(stencil_run);\
         double time = GET_TIME(stencil_run);\
         double mlups = (double)__stencil->dt*(double)__stencil->dx*(double)__stencil->dy*(double)__stencil->dz;\
-        double cy_cl = freq*1e9*cl*time/mlups;\
+        cy_cl = freq*1e9*cl*time/mlups;\
         printf("Benchmark performance = %f MLUP/s\n", mlups*1e-6/time);\
         printf("Benchamrk time = %f s\n", time);\
         printf("Benchmark cycle prediction = %f cy/CL\n", cy_cl);\
-        cy_cl_vec.push_back(cy_cl);\
+        if(push)\
+        {\
+            cy_cl_vec.push_back(cy_cl);\
+        }\
     }\
     else if(strcmp(__mode,"VALIDATE")==0)\
     {\
         __stencil->init();\
         __stencil->calcECM(true);\
+        printf("ECM finished\n");\
         __stencil->printECM();\
         double ecm_mlups = __stencil->getPerfECM();\
-        double ecm_cy_cl = freq*1000*cl/ecm_mlups;\
+        ecm_cy_cl = freq*1000*cl/ecm_mlups;\
         printf("ECM performance = %f MLUP/s\n", ecm_mlups);\
         printf("ECM cycle prediction = %f cy/CL\n", ecm_cy_cl);\
         INIT_TIME(stencil_run);\
@@ -52,12 +64,15 @@
         STOP_TIME(stencil_run);\
         double time = GET_TIME(stencil_run);\
         double mlups = (double)__stencil->dt*(double)__stencil->dx*(double)__stencil->dy*(double)__stencil->dz;\
-        double cy_cl = freq*1e9*cl*time/mlups;\
+        cy_cl = freq*1e9*cl*time/mlups;\
         printf("Benchmark performance = %f MLUP/s\n", mlups*1e-6/time);\
         printf("Benchamrk time = %f s\n", time);\
         printf("Benchmark cycle prediction = %f cy/CL\n", cy_cl);\
-        ecm_cy_cl_vec.push_back(ecm_cy_cl);\
-        cy_cl_vec.push_back(cy_cl);\
+        if(push)\
+        {\
+            ecm_cy_cl_vec.push_back(ecm_cy_cl);\
+            cy_cl_vec.push_back(cy_cl);\
+        }\
     }\
     else\
     {\
@@ -84,6 +99,13 @@ void print_vec(std::vector<double> vec, int thread_start, int thread_end, char* 
         printf("%8.2f", vec[(int)vec.size()-1]);
     }
     printf("\n");
+}
+
+double interpolate(int x,int x1, double y1, int x2, double y2)
+{
+    //y=y1+(x-x1)*m
+    double m = (y2-y1)/((double)(x2-x1));
+    return (y1+(x-x1)*m);
 }
 
 //This measures the performance of different versions of heat3d
@@ -165,8 +187,11 @@ void main(int argc, char** argv)
     std::vector<char*> threads_char;
 
     FILE *tmp;
-    POPEN(NULL, tmp, "%s/threadPerSocket.sh %s", TOOL_DIR, glb_mc_file);
+    POPEN(NULL, tmp, "%s/threadPerNUMA.sh %s", TOOL_DIR, glb_mc_file);
     int thread_per_socket = readIntVar(tmp);
+    PCLOSE(tmp);
+    POPEN(NULL, tmp, "%s/numaPerSocket.sh %s", TOOL_DIR, glb_mc_file);
+    int numa_per_socket = readIntVar(tmp);
     PCLOSE(tmp);
 
     if(optParse.cores == NULL)
@@ -193,9 +218,11 @@ void main(int argc, char** argv)
         printf("Thread string incompatible\n");
     }
 
+    int inter_node_thread = thread_end+1;
     if(thread_end > thread_per_socket)
     {
-        thread_end = thread_per_socket;
+        inter_node_thread = thread_per_socket + 1;
+        //thread_end = thread_per_socket;
         printf("Only 1 ccNUMA domain supported, setting threads to range %d:%d\n", thread_start, thread_end);
     }
 
@@ -232,7 +259,7 @@ void main(int argc, char** argv)
 
     std::vector<double> ecm_cy_cl_vec;
     std::vector<double> cy_cl_vec;
-    for (int threads=thread_start; threads<=thread_end; ++threads)
+    for (int threads=thread_start; threads<inter_node_thread; ++threads)
     {
         stencil->setThread(threads, 1);
 
@@ -242,13 +269,70 @@ void main(int argc, char** argv)
             {
                 if(opt_idx == 1)
                 {
-                    stencil->spatialTuner("L3", "L2", 0.5, 0.5);
+                    stencil->spatialTuner("L2", "L2", 0.5, 0.5);
                 }
                 else if(opt_idx == 2)
                 {
                     stencil->blockTuner("L3","L2","L1", 0.5,0.5,0.5);
                 }
-                RUN(stencil, mode);
+                double ecm_cy_cl, cy_cl;
+                RUN(stencil, mode, true);
+            }
+        }
+    }
+
+    if(thread_end > inter_node_thread)
+    {
+        //cacuate performance at 1 NUMA node
+        stencil->setThread(thread_per_socket, 1);
+        double ecm_cy_cl, cy_cl;
+        for(int opt_idx=0; opt_idx<2; ++opt_idx)
+        {
+            if(opt_bool[opt_idx])
+            {
+                if(opt_idx == 1)
+                {
+                    stencil->spatialTuner("L2", "L2", 0.5, 0.5);
+                }
+                else if(opt_idx == 2)
+                {
+                    stencil->blockTuner("L3","L2","L1", 0.5,0.5,0.5);
+                }
+                RUN(stencil, mode, true);
+            }
+        }
+
+        for (int threads=inter_node_thread; threads<=thread_end; ++threads)
+        {
+            //Do a linear plot, will work if each ccNUMA has no shared resources
+            //like L3
+            if(ecm_cy_cl > 0)
+            {
+                double oneNumaPerf = 1.0/ecm_cy_cl;
+                double allNumaPerf = numa_per_socket*oneNumaPerf*0.78; //0.78 is the efficiency of AMD ROME, currently a hack: it is 1 for Intel arch
+                double ecm_perf = interpolate(threads, thread_per_socket, oneNumaPerf, thread_per_socket*numa_per_socket, allNumaPerf);
+                ecm_cy_cl_vec.push_back(1.0/ecm_perf);
+            }
+            if(cy_cl > 0)
+            {
+                //this means run mode is active
+                stencil->setThread(threads, 1);
+                for(int opt_idx=0; opt_idx<2; ++opt_idx)
+                {
+                    if(opt_bool[opt_idx])
+                    {
+                        if(opt_idx == 1)
+                        {
+                            stencil->spatialTuner("L2", "L2", 0.5, 0.5);
+                        }
+                        else if(opt_idx == 2)
+                        {
+                            stencil->blockTuner("L3","L2","L1", 0.5,0.5,0.5);
+                        }
+                        RUN(stencil, mode, true);
+                    }
+                }
+                cy_cl_vec.push_back(cy_cl);
             }
         }
     }

@@ -37,6 +37,7 @@
 
 #define PERF_RUN(stencil, file)\
 {\
+    stencil->init();\
     FILE* writeFile;\
     writeFile = (file!=NULL) ?fopen(file,"a"):stdout;\
     INIT_TIME(stencil_);\
@@ -184,7 +185,7 @@ void main(int argc, char** argv)
         yaskSite* stencil_1 = new yaskSite(&mpiMan, kernel, dimension, radius, f_z, f_y, f_x, dp, prefetch);
         stencil_1->setDim(dim_z, dim_y, dim_x, dt);
         stencil_1->setThread(threads,1);
-        stencil_1->init();//init goes here, warm-up
+        //stencil_1->init();//init goes here, warm-up
 
         //DISABLE_PREFETCHER(threads);
 

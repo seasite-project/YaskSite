@@ -17,7 +17,7 @@ tool_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 tool_dir="$tool_dir/../"
 
 mc_file=$(cat $tool_dir/mc_file.txt)
-nthread=$($tool_dir/threadPerSocket.sh $mc_file)
+nthread=$($tool_dir/threadPerNUMA.sh $mc_file)
 numCache=$($tool_dir/cacheInfo/numCache.sh $mc_file)
 #llc_size=$($tool_dir/cacheInfo/getCacheInfo.sh $mc_file $(($numCache-1)))
 size=$($tool_dir/yamlParser/yamlParser $mc_file "benchmarks;measurements;MEM;1;size per core;$(($nthread-1))")

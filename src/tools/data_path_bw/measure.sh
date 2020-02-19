@@ -12,7 +12,7 @@ tool_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 tool_dir="$tool_dir/../"
 
 mc_file=$(cat $tool_dir/mc_file.txt)
-nthread=$($tool_dir/threadPerSocket.sh $mc_file)
+nthread=$($tool_dir/threadPerNUMA.sh $mc_file)
 
 shared_caches=""
 shared_cache_idx=""
@@ -60,9 +60,10 @@ for high_idx in $shared_cache_idx; do
     cache_size_low=$($tool_dir/cacheInfo/getCacheInfo.sh $mc_file $low_idx "size")
 
     #convert sizes to MB
-    cache_size_high=$(echo "0.66*$cache_size_high/(1024.0*1024.0)" | bc -l)
+    cache_size_high=$(echo "0.95*$cache_size_high/(1024.0*1024.0)" | bc -l)
     cache_size_low=$(echo "0.66*$cache_size_low/(1024.0*1024.0)" | bc -l)
 
+    echo "cache sizes = $cache_size_low and $cache_size_high"
     cache_shared_high="true"
     cache_shared_low="false"
 
@@ -78,7 +79,7 @@ for high_idx in $shared_cache_idx; do
     if [[ "$victim_to" == "$curr_cache_name" ]]; then
         high_victim="true"
     fi
-    nthreads=$($tool_dir/threadPerSocket.sh $mc_file)
+    nthreads=$($tool_dir/threadPerNUMA.sh $mc_file)
     freq=$($tool_dir/getFreq.sh $mc_file)
 
 

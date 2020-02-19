@@ -91,6 +91,7 @@ struct cache_info
     double penalty;
     double getWords();
     bool stencilInit;
+    int duplexity;
     //cache_info(char* name_, char* details_, int hierarchy_, int set_size=-1, int ways=-1, std::vector<double> latency_={}, int prefetch_cl_=0, double sf_=1, int bytePerWord=8);
     cache_info(int hierarchy_, char *mc_file, int isMEM_=false);
 

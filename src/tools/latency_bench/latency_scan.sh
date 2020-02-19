@@ -55,13 +55,13 @@ for((cache_id=0; cache_id<=$numCache; cache_id+=1)); do
         fi
     fi
 
-    nthreads=$($tool_dir/threadPerSocket.sh $mc_file) #always scanning for full cores
+    nthreads=$($tool_dir/threadPerNUMA.sh $mc_file) #always scanning for full cores
 
     #    if [[ $nthreads == -1 ]]; then
 #        if [[ $mem_type = *"private"* ]]; then
 #            nthreads=1
 #        else
-#            nthreads=$($tool_dir/threadPerSocket.sh)
+#            nthreads=$($tool_dir/threadPerNUMA.sh)
 #        fi
 #    fi
 

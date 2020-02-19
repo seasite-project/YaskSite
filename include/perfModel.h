@@ -33,7 +33,7 @@ class perfModel
     //port cycles
     std::map<std::string, double> portCycle;
     //data cycles
-    std::map<std::string, std::vector<double>> bytePerCycle;
+   // std::map<std::string, std::vector<double>> bytePerCycle_map;
     int blockThroughput;
     std::vector<std::string> LD_ports;
     void parseIACA(char *iacaFile);
@@ -49,6 +49,7 @@ class perfModel
     std::vector<double> temporalOh;
     bool LC_violated(cache_info cache_str, LC type);
     blockDetails determineBlockDetails();
+    double evalECM_str(std::vector<double> ECM);
     double applyNOL();
     void validate();
     bool likwidInited;
@@ -68,6 +69,7 @@ class perfModel
     double weight; //Used for concatenating eqnGroups, this weight is used while joining them
     bool derived; //is it a pure kernel or a derived(combination)
     bool val;
+    std::string overlap_hypothesis;
 
     public:
     double cpu_freq;
@@ -92,6 +94,9 @@ class perfModel
     std::vector<double> ECM_validate;
     std::vector<double> ECM_data;
     std::vector<double> ECM_validate_data;
+
+    //data cycles
+    std::map<std::string, std::vector<double>> bytePerCycle_map;
 
     contribution ecm_contribution;
     perfModel(STENCIL *stencil_, double cpu_freq, char* iacaOut_=NULL);

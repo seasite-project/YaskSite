@@ -1,6 +1,6 @@
 #include <yaskSite.h>
 #include "timing.h"
-//#include  <likwid.h>
+#include  <likwid.h>
 
 #ifdef LIKWID_PERFMON
 #define PERF_RUN(stencil,...)\
@@ -30,6 +30,9 @@
 
 #define PERF_RUN(stencil,...)\
 {\
+    stencil->init();\
+    dt = (double*) stencil->getParam("dt");\
+    (*dt) = 0.025;\
     INIT_TIME(stencil_);\
     START_TIME(stencil_);\
     stencil->run();\
@@ -47,17 +50,19 @@
 
 void main(int argc, char** argv)
 {
-    MPI_Manager mpiMan(&argc, &argv);
-
+    char* mc_file = "Emmy.yml";
+    printf("starting\n");
+    MPI_Manager mpiMan(&argc, &argv, mc_file);
+    printf("started\n");
 #ifdef LIKWID_PERFMON
     LIKWID_MARKER_INIT;
-
 #pragma omp parallel
     {
         LIKWID_MARKER_THREADINIT;
     }
 #endif
 
+    printf("Generating code\n");
     double* dt;
     //Generating code examples
     CODIFY( "heat2d_update", "heat2d",
@@ -179,11 +184,11 @@ void main(int argc, char** argv)
 #endif
 
     yaskSite* stencil = new yaskSite(&mpiMan, "heat2d_embrk",2,1,1,1);
-    stencil->setThread(1,1);
-    stencil->setDim(80000, 2000, 1, 50);
-    stencil->init();//init goes here
-    dt = stencil->getParam("dt"); //set the defined parameters
-    (*dt) = 0.025;
+    stencil->setThread(10,1);
+    stencil->setDim(80000, 2000, 1, 10);
+    //stencil->init();//init goes here
+    //dt = (double*) stencil->getParam("dt"); //set the defined parameters
+    //(*dt) = 0.025;
 
   /*  PERF_RUN(stencil_2,"plain");
 

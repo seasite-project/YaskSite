@@ -27,6 +27,8 @@ set (SOURCES
     src/codeGen.cpp
     src/types.cpp
     src/perfModel.cpp
+    symee/symee.c
+    symee/functions.c
     )
 
 set (HEADERS
@@ -40,6 +42,7 @@ set (HEADERS
     include/codeGen.h
     include/types.h
     include/perfModel.h
+    symee/symee.h
     )
 
 set(LOG_SYS_CALL 0 CACHE BOOL "Log system calls (default: disabled)")
@@ -50,7 +53,7 @@ set(TOOL_DIR "${PROJECT_SOURCE_DIR}/src/tools")
 set(LIB_TOOL_DIR "${CMAKE_INSTALL_PREFIX}/tools/yaskSite/tools")
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
 set(STENCIL_DIR "${PROJECT_SOURCE_DIR}/src/stencils")
-set(INC_DIR "${PROJECT_SOURCE_DIR}/include")
+set(INC_DIR "${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/symee")
 set(CACHE_BUILD OFF CACHE BOOL "Cache the stencil builds for later runs. Enabling cache requires approx. 50 MB diskspace per stencil")
 set(USE_LIKWID ON CACHE BOOL "Set the variable to ON if you need to use LIKWID, currently you have to ON it")
 set(IACA_PATH "" CACHE PATH "Set the path of iaca.sh file, if not provided will try to download and install Intel IACA")
@@ -175,7 +178,8 @@ elseif(TARGET_ARCHITECTURE STREQUAL "sandy-bridge")
     set(TARGET_ARCH "snb")
 else()
     message(WARNING "TARGET ARCHITECTURE could not be detected, setting to intel64")
-    set(TARGET_ARCH "intel64")
+    #set(TARGET_ARCH "intel64")
+    set(TARGET_ARCH "hsw")
 endif()
 
 set(TARGET_ARCH "${TARGET_ARCH}" CACHE STRING "Target architecture detected by default; if needed to build for another CPU, please change this")
@@ -298,6 +302,7 @@ else()
         endif()
     endif()
 endif()
+
 
 if("${IACA_PATH}" STREQUAL "")
     set(BUILTIN_IACA 0 CACHE INTERNAL "am i using built-in iaca")
@@ -491,7 +496,7 @@ configure_file (
 configure_file(${PROJECT_SOURCE_DIR}/yasksite-config.cmake.in ${PROJECT_BINARY_DIR}/yasksite-config.cmake @ONLY)
 
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/symee)
 add_library(yaskSite ${SOURCES})
 
 add_dependencies(yaskSite yaml-cpp)

@@ -161,6 +161,7 @@ cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheI
 
     bytePerWord = sizeof(double);
     sf = 0.9;
+    duplexity = 1;
 
     printf("MEM = %d\n", isMEM);
     if(!isMEM)
@@ -243,6 +244,7 @@ double cache_info::getWords()
 
 double cache_info::getBytePerCycle(int rwRatio, int nthreads)
 {
+    int actualRW_ratio = rwRatio;
     if(bytePerCycle.empty())
     {
         return 0;
@@ -270,7 +272,16 @@ double cache_info::getBytePerCycle(int rwRatio, int nthreads)
         {
             ERROR_PRINT("Could not retrieve bandwidth informations\n");
         }
-        return bytePerCycle[rwRatio-1][nthreads-1];
+        double BPC = bytePerCycle[rwRatio-1][nthreads-1];
+
+        if(!victim && duplexity == 2) //TODO: deal in a nicer way
+        {
+
+            double halfBPC = BPC;
+            int commonRW = 1;
+            BPC = (2*(commonRW)*2*halfBPC + (actualRW_ratio-commonRW)*halfBPC)/(commonRW + actualRW_ratio);
+        }
+        return BPC;
     }
 }
 
@@ -350,16 +361,25 @@ void cache_info::readBytePerCycle(char* mc_file)
             PCLOSE(file);
 
             POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;upstream throughput;1\"", TOOL_DIR, mc_file, hierarchy);
-            std::string duplexity(readStrVar(file));
-            printf("check duplexity = %s\n", duplexity.c_str());
-            if(duplexity.find("half-duplex") == std::string::npos)
+            std::string duplexity_str(readStrVar(file));
+            printf("check duplexity = %s\n", duplexity_str.c_str());
+            if(duplexity_str.find("half-duplex") == std::string::npos)
             {
-                ERROR_PRINT("Currently %s cache with only half-duplexity treated, setting the cache as half-duplex", name.c_str());
+                duplexity = 2;
+                //ERROR_PRINT("Currently %s cache with only half-duplexity treated, setting the cache as half-duplex", name.c_str());
             }
             PCLOSE(file);
         }
         else
         {
+            POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;upstream throughput;1\"", TOOL_DIR, mc_file, hierarchy);
+            std::string duplexity_str(readStrVar(file));
+            printf("check duplexity = %s\n", duplexity_str.c_str());
+            if(duplexity_str.find("half-duplex") == std::string::npos)
+            {
+                duplexity = 2;
+                //ERROR_PRINT("Currently %s cache with only half-duplexity treated, setting the cache as half-duplex", name.c_str());
+            }
             POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;data path bw\" | wc -l", TOOL_DIR, mc_file, name.c_str());
             int numRW = readIntVar(file);
             PCLOSE(file);

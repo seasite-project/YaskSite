@@ -237,6 +237,14 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     num_eqns=(int)eqGroupName.size();
     s = 0;
     maxNumStencils = 0;
+
+    FILE *totStencilFile;
+    POPEN(sysLogFileName, totStencilFile, "%s/getTotalStencils.sh %s/stencilCode.hpp", TOOL_DIR, localDir);
+    int total_stencils=readIntVar(totStencilFile);
+    PCLOSE(totStencilFile);
+
+    printf("totalStencils = %d................\n", total_stencils);
+    int rem_stencils= total_stencils;
     for(int i=0; i<(int)eqGroupName.size(); ++i)
     {
         EQ_GROUP curr_eq_group;
@@ -285,7 +293,12 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
 
         //max is the value of s
         s=std::max(s, curr_eq_group.num_spatial_reads+curr_eq_group.num_spatial_writes);
-        curr_eq_group.num_stencils=std::min(n_stencils,curr_eq_group.num_spatial_reads);
+        if(rem_stencils < 0)
+        {
+            ERROR_PRINT("Couldn't automatically assign stencil per equation group correctly\n");
+        }
+        curr_eq_group.num_stencils=std::min(rem_stencils,std::min(n_stencils,curr_eq_group.num_spatial_reads)); //It can fail if multiple eq. groups is there
+        rem_stencils -= n_stencils;
         //printf("...-----...---Reads = %d, Writes = %d, Stencils = %d\n", curr_eq_group.num_spatial_reads, curr_eq_group.num_spatial_writes, curr_eq_group.num_stencils);
 
         maxNumStencils=std::max(maxNumStencils, curr_eq_group.num_stencils);
@@ -319,7 +332,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     char *mc_file = glb_mc_file;
 
     FILE *threadPerSocketFile;
-    POPEN(sysLogFileName, threadPerSocketFile, "%s/threadPerSocket.sh %s", TOOL_DIR, mc_file);
+    POPEN(sysLogFileName, threadPerSocketFile, "%s/threadPerNUMA.sh %s", TOOL_DIR, mc_file);
     thread_per_socket = readIntVar(threadPerSocketFile);
     PCLOSE(threadPerSocketFile);
 
@@ -408,7 +421,12 @@ void yaskSite::cleanDir()
 
 
 #define BUILD_CMD\
+    "make -C %s EXTRA_CXXFLAGS=\"-fPIC -D__PURE_INTEL_C99_HEADERS__\" %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=%d REGION_LOOP_OPTS=\"-dims 'rw,rx,ry,rz' -ompConstruct 'omp parallel for schedule(static,1) proc_bind(close)' -calcPrefix 'eg->calc_'\" SUB_BLOCK_LOOP_INNER_MODS=\"%s\" SUB_BLOCK_LOOP_OUTER_MODS=\"%s\" BLOCK_LOOP_OPTS=\"-dims 'bw,bx,by,bz' -ompConstruct ''\" layout_txyz=Layout_1234 layout_twxyz=Layout_12345 likwid=%d halo=%d", yaskDir, stencil_with_radius, arch, fold_x, fold_y, fold_z, (dp)?8:4, (prefetch)?"prefetch(L2)":"", path, (int) buildWithLikwid, radius\
+
+/*
+#define BUILD_CMD\
     "make -C %s EXTRA_CXXFLAGS=\"-fPIC -D__PURE_INTEL_C99_HEADERS__\" %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=%d SUB_BLOCK_LOOP_INNER_MODS=\"%s\" SUB_BLOCK_LOOP_OUTER_MODS=\"%s\" BLOCK_LOOP_OPTS=\"-dims 'bw,bx,by,bz' -ompConstruct ''\" layout_txyz=Layout_1234 layout_twxyz=Layout_12345 likwid=%d halo=%d", yaskDir, stencil_with_radius, arch, fold_x, fold_y, fold_z, (dp)?8:4, (prefetch)?"prefetch(L2)":"", path, (int) buildWithLikwid, radius\
+*/
 
 /*
 #define BUILD_CMD\
@@ -628,8 +646,8 @@ void yaskSite::setThread(int nthreads_, int threadPerBlock_, bool resetOthers)
     nthreads = nthreads_;
     if(nthreads > thread_per_socket)
     {
-        nthreads = thread_per_socket;
-        ERROR_PRINT("Currently the framework only supports 1 ccNUMA domain, setting nthreads to %d\n", nthreads);
+        //nthreads = thread_per_socket;
+        WARNING_PRINT("Currently the framework only supports performance modeling for 1 ccNUMA domain\n");
     }
     threadPerBlock = threadPerBlock_;
     if(resetOthers)
@@ -1565,7 +1583,6 @@ void yaskSite::run()
 
     INFO_PRINT("Running %s : nthreads=%d, dim='t=%d,x=%d,y=%d,z=%d' region='t=%d,x=%d,y=%d,z=%d' block='x=%d,y=%d,z=%d' subBlock='x=%d,y=%d,z=%d'", stencilCode, nthreads, dt,dx,dy,dz, rt,rx,ry,rz, bx,by,bz, sbx,sby,sbz);
 
-
     if( dz==-1 )
     {
         ERROR_PRINT("ERROR: It seems you haven't set the dimension\n");
@@ -2116,7 +2133,9 @@ void yaskSite::calcECM(bool validate)
         overallModel = overallModel + *(eqGroups[mainEqGroups[i]].model);
     }
 
+    printf(".........going to validate\n");
     overallModel.model(1, validate);
+    printf("validation done.........\n");
 }
 
 

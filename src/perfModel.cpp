@@ -919,13 +919,13 @@ bool perfModel::LC_violated(cache_info currCache, LC  type)
 
     if(type == OUTER)
     {
-        printf("layers = %f\n", layers);
+        printf("outer layers = %f\n", layers);
     }
 
     //if((layers*blockSize+currCahce.prefetch_cl*8*layers) <= curr_cache_size)
     if(type == INNER)
     {
-        printf("layers = %f\n", layers);
+        printf("inner layers = %f\n", layers);
         printf("cache size = %f\n", curr_cache_size);
     }
     if((layers*blockSize) <= curr_cache_size)
@@ -950,12 +950,10 @@ blockDetails perfModel::determineBlockDetails()
     int numPureWriteGrids = numWriteGrids - numReadWriteGrids;
     int totalGrids = numReadGrids+numPureWriteGrids;
 
-
     //scan through caches to find the smallest cache that fits entire domain
     for(int i=0; i<((int)CACHES.size()); ++i)
     {
         double curr_cache_size = CACHES[i].getWords()*CACHES[i].sf;
-
         if( totalGrids*(dx*dy*dz) <= curr_cache_size )
         {
             opt.fit_domain = &CACHES[i];

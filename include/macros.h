@@ -147,8 +147,15 @@ if(dim==2)\
     else\
     {\
         fold_ = stencil->fold_x*stencil->fold_y;\
-        outer_layer = 2.0*((static_cast<int>((stencil->radius-1)/stencil->fold_x)+1));\
         inner_layer = 2.0*((static_cast<int>((stencil->radius-1)/stencil->fold_y)+1));\
+        if(stencil->dim==3)\
+        {\
+            outer_layer = 2.0*((static_cast<int>((stencil->radius-1)/stencil->fold_x)+1));\
+        }\
+        else\
+        {\
+            outer_layer = 0;\
+        }\
     }\
     double restContrib_ = numReadGrids + numWriteGrids - numStencils;\
     double layers_ = fold_*(numStencils*(inner_layer + 1.0 + outer_layer) + restContrib_);\
@@ -169,8 +176,15 @@ if(dim==2)\
     else\
     {\
         fold_ = stencil->fold_x*stencil->fold_y;\
-        outer_layer = 2.0*((static_cast<int>((stencil->radius-1)/stencil->fold_x)+1));\
         inner_layer = 2.0*((static_cast<int>((stencil->radius-1)/stencil->fold_y)+1));\
+        if(stencil->dim==3)\
+        {\
+            outer_layer = 2.0*((static_cast<int>((stencil->radius-1)/stencil->fold_x)+1));\
+        }\
+        else\
+        {\
+            outer_layer = 0;\
+        }\
     }\
     double restContrib_ = stencil->s - stencil->maxNumStencils;\
     double layers_ = fold_*(stencil->maxNumStencils*(inner_layer + 1.0 + outer_layer) + restContrib_);\

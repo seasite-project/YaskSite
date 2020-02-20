@@ -802,7 +802,10 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
         bx = 1;
         by_min = std::min(ry, (16 + 4*static_cast<int>(fold_y/4.0)*fold_y));
         bz_min = std::min(rz, 128 + 0*static_cast<int>(fold_z/4.0)*fold_z);
-
+        if(by_min < nthreads) //it can't cut if this is the case
+        {
+            bz_min = 12;
+        }
         //Similar to OMP on outer-most loop
         //TODO inner shouldn't in priciple hurt in yask if loop size is big
         //enough
@@ -897,6 +900,11 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
         bx_min = std::min(rx, std::max(5,static_cast<int>(3*radius_x)));
         by_min = std::min(ry, std::max(5,static_cast<int>(3*radius_y)));
         bz_min = std::min(rz, 64 + 8*static_cast<int>(fold_z/4.0)*fold_z);
+
+        if(bx_min*by_min < nthreads)
+        {
+            bz_min = 12;
+        }
 
         printf("min %dx%dx%d\n",bx_min,by_min,bz_min);
 
@@ -1183,6 +1191,8 @@ std::vector<int> yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_
             //setDefaultBlock();
             retThreads = setDefaultBlock_min_rem(1,1,temporal_str);
             setDefaultSubBlock();
+
+            INFO_PRINT("Found: bx=%d by=%d, bz=%d", bx, by, bz);
             INFO_PRINT("Spatial Blocking not carried out, dim fits in cache");
         }
 

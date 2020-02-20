@@ -63,7 +63,7 @@ done
 #REPLACE all RHS with STENCIL
 sed  -i "s@RHS\([^,]*\)[^\)]*@STENCIL\1@g" $tmpFile
 
-key=$(basename $codeFile | cut -f1 -d '.')
+key=$(basename $codeFile | cut -f1 -d '.' | sed -e "s@:@_@g")
 
 restArgs="${@:2}"
 #echo "check ${tool_dir}/offsite_adapter $tmpFile $key ${params} $stencil_name $restArgs"

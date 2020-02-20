@@ -1949,14 +1949,14 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
     int data_factor = 1;
 
     //1st core contribution
-    ECM.push_back((blockThroughput/core_factor)*scale);
+    ECM.push_back((blockThroughput/((double)core_factor))*scale);
     //L1->core
     double l1_core=0.0;
     for(int port_idx=0; port_idx<(int)LD_ports.size(); ++port_idx)
     {
         l1_core = std::max(l1_core, portCycle[LD_ports[port_idx]]);
     }
-    ECM.push_back((l1_core/core_factor)*scale);
+    ECM.push_back((l1_core/((double)core_factor))*scale);
 
     //calculate latency, data transfer from IACA
     std::vector<double> l1_core_data = getDataContrib("L1",&opt,temporalStoreMode);

@@ -711,8 +711,17 @@ void yaskSite::setDefaultBlock()
         //Similar to OMP on outer-most loop
         //TODO inner shouldn't in priciple hurt in yask if loop size is big
         //enough
-        by = static_cast<int>(round(threadPerBlock*ry_p/((double)nthreads)));
-        bz = rz_p;
+        double test_by = threadPerBlock*ry_p/((double)nthreads);
+        if(test_by >= 1)
+        {
+            by = static_cast<int>(round(threadPerBlock*ry_p/((double)nthreads)));
+            bz = rz_p;
+        }
+        else
+        {
+            by = ry_p;
+            bz = static_cast<int>(round(threadPerBlock*rz_p/((double)nthreads)));
+        }
     }
     else if(dim==3)
     {
@@ -722,9 +731,26 @@ void yaskSite::setDefaultBlock()
         //1. use loopTuner
         //2. manually set Block and subBlock
         //default outer loop will be parallelised
-        bx = static_cast<int>(round(threadPerBlock*rx_p/((double)nthreads)));
-        by = ry_p;
-        bz = rz_p;
+        double test_bx = threadPerBlock*rx_p/((double)nthreads);
+        double test_by = threadPerBlock*ry_p/((double)nthreads);
+        if(test_bx >= 1)
+        {
+            bx = static_cast<int>(round(threadPerBlock*rx_p/((double)nthreads)));
+            by = ry_p;
+            bz = rz_p;
+        }
+        else if(test_by >= 1)
+        {
+            bx = rx_p;
+            by = static_cast<int>(round(threadPerBlock*ry_p/((double)nthreads)));
+            bz = rz_p;
+        }
+        else
+        {
+            bx = rx_p;
+            by = ry_p;
+            bz = static_cast<int>(round(threadPerBlock*rz_p/((double)nthreads)));
+        }
     }
 }
 

@@ -255,7 +255,7 @@ void main(int argc, char** argv)
 
     printf("stencilName = %s\n", stencilName);
     yaskSite* stencil = new yaskSite(&mpiMan, derivedStencilName, dim, -1, fold[0], fold[1], fold[2], dp, prefetch);
-    stencil->setDim(size[0], size[1], size[2]);
+    stencil->setDim(size[0], size[1], size[2], dt);
 
     std::vector<double> ecm_cy_cl_vec;
     std::vector<double> cy_cl_vec;

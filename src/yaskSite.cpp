@@ -804,65 +804,78 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
         bz_min = std::min(rz, 128 + 0*static_cast<int>(fold_z/4.0)*fold_z);
         if(by_min < nthreads) //it can't cut if this is the case
         {
-            bz_min = 12;
-        }
-        //Similar to OMP on outer-most loop
-        //TODO inner shouldn't in priciple hurt in yask if loop size is big
-        //enough
-
-        //find good multiple of nthreads
-        std::vector<int> outer_threads;
-        std::vector<int> inner_threads;
-
-        for(int i=nthreads; i>=1; --i)
-        {
-            /*In the order outer has more threads first*/
-            int out=i;
-            int in=nthreads/i;
-
-            if(out*in == nthreads)
-            {
-                outer_threads.push_back(out);
-                inner_threads.push_back(in);
-            }
+            bz_min = fold_z;
         }
 
-        int curr_by, curr_bz;
         std::vector<double> reminder_size;
         std::vector<int> select_by;
         std::vector<int> select_bz;
         std::vector<int> select_ty;
         std::vector<int> select_tz;
 
+
+        int curr_threads = nthreads;
+        //Similar to OMP on outer-most loop
+        //TODO inner shouldn't in priciple hurt in yask if loop size is big
+        //enough
         while(!found)
         {
-            for(int i=0; i<(int)outer_threads.size(); ++i)
+            //find good multiple of curr_threads
+            std::vector<int> outer_threads;
+            std::vector<int> inner_threads;
+
+            for(int i=curr_threads; i>=1; --i)
             {
-                int out = outer_threads[i];
-                int in  = inner_threads[i]*n_scale_down_olc;
+                /*In the order outer has more threads first*/
+                int out=i;
+                int in=curr_threads/i;
 
-                curr_by = static_cast<int>(round(threadPerBlock*ry_p/((double)out)));
-                curr_bz = static_cast<int>(round(threadPerBlock*rz_p/((double)in)));
-
-                if((curr_by >= by_min) && (curr_bz >= bz_min) )
+                if(out*in == curr_threads)
                 {
-                    //will have to rank based on reminder; this makes to select the
-                    //block with good load balancing
-                    reminder_size.push_back( ((curr_by*out)-ry_p)*rz_p + (curr_bz*in-rz_p) );
-                    select_by.push_back(curr_by);
-                    select_bz.push_back(curr_bz);
-                    select_ty.push_back(out);
-                    select_tz.push_back(in);
-                    found = true;
-                    //select this break
-                    //break;
+                    outer_threads.push_back(out);
+                    inner_threads.push_back(in);
                 }
             }
-            if(!found)
+
+            int curr_by, curr_bz;
+            bool min_set = false;
+            while(!found)
             {
-                by_min = 2;
-                bz_min = 2;
+                for(int i=0; i<(int)outer_threads.size(); ++i)
+                {
+                    int out = outer_threads[i];
+                    int in  = inner_threads[i]*n_scale_down_olc;
+
+                    curr_by = static_cast<int>(round(threadPerBlock*ry_p/((double)out)));
+                    curr_bz = static_cast<int>(round(threadPerBlock*rz_p/((double)in)));
+
+                    if((curr_by >= by_min) && (curr_bz >= bz_min) )
+                    {
+                        //will have to rank based on reminder; this makes to select the
+                        //block with good load balancing
+                        reminder_size.push_back( ((curr_by*out)-ry_p)*rz_p + (curr_bz*in-rz_p) );
+                        select_by.push_back(curr_by);
+                        select_bz.push_back(curr_bz);
+                        select_ty.push_back(out);
+                        select_tz.push_back(in);
+                        found = true;
+                        //select this break
+                        //break;
+                    }
+                }
+                if(!found && !min_set)
+                {
+                    by_min = 2;
+                    bz_min = 2;
+                    min_set=true;
+                }
+                else
+                {
+                    break;
+                }
             }
+
+            --curr_threads; //extreme measure reduce curr_threads
         }
 
         std::vector<int> perm(reminder_size.size());
@@ -903,7 +916,7 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
 
         if(bx_min*by_min < nthreads)
         {
-            bz_min = 12;
+            bz_min = fold_z;
         }
 
         printf("min %dx%dx%d\n",bx_min,by_min,bz_min);
@@ -1617,7 +1630,10 @@ void yaskSite::run()
         init();
     }
 
-    INFO_PRINT("Running %s : nthreads=%d, dim='t=%d,x=%d,y=%d,z=%d' region='t=%d,x=%d,y=%d,z=%d' block='x=%d,y=%d,z=%d' subBlock='x=%d,y=%d,z=%d'", stencilCode, nthreads, dt,dx,dy,dz, rt,rx,ry,rz, bx,by,bz, sbx,sby,sbz);
+    if(yaskSite_VERBOSITY > 1)
+    {
+        INFO_PRINT("Running %s : nthreads=%d, dim='t=%d,x=%d,y=%d,z=%d' region='t=%d,x=%d,y=%d,z=%d' block='x=%d,y=%d,z=%d' subBlock='x=%d,y=%d,z=%d'", stencilCode, nthreads, dt,dx,dy,dz, rt,rx,ry,rz, bx,by,bz, sbx,sby,sbz);
+    }
 
     if( dz==-1 )
     {

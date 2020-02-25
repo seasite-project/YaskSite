@@ -1,0 +1,1972 @@
+Intel(R) Advisor can now assist with vectorization and show optimization
+  report messages with your source code.
+See "https://software.intel.com/en-us/intel-advisor-xe" for details.
+
+Intel(R) C++ Intel(R) 64 Compiler for applications running on Intel(R) 64, Version 19.0.2.187 Build 20190117
+
+Compiler options: -I/apps/intel/ComposerXE2019/compilers_and_libraries_2019.2.187/linux/mpi/intel64/include -g -std=c++11 -Wall -O3 -xCORE-AVX2 -debug extended -Fa -restrict -ansi-alias -fno-alias -fimf-precision=low -fast-transcendentals -no-prec-sqrt -no-prec-div -fp-model fast=2 -fno-protect-parens -rcd -ftz -fma -fimf-domain-exclusion=none -qopt-assume-safe-padding -qoverride-limits -qopt-report=5 -no-diag-message-catalog -fopenmp -fPIC -D__PURE_INTEL_C99_HEADERS__ -c -o src/realv_grids.test.hsw.o
+
+    Report from: Interprocedural optimizations [ipo]
+
+  WHOLE PROGRAM (SAFE) [EITHER METHOD]: false
+  WHOLE PROGRAM (SEEN) [TABLE METHOD]: false
+  WHOLE PROGRAM (READ) [OBJECT READER METHOD]: false
+
+INLINING OPTION VALUES:
+  -inline-factor: 100
+  -inline-min-size: 30
+  -inline-max-size: 230
+  -inline-max-total-size: 2000
+  -inline-max-per-routine: 10000
+  -inline-max-per-compile: 500000
+
+In the inlining report below:
+   "sz" refers to the "size" of the routine. The smaller a routine's size,
+      the more likely it is to be inlined.
+   "isz" refers to the "inlined size" of the routine. This is the amount
+      the calling routine will grow if the called routine is inlined into it.
+      The compiler generally limits the amount a routine can grow by having
+      routines inlined into it.
+
+Begin optimization report for: std::char_traits<char>::assign(std::char_traits<char>::char_type &, const std::char_traits<char>::char_type &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::char_traits<char>::assign(std::char_traits<char>::char_type &, const std::char_traits<char>::char_type &)) /usr/include/c++/7.4.0/bits/char_traits.h(285,7)
+
+===========================================================================
+
+Begin optimization report for: std::char_traits<char>::copy(std::char_traits<char>::char_type *, const std::char_traits<char>::char_type *, std::size_t)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::char_traits<char>::copy(std::char_traits<char>::char_type *, const std::char_traits<char>::char_type *, std::size_t)) /usr/include/c++/7.4.0/bits/char_traits.h(347,7)
+
+===========================================================================
+
+Begin optimization report for: std::allocator<char>::allocator(std::allocator<char> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::allocator<char>::allocator(std::allocator<char> *))/usr/include/c++/7.4.0/bits/allocator.h(131,27)
+
+===========================================================================
+
+Begin optimization report for: std::allocator<char>::allocator(std::allocator<char> *, const std::allocator<char> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::allocator<char>::allocator(std::allocator<char> *, const std::allocator<char> &))/usr/include/c++/7.4.0/bits/allocator.h(134,36)
+
+===========================================================================
+
+Begin optimization report for: std::allocator<char>::allocator(std::allocator<char> *const, const std::allocator<char> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::allocator<char>::allocator(std::allocator<char> *const, const std::allocator<char> &))/usr/include/c++/7.4.0/bits/allocator.h(133,7)
+
+===========================================================================
+
+Begin optimization report for: std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type)) /usr/include/c++/7.4.0/bits/alloc_traits.h(462,7)
+
+===========================================================================
+
+Begin optimization report for: std::ctype<char>::widen(const std::ctype<char> *, char) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::ctype<char>::widen(const std::ctype<char> *, char) const) /usr/include/c++/7.4.0/bits/locale_facets.h(873,7)
+
+===========================================================================
+
+Begin optimization report for: std::basic_ios<char, std::char_traits<char>>::rdstate(const std::basic_ios<char, std::char_traits<char>> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::basic_ios<char, std::char_traits<char>>::rdstate(const std::basic_ios<char, std::char_traits<char>> *) const)/usr/include/c++/7.4.0/bits/basic_ios.h(138,7)
+
+===========================================================================
+
+Begin optimization report for: std::basic_ios<char, std::char_traits<char>>::widen(const std::basic_ios<char, std::char_traits<char>> *, char) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::basic_ios<char, std::char_traits<char>>::widen(const std::basic_ios<char, std::char_traits<char>> *, char) const)/usr/include/c++/7.4.0/bits/basic_ios.h(450,7)
+
+===========================================================================
+
+Begin optimization report for: std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &)) /usr/include/c++/7.4.0/bits/ptr_traits.h(142,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer))/usr/include/c++/7.4.0/bits/basic_string.h(168,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_length(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_length(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type))/usr/include/c++/7.4.0/bits/basic_string.h(172,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const)/usr/include/c++/7.4.0/bits/basic_string.h(176,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *))/usr/include/c++/7.4.0/bits/basic_string.h(180,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const)/usr/include/c++/7.4.0/bits/basic_string.h(190,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_capacity(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_capacity(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type))/usr/include/c++/7.4.0/bits/basic_string.h(200,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_set_length(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_set_length(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type))/usr/include/c++/7.4.0/bits/basic_string.h(204,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const)/usr/include/c++/7.4.0/bits/basic_string.h(211,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *))/usr/include/c++/7.4.0/bits/basic_string.h(219,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type))/usr/include/c++/7.4.0/bits/basic_string.h(226,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *))/usr/include/c++/7.4.0/bits/basic_string.h(276,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_S_copy(char *, const char *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_S_copy(char *, const char *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type))/usr/include/c++/7.4.0/bits/basic_string.h(336,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_S_copy_chars(char *, const char *, const char *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_S_copy_chars(char *, const char *, const char *))/usr/include/c++/7.4.0/bits/basic_string.h(387,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const std::allocator<char> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const std::allocator<char> &))/usr/include/c++/7.4.0/bits/basic_string.h(511,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *))/usr/include/c++/7.4.0/bits/basic_string.h(647,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::length(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::length(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const)/usr/include/c++/7.4.0/bits/basic_string.h(927,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *)) /usr/include/c++/7.4.0/bits/basic_string.h(253,2)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct_aux<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *, std::__false_type)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct_aux<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *, std::__false_type)) /usr/include/c++/7.4.0/bits/basic_string.h(234,2)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *, std::forward_iterator_tag)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *, std::forward_iterator_tag)) /usr/include/c++/7.4.0/bits/basic_string.tcc(209,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_Alloc_hider::_Alloc_hider(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_Alloc_hider *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer, const std::allocator<char> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_Alloc_hider::_Alloc_hider(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_Alloc_hider *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer, const std::allocator<char> &))/usr/include/c++/7.4.0/bits/basic_string.h(146,37)
+
+===========================================================================
+
+Begin optimization report for: __gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (__gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *)) /usr/include/c++/7.4.0/ext/new_allocator.h(79,45)
+
+===========================================================================
+
+Begin optimization report for: __gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *, const __gnu_cxx::new_allocator<char> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (__gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *, const __gnu_cxx::new_allocator<char> &)) /usr/include/c++/7.4.0/ext/new_allocator.h(81,65)
+
+===========================================================================
+
+Begin optimization report for: __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (__gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type)) /usr/include/c++/7.4.0/ext/new_allocator.h(117,7)
+
+===========================================================================
+
+Begin optimization report for: yask::real_vec_t::real_vec_t(yask::real_vec_t *, const yask::real_vec_t &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::real_vec_t::real_vec_t(yask::real_vec_t *, const yask::real_vec_t &)) src/realv.hpp(254,57)
+
+===========================================================================
+
+Begin optimization report for: yask::real_vec_t::real_vec_t(yask::real_vec_t *, double)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::real_vec_t::real_vec_t(yask::real_vec_t *, double)) src/realv.hpp(265,46)
+
+===========================================================================
+
+Begin optimization report for: yask::real_vec_t::operator=(yask::real_vec_t *, const yask::real_vec_t &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::real_vec_t::operator=(yask::real_vec_t *, const yask::real_vec_t &)) src/realv.hpp(276,68)
+
+===========================================================================
+
+Begin optimization report for: yask::real_vec_t::operator=(yask::real_vec_t *, double)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::real_vec_t::operator=(yask::real_vec_t *, double)) src/realv.hpp(290,50)
+
+===========================================================================
+
+Begin optimization report for: yask::real_vec_t::operator[](yask::real_vec_t *, yask::idx_t)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::real_vec_t::operator[](yask::real_vec_t *, yask::idx_t)) src/realv.hpp(315,51)
+
+===========================================================================
+
+Begin optimization report for: yask::real_vec_t::operator()(const yask::real_vec_t *, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::real_vec_t::operator()(const yask::real_vec_t *, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t) const) src/realv.hpp(327,90)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::~RealVecGridBase(yask::RealVecGridBase *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::~RealVecGridBase(yask::RealVecGridBase *)) [40/102=39.2%] src/realv_grids.hpp(119,36)
+  -> INLINE (MANUAL): (119,38) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> INLINE (MANUAL): (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/ptr_traits.h:(142,16) std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 4) (sz = 11)
+              -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/move.h:(138,14) std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 0) (sz = 6)
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.hpp(119,36):remark #34051: REGISTER ALLOCATION : [_ZN4yask15RealVecGridBaseD1Ev] src/realv_grids.hpp:119
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    3[ rax rdx rdi]
+        
+    Routine temporaries
+        Total         :      13
+            Global    :       7
+            Local     :       6
+        Regenerable   :       1
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::~RealVecGridBase(yask::RealVecGridBase *const)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::~RealVecGridBase(yask::RealVecGridBase *const)) [41/102=40.2%] src/realv_grids.hpp(119,17)
+  -> EXTERN: (119,17) operator delete(void *)
+  -> INLINE (MANUAL): (119,17) yask::RealVecGridBase::~RealVecGridBase(yask::RealVecGridBase *) (isz = 17) (sz = 22)
+    -> INLINE (MANUAL): (119,38) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+      -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+        -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+          -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+          -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+            -> INLINE (MANUAL): (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+              -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/ptr_traits.h:(142,16) std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 4) (sz = 11)
+                -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/move.h:(138,14) std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+          -> EXTERN: (226,7) __cxa_call_unexpected
+          -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+              -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+          -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+          -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.hpp(119,17):remark #34051: REGISTER ALLOCATION : [_ZN4yask15RealVecGridBaseD0Ev] src/realv_grids.hpp:119
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    5[ rax rdx rcx rbx rdi]
+        
+    Routine temporaries
+        Total         :      14
+            Global    :       8
+            Local     :       6
+        Regenerable   :       1
+        Spilled       :       1
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_name(yask::RealVecGridBase *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_name(yask::RealVecGridBase *)) src/realv_grids.hpp(122,39)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::got_t(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::got_t(const yask::RealVecGridBase *) const) [43/102=42.2%] src/realv_grids.hpp(125,36)
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.hpp(125,36):remark #34051: REGISTER ALLOCATION : [_ZNK4yask15RealVecGridBase5got_tEv] src/realv_grids.hpp:125
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    2[ rax rdi]
+        
+    Routine temporaries
+        Total         :       8
+            Global    :       0
+            Local     :       8
+        Regenerable   :       1
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::got_w(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::got_w(const yask::RealVecGridBase *) const) [44/102=43.1%] src/realv_grids.hpp(126,36)
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.hpp(126,36):remark #34051: REGISTER ALLOCATION : [_ZNK4yask15RealVecGridBase5got_wEv] src/realv_grids.hpp:126
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    2[ rax rdi]
+        
+    Routine temporaries
+        Total         :       8
+            Global    :       0
+            Local     :       8
+        Regenerable   :       1
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::got_x(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::got_x(const yask::RealVecGridBase *) const) [45/102=44.1%] src/realv_grids.hpp(127,36)
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.hpp(127,36):remark #34051: REGISTER ALLOCATION : [_ZNK4yask15RealVecGridBase5got_xEv] src/realv_grids.hpp:127
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    2[ rax rdi]
+        
+    Routine temporaries
+        Total         :       8
+            Global    :       0
+            Local     :       8
+        Regenerable   :       1
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::got_y(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::got_y(const yask::RealVecGridBase *) const) [46/102=45.1%] src/realv_grids.hpp(128,36)
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.hpp(128,36):remark #34051: REGISTER ALLOCATION : [_ZNK4yask15RealVecGridBase5got_yEv] src/realv_grids.hpp:128
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    2[ rax rdi]
+        
+    Routine temporaries
+        Total         :       8
+            Global    :       0
+            Local     :       8
+        Regenerable   :       1
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::got_z(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::got_z(const yask::RealVecGridBase *) const) [47/102=46.1%] src/realv_grids.hpp(129,36)
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.hpp(129,36):remark #34051: REGISTER ALLOCATION : [_ZNK4yask15RealVecGridBase5got_zEv] src/realv_grids.hpp:129
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    2[ rax rdi]
+        
+    Routine temporaries
+        Total         :       8
+            Global    :       0
+            Local     :       8
+        Regenerable   :       1
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_num_dims(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::get_num_dims(const yask::RealVecGridBase *) const) [48/102=47.1%] src/realv_grids.hpp(130,42)
+  -> INDIRECT- (VIRTUAL): (131,21)  yask::RealVecGridBase::got_t(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INDIRECT- (VIRTUAL): (132,18)  yask::RealVecGridBase::got_w(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INDIRECT- (VIRTUAL): (133,18)  yask::RealVecGridBase::got_x(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INDIRECT- (VIRTUAL): (134,18)  yask::RealVecGridBase::got_y(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INDIRECT- (VIRTUAL): (135,18)  yask::RealVecGridBase::got_z(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.hpp(130,42):remark #34051: REGISTER ALLOCATION : [_ZNK4yask15RealVecGridBase12get_num_dimsEv] src/realv_grids.hpp:130
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   11[ rax rdx rcx rbp rsi rdi r8 r12-r15]
+        
+    Routine temporaries
+        Total         :      44
+            Global    :      17
+            Local     :      27
+        Regenerable   :       1
+        Spilled       :       5
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_tdim(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::get_tdim(const yask::RealVecGridBase *) const) [49/102=48.0%] src/realv_grids.hpp(139,47)
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.hpp(139,47):remark #34051: REGISTER ALLOCATION : [_ZNK4yask15RealVecGridBase8get_tdimEv] src/realv_grids.hpp:139
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    2[ rax rdi]
+        
+    Routine temporaries
+        Total         :       8
+            Global    :       0
+            Local     :       8
+        Regenerable   :       1
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_dw(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_dw(const yask::RealVecGridBase *) const) src/realv_grids.hpp(142,37)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_dx(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_dx(const yask::RealVecGridBase *) const) src/realv_grids.hpp(143,37)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_dy(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_dy(const yask::RealVecGridBase *) const) src/realv_grids.hpp(144,37)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_dz(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_dz(const yask::RealVecGridBase *) const) src/realv_grids.hpp(145,37)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_first_w(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_first_w(const yask::RealVecGridBase *) const) src/realv_grids.hpp(162,42)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_first_x(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_first_x(const yask::RealVecGridBase *) const) src/realv_grids.hpp(163,42)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_first_y(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_first_y(const yask::RealVecGridBase *) const) src/realv_grids.hpp(164,42)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_first_z(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_first_z(const yask::RealVecGridBase *) const) src/realv_grids.hpp(165,42)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_last_w(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_last_w(const yask::RealVecGridBase *) const) src/realv_grids.hpp(168,41)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_last_x(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_last_x(const yask::RealVecGridBase *) const) src/realv_grids.hpp(169,41)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_last_y(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_last_y(const yask::RealVecGridBase *) const) src/realv_grids.hpp(170,41)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_last_z(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_last_z(const yask::RealVecGridBase *) const) src/realv_grids.hpp(171,41)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::set_same(yask::RealVecGridBase *, yask::real_t)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::set_same(yask::RealVecGridBase *, yask::real_t)) [62/102=60.8%] src/realv_grids.hpp(220,43)
+  -> DELETED: (221,24) yask::real_vec_t::real_vec_t(yask::real_vec_t *) (isz = 0) (sz = 3)
+  -> INLINE (MANUAL): (222,16) yask::real_vec_t::operator=(yask::real_vec_t *, double) (isz = 2) (sz = 9)
+    -> EXTERN: src/realv.hpp:(294,20) yask::_mm256_set1_pd(double)
+  -> INDIRECT- (VIRTUAL): (223,27)  EXPR_CONV.SI64.P64(*((SI64*) (__$U9_V$4b8.0.76->__vptr_V$4ba + EXPR_CONV.SI32.I64(5(SI32)) * 8(I64))))
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INLINE (MANUAL): (223,27) yask::real_vec_t::real_vec_t(yask::real_vec_t *, const yask::real_vec_t &) (isz = 1) (sz = 8)
+    -> INLINE (MANUAL): src/realv.hpp:(255,13) yask::real_vec_t::operator=(yask::real_vec_t *, const yask::real_vec_t &) (isz = 0) (sz = 9)
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.hpp(220,43):remark #34051: REGISTER ALLOCATION : [_ZN4yask15RealVecGridBase8set_sameEd] src/realv_grids.hpp:220
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    5[ rax rsi rdi zmm0-zmm1]
+        
+    Routine temporaries
+        Total         :      17
+            Global    :       6
+            Local     :      11
+        Regenerable   :       2
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :      32 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       1 [1.00e+00 ~ 5.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::real_vec_t::real_vec_t(yask::real_vec_t *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::real_vec_t::real_vec_t(yask::real_vec_t *)) src/realv.hpp(251,36)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::set_diff(yask::RealVecGridBase *, yask::real_t)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::set_diff(yask::RealVecGridBase *, yask::real_t)) [64/102=62.7%] src/realv_grids.cpp(33,48)
+  -> DELETED: (36,20) yask::real_vec_t::real_vec_t(yask::real_vec_t *) (isz = 0) (sz = 3)
+  -> INLINE (MANUAL): (38,15) yask::real_vec_t::operator[](yask::real_vec_t *, yask::idx_t) (isz = 1) (sz = 9)
+  -> INDIRECT- (VIRTUAL): (40,23)  EXPR_CONV.SI64.P64(*((SI64*) (__$U10_V$4e4.0.97->__vptr_V$4ba + EXPR_CONV.SI32.I64(6(SI32)) * 8(I64))))
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INLINE (MANUAL): (40,23) yask::real_vec_t::real_vec_t(yask::real_vec_t *, const yask::real_vec_t &) (isz = 1) (sz = 8)
+    -> INLINE (MANUAL): src/realv.hpp:(255,13) yask::real_vec_t::operator=(yask::real_vec_t *, const yask::real_vec_t &) (isz = 0) (sz = 9)
+
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at src/realv_grids.cpp(37,9)
+   remark #15388: vectorization support: reference rn.u.u[i] has aligned access   [ src/realv.hpp(318,20) ]
+   remark #15305: vectorization support: vector length 4
+   remark #15427: loop was completely unrolled
+   remark #15309: vectorization support: normalized vectorization overhead 0.167
+   remark #15300: LOOP WAS VECTORIZED
+   remark #15449: unmasked aligned unit stride stores: 1 
+   remark #15475: --- begin vector cost summary ---
+   remark #15476: scalar cost: 10 
+   remark #15477: vector cost: 1.500 
+   remark #15478: estimated potential speedup: 5.710 
+   remark #15487: type converts: 1 
+   remark #15488: --- end vector cost summary ---
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.cpp(33,48):remark #34051: REGISTER ALLOCATION : [_ZN4yask15RealVecGridBase8set_diffEd] src/realv_grids.cpp:33
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    8[ rax rsi rdi zmm0-zmm4]
+        
+    Routine temporaries
+        Total         :      20
+            Global    :       6
+            Local     :      14
+        Regenerable   :       3
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :      32 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       1 [1.00e+00 ~ 4.2%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_num_real_vecs(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_num_real_vecs(const yask::RealVecGridBase *) const) src/realv_grids.hpp(230,48)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_num_elems(yask::RealVecGridBase *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_num_elems(yask::RealVecGridBase *)) src/realv_grids.hpp(235,38)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_num_bytes(const yask::RealVecGridBase *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_num_bytes(const yask::RealVecGridBase *) const) src/realv_grids.hpp(240,45)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::print_info(yask::RealVecGridBase *, std::ostream &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::print_info(yask::RealVecGridBase *, std::ostream &)) [68/102=66.7%] src/realv_grids.cpp(44,56)
+  -> EXTERN: (47,12) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, int)
+  -> INDIRECT- (VIRTUAL): (47,15)  yask::RealVecGridBase::get_num_dims(const yask::RealVecGridBase *) const  (isz = 52) (sz = 59)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (47,30) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (48,13)  yask::RealVecGridBase::got_t(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (48,25) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (48,33) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (48,36)  yask::RealVecGridBase::get_tdim(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (48,47) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (49,13)  yask::RealVecGridBase::got_w(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (49,25) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (49,33) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> INLINE (MANUAL): (49,36) yask::RealVecGridBase::get_dw(const yask::RealVecGridBase *) const (isz = 0) (sz = 6)
+  -> (49,45) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (50,13)  yask::RealVecGridBase::got_x(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (50,25) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (50,33) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> INLINE (MANUAL): (50,36) yask::RealVecGridBase::get_dx(const yask::RealVecGridBase *) const (isz = 0) (sz = 6)
+  -> (50,45) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (51,13)  yask::RealVecGridBase::got_y(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (51,25) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (51,33) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> INLINE (MANUAL): (51,36) yask::RealVecGridBase::get_dy(const yask::RealVecGridBase *) const (isz = 0) (sz = 6)
+  -> (51,45) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (52,13)  yask::RealVecGridBase::got_z(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (52,25) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (52,33) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> INLINE (MANUAL): (52,36) yask::RealVecGridBase::get_dz(const yask::RealVecGridBase *) const (isz = 0) (sz = 6)
+  -> (53,12) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (53,21) std::operator<<<char, std::char_traits<char>, std::allocator<char>>(std::basic_ostream<char, std::char_traits<char>> &, const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> &) (isz = 9) (sz = 18)
+     [[ Called routine is noinline  <2>]]
+  -> INLINE (MANUAL): (53,24) yask::RealVecGridBase::get_name(yask::RealVecGridBase *) (isz = 1) (sz = 7)
+  -> (53,35) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (53,54) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, const void *) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> INLINE (MANUAL): (53,57) yask::RealVecGridBase::get_storage(yask::RealVecGridBase *) (isz = 2) (sz = 9)
+    -> INLINE (MANUAL): src/realv_grids.hpp:(306,25) yask::GenericGridBase<yask::real_vec_t>::get_storage(yask::GenericGridBase<yask::real_vec_t> *) (isz = 0) (sz = 6)
+  -> (53,71) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (53,79) std::operator<<<char, std::char_traits<char>, std::allocator<char>>(std::basic_ostream<char, std::char_traits<char>> &, const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> &) (isz = 9) (sz = 18)
+     [[ Called routine is noinline  <2>]]
+  -> INLINE (MANUAL): (54,17) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+             [[ Callee not marked with inlining pragma  <3>]]
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+  -> EXTERN: (54,17) yask::printWithPow10Multiplier(std::__cxx11::string *, double)
+  -> INLINE (MANUAL): (54,42) yask::RealVecGridBase::get_num_elems(yask::RealVecGridBase *) (isz = 14) (sz = 21)
+    -> INLINE (MANUAL): src/realv_grids.hpp:(236,25) yask::GenericGridBase<yask::real_vec_t>::get_num_bytes(const yask::GenericGridBase<yask::real_vec_t> *) const (isz = 9) (sz = 16)
+      -> INDIRECT- (VIRTUAL): src/generic_grids.hpp:(88,32)  EXPR_CONV.SI64.P64(*((SI64*) (this_35988_V$4c1.0.81.383->__vptr_V$4ba + EXPR_CONV.SI32.I64(3(SI32)) * 8(I64))))
+         [[ Unable to inline indirect callsite  <1>]]
+  -> (54,59) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (54,80) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, unsigned long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> (55,32) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (55,53) std::operator<<<char, std::char_traits<char>, std::allocator<char>>(std::basic_ostream<char, std::char_traits<char>> &, const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> &) (isz = 9) (sz = 18)
+     [[ Called routine is noinline  <2>]]
+  -> INLINE (MANUAL): (56,17) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+             [[ Callee not marked with inlining pragma  <3>]]
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+  -> EXTERN: (56,17) yask::printWithPow10Multiplier(std::__cxx11::string *, double)
+  -> INLINE (MANUAL): (56,42) yask::RealVecGridBase::get_num_real_vecs(const yask::RealVecGridBase *) const (isz = 8) (sz = 15)
+    -> INDIRECT- (VIRTUAL): src/realv_grids.hpp:(231,20)  EXPR_CONV.SI64.P64(*((SI64*) ((this_24590_V$4bd.0.77.376->_gp_V$21f)->__vptr_V$4ba + EXPR_CONV.SI32.I64(3(SI32)) * 8(I64))))
+       [[ Unable to inline indirect callsite  <1>]]
+  -> (56,63) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (56,81) std::operator<<<char, std::char_traits<char>, std::allocator<char>>(std::basic_ostream<char, std::char_traits<char>> &, const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> &) (isz = 9) (sz = 18)
+     [[ Called routine is noinline  <2>]]
+  -> INLINE (MANUAL): (57,17) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+             [[ Callee not marked with inlining pragma  <3>]]
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+  -> EXTERN: (57,17) yask::printWithPow2Multiplier(std::__cxx11::string *, double)
+  -> INLINE (MANUAL): (57,41) yask::RealVecGridBase::get_num_bytes(const yask::RealVecGridBase *) const (isz = 11) (sz = 18)
+    -> INLINE (MANUAL): src/realv_grids.hpp:(241,25) yask::GenericGridBase<yask::real_vec_t>::get_num_bytes(const yask::GenericGridBase<yask::real_vec_t> *) const (isz = 9) (sz = 16)
+      -> INDIRECT- (VIRTUAL): src/generic_grids.hpp:(88,32)  EXPR_CONV.SI64.P64(*((SI64*) (this_35988_V$4c1.0.81.381->__vptr_V$4ba + EXPR_CONV.SI32.I64(3(SI32)) * 8(I64))))
+         [[ Unable to inline indirect callsite  <1>]]
+  -> INLINE (MANUAL): (57,58) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> INLINE (MANUAL): (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/ptr_traits.h:(142,16) std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 4) (sz = 11)
+              -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/move.h:(138,14) std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 0) (sz = 6)
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+  -> INLINE (MANUAL): (57,58) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> INLINE (MANUAL): (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/ptr_traits.h:(142,16) std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 4) (sz = 11)
+              -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/move.h:(138,14) std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 0) (sz = 6)
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+  -> INLINE (MANUAL): (57,58) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> INLINE (MANUAL): (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/ptr_traits.h:(142,16) std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 4) (sz = 11)
+              -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/move.h:(138,14) std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 0) (sz = 6)
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+  -> (57,58) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.cpp(44,56):remark #34051: REGISTER ALLOCATION : [_ZN4yask15RealVecGridBase10print_infoERSo] src/realv_grids.cpp:44
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    8[ rax rdx rbx rbp rsi rdi r12 zmm0]
+        
+    Routine temporaries
+        Total         :     245
+            Global    :      89
+            Local     :     156
+        Regenerable   :      53
+        Spilled       :       3
+        
+    Routine stack
+        Variables     :     104 bytes*
+            Reads     :      10 [3.00e+00 ~ 1.9%]
+            Writes    :       3 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &)) [69/102=67.6%] /usr/include/c++/7.4.0/bits/ptr_traits.h(142,7)
+  -> INLINE (MANUAL): (142,16) std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 4) (sz = 11)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/move.h:(138,14) std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 0) (sz = 6)
+
+
+    Report from: Code generation optimizations [cg]
+
+/usr/include/c++/7.4.0/bits/ptr_traits.h(142,7):remark #34051: REGISTER ALLOCATION : [_ZNSt14pointer_traitsIPKcE10pointer_toERS0_] /usr/include/c++/7.4.0/bits/ptr_traits.h:142
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    2[ rax rdi]
+        
+    Routine temporaries
+        Total         :       9
+            Global    :       0
+            Local     :       9
+        Regenerable   :       0
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *))/usr/include/c++/7.4.0/ostream(557,5)
+
+===========================================================================
+
+Begin optimization report for: std::basic_ios<char, std::char_traits<char>>::setstate(std::basic_ios<char, std::char_traits<char>> *, std::ios_base::iostate)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::basic_ios<char, std::char_traits<char>>::setstate(std::basic_ios<char, std::char_traits<char>> *, std::ios_base::iostate))/usr/include/c++/7.4.0/bits/basic_ios.h(158,7)
+
+===========================================================================
+
+Begin optimization report for: std::char_traits<char>::length(const std::char_traits<char>::char_type *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (std::char_traits<char>::length(const std::char_traits<char>::char_type *)) [72/102=70.6%] /usr/include/c++/7.4.0/bits/char_traits.h(315,7)
+  -> EXTERN: (320,9) __builtin_strlen(const char *)
+
+
+    Report from: Code generation optimizations [cg]
+
+/usr/include/c++/7.4.0/bits/char_traits.h(315,7):remark #34051: REGISTER ALLOCATION : [_ZNSt11char_traitsIcE6lengthEPKc] /usr/include/c++/7.4.0/bits/char_traits.h:315
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    3[ rax rdx rdi]
+        
+    Routine temporaries
+        Total         :      12
+            Global    :       7
+            Local     :       5
+        Regenerable   :       0
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: std::operator<<<char, std::char_traits<char>, std::allocator<char>>(std::basic_ostream<char, std::char_traits<char>> &, const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::operator<<<char, std::char_traits<char>, std::allocator<char>>(std::basic_ostream<char, std::char_traits<char>> &, const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> &))/usr/include/c++/7.4.0/bits/basic_string.h(6286,5)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const)/usr/include/c++/7.4.0/bits/basic_string.h(2293,7)
+
+===========================================================================
+
+Begin optimization report for: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const)/usr/include/c++/7.4.0/bits/basic_string.h(921,7)
+
+===========================================================================
+
+Begin optimization report for: std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long))/usr/include/c++/7.4.0/ostream(167,7)
+
+===========================================================================
+
+Begin optimization report for: std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, const void *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, const void *))/usr/include/c++/7.4.0/ostream(246,7)
+
+===========================================================================
+
+Begin optimization report for: std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, unsigned long)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, unsigned long))/usr/include/c++/7.4.0/ostream(171,7)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::compare(const yask::RealVecGridBase *, const yask::RealVecGridBase &, yask::real_t, int, std::ostream &) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::compare(const yask::RealVecGridBase *, const yask::RealVecGridBase &, yask::real_t, int, std::ostream &) const) [79/102=77.5%] src/realv_grids.cpp(65,60)
+  -> DELETED: (66,20) yask::real_vec_t::real_vec_t(yask::real_vec_t *) (isz = 0) (sz = 3)
+  -> INLINE (MANUAL): (67,12) yask::real_vec_t::operator=(yask::real_vec_t *, double) (isz = 2) (sz = 9)
+    -> EXTERN: src/realv.hpp:(294,20) yask::_mm256_set1_pd(double)
+  -> INDIRECT- (VIRTUAL): (70,49)  EXPR_CONV.SI64.P64(*((SI64*) (__$U15_V$502.0.99->__vptr_V$4ba + EXPR_CONV.SI32.I64(7(SI32)) * 8(I64))))
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INLINE (MANUAL): (70,49) yask::real_vec_t::real_vec_t(yask::real_vec_t *, double) (isz = 0) (sz = 7)
+    -> INLINE (MANUAL): src/realv.hpp:(266,13) yask::real_vec_t::operator=(yask::real_vec_t *, double) (isz = 2) (sz = 9)
+      -> EXTERN: (294,20) yask::_mm256_set1_pd(double)
+  -> INDIRECT- (VIRTUAL): (78,36)  yask::RealVecGridBase::get_tdim(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INDIRECT- (VIRTUAL): (78,36)  yask::RealVecGridBase::get_tdim(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INLINE (MANUAL): (79,31) yask::RealVecGridBase::get_first_w(const yask::RealVecGridBase *) const (isz = 0) (sz = 6)
+  -> INLINE (MANUAL): (79,52) yask::RealVecGridBase::get_last_w(const yask::RealVecGridBase *) const (isz = 3) (sz = 9)
+  -> INLINE (MANUAL): (79,52) yask::RealVecGridBase::get_last_w(const yask::RealVecGridBase *) const (isz = 3) (sz = 9)
+  -> INLINE (MANUAL): (80,35) yask::RealVecGridBase::get_first_x(const yask::RealVecGridBase *) const (isz = 0) (sz = 6)
+  -> INLINE (MANUAL): (80,56) yask::RealVecGridBase::get_last_x(const yask::RealVecGridBase *) const (isz = 3) (sz = 9)
+  -> INLINE (MANUAL): (80,56) yask::RealVecGridBase::get_last_x(const yask::RealVecGridBase *) const (isz = 3) (sz = 9)
+  -> INLINE (MANUAL): (81,39) yask::RealVecGridBase::get_first_y(const yask::RealVecGridBase *) const (isz = 0) (sz = 6)
+  -> INLINE (MANUAL): (81,60) yask::RealVecGridBase::get_last_y(const yask::RealVecGridBase *) const (isz = 3) (sz = 9)
+  -> INLINE (MANUAL): (81,60) yask::RealVecGridBase::get_last_y(const yask::RealVecGridBase *) const (isz = 3) (sz = 9)
+  -> INLINE (MANUAL): (82,43) yask::RealVecGridBase::get_first_z(const yask::RealVecGridBase *) const (isz = 0) (sz = 6)
+  -> INLINE (MANUAL): (82,64) yask::RealVecGridBase::get_last_z(const yask::RealVecGridBase *) const (isz = 3) (sz = 9)
+  -> INLINE (MANUAL): (82,64) yask::RealVecGridBase::get_last_z(const yask::RealVecGridBase *) const (isz = 3) (sz = 9)
+  -> INDIRECT- (VIRTUAL): (84,80)  EXPR_CONV.SI64.P64(*((SI64*) (this_25443_V$4fc.0.99->__vptr_V$21d + EXPR_CONV.SI32.I64(14(SI32)) * 8(I64))))
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INDIRECT- (VIRTUAL): (85,84)  EXPR_CONV.SI64.P64(*((SI64*) (ref_25443_V$4fd.0.99->__vptr_V$21d + EXPR_CONV.SI32.I64(14(SI32)) * 8(I64))))
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INLINE (MANUAL): (87,38) yask::within_tolerance<yask::real_t>(yask::real_t, yask::real_t, yask::real_t) (isz = 11) (sz = 22)
+  -> INLINE (MANUAL): (90,61) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+             [[ Callee not marked with inlining pragma  <3>]]
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+  -> DELETED: (90,61) std::allocator<char>::~allocator(std::allocator<char> *) (isz = 0) (sz = 3)
+  -> INLINE (MANUAL): (90,61) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const std::allocator<char> &) (isz = 76) (sz = 85)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(510,21) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 11) (sz = 18)
+      -> INLINE (MANUAL): (182,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &) (isz = 8) (sz = 15)
+        -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/ptr_traits.h:(142,16) std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &) (isz = 4) (sz = 11)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/move.h:(138,14) std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &) (isz = 0) (sz = 6)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(510,38) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_Alloc_hider::_Alloc_hider(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_Alloc_hider *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer, const std::allocator<char> &) (isz = 1) (sz = 10)
+      -> INLINE (MANUAL): (146,19) std::allocator<char>::allocator(std::allocator<char> *const, const std::allocator<char> &) (isz = 0) (sz = 7)
+        -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/allocator.h:(133,7) std::allocator<char>::allocator(std::allocator<char> *, const std::allocator<char> &) (isz = 5) (sz = 12)
+          -> DELETED: (134,31) __gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *const, const __gnu_cxx::new_allocator<char> &) (isz = 0) (sz = 7)
+          -> EXTERN: (134,36) __cxa_call_unexpected
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(511,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *) (isz = 49) (sz = 58)
+      -> INLINE (MANUAL): (255,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct_aux<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *, std::__false_type) (isz = 48) (sz = 59)
+        -> INLINE (MANUAL): (236,11) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *, std::forward_iterator_tag) (isz = 46) (sz = 57)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(211,6) __gnu_cxx::__is_null_pointer<const char>(const char *) (isz = 1) (sz = 7)
+          -> EXTERN: /usr/include/c++/7.4.0/bits/basic_string.tcc:(212,4) std::__throw_logic_error(const char *)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(215,44) std::distance<const char *>(const char *, const char *) (isz = 3) (sz = 12)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/stl_iterator_base_funcs.h:(141,14) std::__distance<const char *>(const char *, const char *, std::random_access_iterator_tag) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(219,6) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer) (isz = 0) (sz = 6)
+          -> EXTERN: /usr/include/c++/7.4.0/bits/basic_string.tcc:(219,14) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_create(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type &, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(220,6) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_capacity(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 0) (sz = 6)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(225,12) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_S_copy_chars(char *, const char *, const char *) (isz = 9) (sz = 18)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(387,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_S_copy(char *, const char *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 10) (sz = 19)
+              -> INLINE (MANUAL): (338,4) std::char_traits<char>::assign(std::char_traits<char>::char_type &, const std::char_traits<char>::char_type &) (isz = 0) (sz = 7)
+              -> INLINE (MANUAL): (340,4) std::char_traits<char>::copy(std::char_traits<char>::char_type *, const std::char_traits<char>::char_type *, std::size_t) (isz = 4) (sz = 16)
+                -> EXTERN: /usr/include/c++/7.4.0/bits/char_traits.h:(350,33) __builtin_memcpy(void *, const void *, unsigned long)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(225,26) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(232,2) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_set_length(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 9) (sz = 16)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(205,2) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_length(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 0) (sz = 6)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(206,2) std::char_traits<char>::assign(std::char_traits<char>::char_type &, const std::char_traits<char>::char_type &) (isz = 0) (sz = 7)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(206,22) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(511,39) std::char_traits<char>::length(const std::char_traits<char>::char_type *) (isz = 1) (sz = 8)
+      -> EXTERN: /usr/include/c++/7.4.0/bits/char_traits.h:(320,9) __builtin_strlen(const char *)
+  -> INLINE (MANUAL): (90,61) std::allocator<char>::allocator(std::allocator<char> *) (isz = 5) (sz = 10)
+    -> DELETED: /usr/include/c++/7.4.0/bits/allocator.h:(131,7) __gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *const) (isz = 0) (sz = 5)
+    -> EXTERN: /usr/include/c++/7.4.0/bits/allocator.h:(131,27) __cxa_call_unexpected
+  -> DELETED: (92,64) std::allocator<char>::~allocator(std::allocator<char> *) (isz = 0) (sz = 3)
+  -> INLINE (MANUAL): (92,64) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> INLINE (MANUAL): (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/ptr_traits.h:(142,16) std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 4) (sz = 11)
+              -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/move.h:(138,14) std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 0) (sz = 6)
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+  -> INDIRECT- (VIRTUAL): (92,64)  yask::RealVecGridBase::printElem_TWXYZ(const yask::RealVecGridBase *, std::ostream &, const std::__cxx11::string &, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::real_t, int, bool) const  (isz = 164) (sz = 189)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> INLINE (MANUAL): (93,61) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+             [[ Callee not marked with inlining pragma  <3>]]
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+  -> DELETED: (93,61) std::allocator<char>::~allocator(std::allocator<char> *) (isz = 0) (sz = 3)
+  -> INLINE (MANUAL): (93,61) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const std::allocator<char> &) (isz = 76) (sz = 85)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(510,21) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 11) (sz = 18)
+      -> INLINE (MANUAL): (182,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &) (isz = 8) (sz = 15)
+        -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/ptr_traits.h:(142,16) std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &) (isz = 4) (sz = 11)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/move.h:(138,14) std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &) (isz = 0) (sz = 6)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(510,38) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_Alloc_hider::_Alloc_hider(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_Alloc_hider *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer, const std::allocator<char> &) (isz = 1) (sz = 10)
+      -> INLINE (MANUAL): (146,19) std::allocator<char>::allocator(std::allocator<char> *const, const std::allocator<char> &) (isz = 0) (sz = 7)
+        -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/allocator.h:(133,7) std::allocator<char>::allocator(std::allocator<char> *, const std::allocator<char> &) (isz = 5) (sz = 12)
+          -> DELETED: (134,31) __gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *const, const __gnu_cxx::new_allocator<char> &) (isz = 0) (sz = 7)
+          -> EXTERN: (134,36) __cxa_call_unexpected
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(511,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *) (isz = 49) (sz = 58)
+      -> INLINE (MANUAL): (255,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct_aux<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *, std::__false_type) (isz = 48) (sz = 59)
+        -> INLINE (MANUAL): (236,11) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_construct<const char *>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, const char *, const char *, std::forward_iterator_tag) (isz = 46) (sz = 57)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(211,6) __gnu_cxx::__is_null_pointer<const char>(const char *) (isz = 1) (sz = 7)
+          -> EXTERN: /usr/include/c++/7.4.0/bits/basic_string.tcc:(212,4) std::__throw_logic_error(const char *)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(215,44) std::distance<const char *>(const char *, const char *) (isz = 3) (sz = 12)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/stl_iterator_base_funcs.h:(141,14) std::__distance<const char *>(const char *, const char *, std::random_access_iterator_tag) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(219,6) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer) (isz = 0) (sz = 6)
+          -> EXTERN: /usr/include/c++/7.4.0/bits/basic_string.tcc:(219,14) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_create(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type &, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(220,6) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_capacity(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 0) (sz = 6)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(225,12) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_S_copy_chars(char *, const char *, const char *) (isz = 9) (sz = 18)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(387,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_S_copy(char *, const char *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 10) (sz = 19)
+              -> INLINE (MANUAL): (338,4) std::char_traits<char>::assign(std::char_traits<char>::char_type &, const std::char_traits<char>::char_type &) (isz = 0) (sz = 7)
+              -> INLINE (MANUAL): (340,4) std::char_traits<char>::copy(std::char_traits<char>::char_type *, const std::char_traits<char>::char_type *, std::size_t) (isz = 4) (sz = 16)
+                -> EXTERN: /usr/include/c++/7.4.0/bits/char_traits.h:(350,33) __builtin_memcpy(void *, const void *, unsigned long)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(225,26) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.tcc:(232,2) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_set_length(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 9) (sz = 16)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(205,2) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_length(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 0) (sz = 6)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(206,2) std::char_traits<char>::assign(std::char_traits<char>::char_type &, const std::char_traits<char>::char_type &) (isz = 0) (sz = 7)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(206,22) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(511,39) std::char_traits<char>::length(const std::char_traits<char>::char_type *) (isz = 1) (sz = 8)
+      -> EXTERN: /usr/include/c++/7.4.0/bits/char_traits.h:(320,9) __builtin_strlen(const char *)
+  -> INLINE (MANUAL): (93,61) std::allocator<char>::allocator(std::allocator<char> *) (isz = 5) (sz = 10)
+    -> DELETED: /usr/include/c++/7.4.0/bits/allocator.h:(131,7) __gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *const) (isz = 0) (sz = 5)
+    -> EXTERN: /usr/include/c++/7.4.0/bits/allocator.h:(131,27) __cxa_call_unexpected
+  -> INLINE (MANUAL): (95,64) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::~basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 10) (sz = 15)
+    -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/basic_string.h:(647,9) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_dispose(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 16) (sz = 21)
+      -> INLINE (MANUAL): (220,7) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_is_local(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 14) (sz = 21)
+        -> INLINE (MANUAL): (211,16) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+        -> INLINE (MANUAL): (211,29) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_local_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 11) (sz = 18)
+          -> INLINE (MANUAL): (192,9) std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::pointer_to(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 8) (sz = 15)
+            -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/ptr_traits.h:(142,16) std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 4) (sz = 11)
+              -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/move.h:(138,14) std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &) (isz = 0) (sz = 6)
+      -> INLINE (MANUAL): (221,4) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_destroy(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::size_type) (isz = 14) (sz = 21)
+        -> EXTERN: (226,7) __cxa_call_unexpected
+        -> INLINE (MANUAL): (226,9) std::allocator_traits<std::allocator<char>>::deallocate(std::allocator_traits<std::allocator<char>>::allocator_type &, std::allocator_traits<std::allocator<char>>::pointer, std::allocator_traits<std::allocator<char>>::size_type) (isz = 0) (sz = 9)
+          -> INLINE (MANUAL): /usr/include/c++/7.4.0/bits/alloc_traits.h:(462,13) __gnu_cxx::new_allocator<char>::deallocate(__gnu_cxx::new_allocator<char> *, __gnu_cxx::new_allocator<char>::pointer, __gnu_cxx::new_allocator<char>::size_type) (isz = 0) (sz = 7)
+            -> EXTERN: /usr/include/c++/7.4.0/ext/new_allocator.h:(125,2) operator delete(void *)
+        -> INLINE (MANUAL): (226,35) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_get_allocator(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) (isz = 1) (sz = 7)
+        -> INLINE (MANUAL): (226,55) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::_M_data(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 6)
+  -> INDIRECT- (VIRTUAL): (95,64)  yask::RealVecGridBase::printElem_TWXYZ(const yask::RealVecGridBase *, std::ostream &, const std::__cxx11::string &, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::real_t, int, bool) const  (isz = 164) (sz = 189)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> DELETED: (95,64) std::allocator<char>::~allocator(std::allocator<char> *) (isz = 0) (sz = 3)
+  -> (98,44) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (98,83) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, std::basic_ostream<char, std::char_traits<char>>::__ostream_type &(*)(std::basic_ostream<char, std::char_traits<char>>::__ostream_type &)) (isz = 0) (sz = 9)
+     [[ Called routine is noinline  <2>]]
+
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at src/realv_grids.cpp(82,64)
+   remark #25260: Invariant Condition eliminated(Proven False) at line 337
+   remark #25261: Invariant Condition eliminated(Proven True) at line 348
+   remark #25260: Invariant Condition eliminated(Proven False) at line 337
+   remark #25261: Invariant Condition eliminated(Proven True) at line 348
+   remark #15523: loop was not vectorized: loop control variable zi was found, but loop iteration count cannot be computed before executing the loop
+LOOP END
+
+
+Non-optimizable loops:
+
+
+LOOP BEGIN at src/realv_grids.cpp(78,36)
+   remark #15333: loop was not vectorized: exception handling for a call prevents vectorization   [ /usr/include/c++/7.4.0/bits/basic_string.tcc(219,14) ]
+
+   LOOP BEGIN at src/realv_grids.cpp(79,52)
+      remark #15333: loop was not vectorized: exception handling for a call prevents vectorization   [ /usr/include/c++/7.4.0/bits/basic_string.tcc(219,14) ]
+
+      LOOP BEGIN at src/realv_grids.cpp(80,56)
+         remark #15333: loop was not vectorized: exception handling for a call prevents vectorization   [ /usr/include/c++/7.4.0/bits/basic_string.tcc(219,14) ]
+
+         LOOP BEGIN at src/realv_grids.cpp(81,60)
+            remark #15333: loop was not vectorized: exception handling for a call prevents vectorization   [ /usr/include/c++/7.4.0/bits/basic_string.tcc(219,14) ]
+         LOOP END
+      LOOP END
+   LOOP END
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+/usr/include/c++/7.4.0/bits/char_traits.h(350,33):remark #34000: call to memcpy implemented inline with loads and stores with proven source (alignment, offset): (16, 0), and destination (alignment, offset): (16, 0)
+/usr/include/c++/7.4.0/bits/char_traits.h(350,33):remark #34000: call to memcpy implemented inline with loads and stores with proven source (alignment, offset): (16, 0), and destination (alignment, offset): (16, 0)
+src/realv_grids.cpp(65,60):remark #34051: REGISTER ALLOCATION : [_ZNK4yask15RealVecGridBase7compareERKS0_diRSo] src/realv_grids.cpp:65
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   19[ rax rdx rcx rbx rsi rdi r8-r15 zmm0-zmm4]
+        
+    Routine temporaries
+        Total         :     150
+            Global    :      50
+            Local     :     100
+        Regenerable   :      14
+        Spilled       :      13
+        
+    Routine stack
+        Variables     :      88 bytes*
+            Reads     :      12 [3.09e+03 ~ 1.7%]
+            Writes    :       9 [3.09e+03 ~ 1.7%]
+        Spills        :      64 bytes*
+            Reads     :      20 [3.19e+04 ~ 17.5%]
+            Writes    :       8 [6.04e+03 ~ 3.3%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: __gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *const)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (__gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *const)) /usr/include/c++/7.4.0/ext/new_allocator.h(79,7)
+
+===========================================================================
+
+Begin optimization report for: __gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *const, const __gnu_cxx::new_allocator<char> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (__gnu_cxx::new_allocator<char>::new_allocator(__gnu_cxx::new_allocator<char> *const, const __gnu_cxx::new_allocator<char> &)) /usr/include/c++/7.4.0/ext/new_allocator.h(81,7)
+
+===========================================================================
+
+Begin optimization report for: std::allocator<char>::~allocator(std::allocator<char> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::allocator<char>::~allocator(std::allocator<char> *))/usr/include/c++/7.4.0/bits/allocator.h(139,28)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::printElem_TWXYZ(const yask::RealVecGridBase *, std::ostream &, const std::__cxx11::string &, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::real_t, int, bool) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::printElem_TWXYZ(const yask::RealVecGridBase *, std::ostream &, const std::__cxx11::string &, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::real_t, int, bool) const) [83/102=81.4%] src/realv_grids.cpp(114,64)
+  -> INLINE (MANUAL): (117,15) std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::length(const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> *) const (isz = 0) (sz = 7)
+  -> (118,16) std::operator<<<char, std::char_traits<char>, std::allocator<char>>(std::basic_ostream<char, std::char_traits<char>> &, const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> &) (isz = 9) (sz = 18)
+     [[ Called routine is noinline  <2>]]
+  -> (118,21) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (119,12) std::operator<<<char, std::char_traits<char>, std::allocator<char>>(std::basic_ostream<char, std::char_traits<char>> &, const std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>> &) (isz = 9) (sz = 18)
+     [[ Called routine is noinline  <2>]]
+  -> (119,21) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (120,13)  yask::RealVecGridBase::got_t(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (120,25) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (120,33) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> (120,38) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (121,13)  yask::RealVecGridBase::got_w(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (121,25) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (121,33) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> (121,38) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (122,13)  yask::RealVecGridBase::got_x(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (122,25) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (122,33) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> (122,38) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (123,13)  yask::RealVecGridBase::got_y(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (123,25) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (123,33) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> (123,38) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> INDIRECT- (VIRTUAL): (124,13)  yask::RealVecGridBase::got_z(const yask::RealVecGridBase *) const  (isz = 0) (sz = 5)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (124,25) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (124,33) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, long) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> (125,12) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> (125,22) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, double) (isz = 1) (sz = 10)
+     [[ Called routine is noinline  <2>]]
+  -> (127,16) std::operator<<<std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &, const char *) (isz = 15) (sz = 24)
+     [[ Called routine is noinline  <2>]]
+  -> EXTERN: (127,31) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, int)
+  -> (129,16) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, std::basic_ostream<char, std::char_traits<char>>::__ostream_type &(*)(std::basic_ostream<char, std::char_traits<char>>::__ostream_type &)) (isz = 0) (sz = 9)
+     [[ Called routine is noinline  <2>]]
+  -> (129,29) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, std::basic_ostream<char, std::char_traits<char>>::__ostream_type &(*)(std::basic_ostream<char, std::char_traits<char>>::__ostream_type &)) (isz = 0) (sz = 9)
+     [[ Called routine is noinline  <2>]]
+
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.cpp(114,64):remark #34051: REGISTER ALLOCATION : [_ZNK4yask15RealVecGridBase15printElem_TWXYZERSoRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEllllldib] src/realv_grids.cpp:114
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   13[ rax rdx rcx rbp rsi rdi r8-r9 r12-r15 zmm0]
+        
+    Routine temporaries
+        Total         :     140
+            Global    :      52
+            Local     :      88
+        Regenerable   :      32
+        Spilled       :       6
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       8 bytes*
+            Reads     :       1 [1.00e+00 ~ 1.0%]
+            Writes    :       1 [1.00e+00 ~ 1.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, double)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, double))/usr/include/c++/7.4.0/ostream(221,7)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::printVecNorm_TWXYZ(const yask::RealVecGridBase *, std::ostream &, const std::__cxx11::string &, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, const yask::real_vec_t &, int) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (yask::RealVecGridBase::printVecNorm_TWXYZ(const yask::RealVecGridBase *, std::ostream &, const std::__cxx11::string &, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, const yask::real_vec_t &, int) const) [85/102=83.3%] src/realv_grids.cpp(137,62)
+  -> INLINE (MANUAL): (148,37) yask::real_vec_t::operator()(const yask::real_vec_t *, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t) const (isz = 1) (sz = 16)
+  -> INDIRECT- (VIRTUAL): (152,78)  yask::RealVecGridBase::printElem_TWXYZ(const yask::RealVecGridBase *, std::ostream &, const std::__cxx11::string &, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::real_t, int, bool) const  (isz = 164) (sz = 189)
+     [[ Unable to inline indirect callsite  <1>]]
+  -> (160,28) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, std::basic_ostream<char, std::char_traits<char>>::__ostream_type &(*)(std::basic_ostream<char, std::char_traits<char>>::__ostream_type &)) (isz = 0) (sz = 9)
+     [[ Called routine is noinline  <2>]]
+  -> (160,41) std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, std::basic_ostream<char, std::char_traits<char>>::__ostream_type &(*)(std::basic_ostream<char, std::char_traits<char>>::__ostream_type &)) (isz = 0) (sz = 9)
+     [[ Called routine is noinline  <2>]]
+
+
+    Report from: Loop nest, Vector & Auto-parallelization optimizations [loop, vec, par]
+
+
+LOOP BEGIN at src/realv_grids.cpp(144,9)
+   remark #15382: vectorization support: call to function virtual call: yask::RealVecGridBase::printElem_TWXYZ(const yask::RealVecGridBase *, std::ostream &, const std::__cxx11::string &, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::idx_t, yask::real_t, int, bool) const cannot be vectorized   [ src/realv_grids.cpp(152,78) ]
+   remark #15382: vectorization support: call to function std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, std::basic_ostream<char, std::char_traits<char>>::__ostream_type &(*)(std::basic_ostream<char, std::char_traits<char>>::__ostream_type &)) cannot be vectorized   [ src/realv_grids.cpp(160,28) ]
+   remark #15382: vectorization support: call to function std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, std::basic_ostream<char, std::char_traits<char>>::__ostream_type &(*)(std::basic_ostream<char, std::char_traits<char>>::__ostream_type &)) cannot be vectorized   [ src/realv_grids.cpp(160,41) ]
+   remark #15344: loop was not vectorized: vector dependence prevents vectorization
+LOOP END
+
+    Report from: Code generation optimizations [cg]
+
+src/realv_grids.cpp(137,62):remark #34051: REGISTER ALLOCATION : [_ZNK4yask15RealVecGridBase18printVecNorm_TWXYZERSoRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEElllllRKNS_10real_vec_tEi] src/realv_grids.cpp:137
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :   16[ rax rdx rcx rbx rbp rsi rdi r8-r15 zmm0]
+        
+    Routine temporaries
+        Total         :      41
+            Global    :      21
+            Local     :      20
+        Regenerable   :       4
+        Spilled       :      13
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :      56 bytes*
+            Reads     :       8 [3.20e+01 ~ 21.9%]
+            Writes    :       7 [7.00e+00 ~ 4.8%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+Begin optimization report for: std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, std::basic_ostream<char, std::char_traits<char>>::__ostream_type &(*)(std::basic_ostream<char, std::char_traits<char>>::__ostream_type &))
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::basic_ostream<char, std::char_traits<char>>::operator<<(std::basic_ostream<char, std::char_traits<char>> *, std::basic_ostream<char, std::char_traits<char>>::__ostream_type &(*)(std::basic_ostream<char, std::char_traits<char>>::__ostream_type &)))/usr/include/c++/7.4.0/ostream(109,7)
+
+===========================================================================
+
+Begin optimization report for: yask::RealVecGridBase::get_storage(yask::RealVecGridBase *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::RealVecGridBase::get_storage(yask::RealVecGridBase *)) src/realv_grids.hpp(305,35)
+
+===========================================================================
+
+Begin optimization report for: yask::GenericGridBase<yask::real_vec_t>::get_num_bytes(const yask::GenericGridBase<yask::real_vec_t> *) const
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::GenericGridBase<yask::real_vec_t>::get_num_bytes(const yask::GenericGridBase<yask::real_vec_t> *) const) src/generic_grids.hpp(87,45)
+
+===========================================================================
+
+Begin optimization report for: yask::GenericGridBase<yask::real_vec_t>::get_storage(yask::GenericGridBase<yask::real_vec_t> *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::GenericGridBase<yask::real_vec_t>::get_storage(yask::GenericGridBase<yask::real_vec_t> *)) src/generic_grids.hpp(144,26)
+
+===========================================================================
+
+Begin optimization report for: std::operator|(std::_Ios_Iostate, std::_Ios_Iostate)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::operator|(std::_Ios_Iostate, std::_Ios_Iostate)) /usr/include/c++/7.4.0/bits/ios_base.h(170,3)
+
+===========================================================================
+
+Begin optimization report for: std::endl<char, std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::endl<char, std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &))/usr/include/c++/7.4.0/ostream(591,5)
+
+===========================================================================
+
+Begin optimization report for: std::flush<char, std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+NEVER EMIT DEFINITION FUNCTION: (std::flush<char, std::char_traits<char>>(std::basic_ostream<char, std::char_traits<char>> &))/usr/include/c++/7.4.0/ostream(613,5)
+
+===========================================================================
+
+Begin optimization report for: std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &)) /usr/include/c++/7.4.0/bits/move.h(138,5)
+
+===========================================================================
+
+Begin optimization report for: std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::pointer>::element_type> &)) /usr/include/c++/7.4.0/bits/move.h(48,5)
+
+===========================================================================
+
+Begin optimization report for: std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &)) /usr/include/c++/7.4.0/bits/move.h(138,5)
+
+===========================================================================
+
+Begin optimization report for: std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__addressof<std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type>>(std::__make_not_void<std::pointer_traits<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>::const_pointer>::element_type> &)) /usr/include/c++/7.4.0/bits/move.h(48,5)
+
+===========================================================================
+
+Begin optimization report for: std::distance<const char *>(const char *, const char *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::distance<const char *>(const char *, const char *)) /usr/include/c++/7.4.0/bits/stl_iterator_base_funcs.h(139,5)
+
+===========================================================================
+
+Begin optimization report for: std::__distance<const char *>(const char *, const char *, std::random_access_iterator_tag)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__distance<const char *>(const char *, const char *, std::random_access_iterator_tag)) /usr/include/c++/7.4.0/bits/stl_iterator_base_funcs.h(100,5)
+
+===========================================================================
+
+Begin optimization report for: std::__check_facet<std::basic_ios<char, std::char_traits<char>>::__ctype_type>(const std::basic_ios<char, std::char_traits<char>>::__ctype_type *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (std::__check_facet<std::basic_ios<char, std::char_traits<char>>::__ctype_type>(const std::basic_ios<char, std::char_traits<char>>::__ctype_type *)) /usr/include/c++/7.4.0/bits/basic_ios.h(48,5)
+
+===========================================================================
+
+Begin optimization report for: __gnu_cxx::__is_null_pointer<const char>(const char *)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (__gnu_cxx::__is_null_pointer<const char>(const char *)) /usr/include/c++/7.4.0/ext/type_traits.h(153,5)
+
+===========================================================================
+
+Begin optimization report for: yask::within_tolerance<yask::real_t>(yask::real_t, yask::real_t, yask::real_t)
+
+    Report from: Interprocedural optimizations [ipo]
+
+DEAD STATIC FUNCTION: (yask::within_tolerance<yask::real_t>(yask::real_t, yask::real_t, yask::real_t)) src/realv.hpp(796,59)
+
+===========================================================================
+
+Begin optimization report for: __sti__$E()
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINE REPORT: (__sti__$E()) [102/102=100.0%] <compiler generated>
+  -> EXTERN: /usr/include/c++/7.4.0/iostream:(74,25) __cxa_atexit(void (*)(void *), void *, void *)
+  -> EXTERN: /usr/include/c++/7.4.0/iostream:(74,25) std::ios_base::Init::Init(std::ios_base::Init *)
+
+
+    Report from: Code generation optimizations [cg]
+
+<compiler generated>:remark #34051: REGISTER ALLOCATION : [__sti__$E] (null):0
+
+    Hardware registers
+        Reserved     :    2[ rsp rip]
+        Available    :   39[ rax rdx rcx rbx rbp rsi rdi r8-r15 mm0-mm7 zmm0-zmm15]
+        Callee-save  :    6[ rbx rbp r12-r15]
+        Assigned     :    3[ rdx rsi rdi]
+        
+    Routine temporaries
+        Total         :      13
+            Global    :       7
+            Local     :       6
+        Regenerable   :       5
+        Spilled       :       0
+        
+    Routine stack
+        Variables     :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+        Spills        :       0 bytes*
+            Reads     :       0 [0.00e+00 ~ 0.0%]
+            Writes    :       0 [0.00e+00 ~ 0.0%]
+    
+    Notes
+    
+        *Non-overlapping variables and spills may share stack space,
+         so the total stack size might be less than this.
+    
+
+===========================================================================
+
+    Report from: Interprocedural optimizations [ipo]
+
+INLINING FOOTNOTES:
+
+<1> The indirectly called function must be resolved to its targets before it 
+can be inlined.  Consider compiling with -ipo or -prof-gen followed by 
+-prof-use.
+
+<2> The routine declaration is annotated with "__attribute__((noinline))".  
+    Remove this annotation to permit the compiler to inline this routine.
+
+<3> The compiler's heuristics indicate that the function is not profitable to 
+    inline.  Override this decision by adding "inline 
+    __attribute__((always_inline))" to the declaration of the called function, 
+    or add "#pragma forceinline" before the call site.
+

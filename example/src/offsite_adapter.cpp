@@ -33,12 +33,20 @@
     else if(strcmp(__mode,"BENCH")==0)\
     {\
         __stencil->init();\
+        __stencil->run(); /*bring-data warm-up*/\
+        double ctr = 0;\
         INIT_TIME(stencil_run);\
         START_TIME(stencil_run);\
-        __stencil->run();\
-        STOP_TIME(stencil_run);\
+        double cur_time = 0;\
+        while(cur_time<0.5)\
+        {\
+            __stencil->run();\
+            ctr++;\
+            STOP_TIME(stencil_run);\
+            cur_time = GET_TIME(stencil_run);\
+        }\
         double time = GET_TIME(stencil_run);\
-        double mlups = (double)__stencil->dt*(double)__stencil->dx*(double)__stencil->dy*(double)__stencil->dz;\
+        double mlups = ctr*(double)__stencil->dt*(double)__stencil->dx*(double)__stencil->dy*(double)__stencil->dz;\
         cy_cl = freq*1e9*cl*time/mlups;\
         printf("Benchmark performance = %f MLUP/s\n", mlups*1e-6/time);\
         printf("Benchamrk time = %f s\n", time);\
@@ -196,7 +204,7 @@ void main(int argc, char** argv)
 
     if(optParse.cores == NULL)
     {
-        int totCores = thread_per_socket;
+        int totCores = thread_per_socket*numa_per_socket;
         char *thread_str;
         STRINGIFY(thread_str, "1:%d", totCores);
         printf("thread_str = %s\n", thread_str);

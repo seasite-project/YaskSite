@@ -13,7 +13,7 @@ my_option::my_option()
 {
 }
 
-parser::parser():kernel(NULL), iter(100), cores(1), smt(1), innerDim(NULL), radius(1), fold("1:1:1"), dp(true), prefetch(false), path("default"), outDir(NULL), opt("plain:spatial:temporal"), prgname("a.out"), numOptions(13)
+parser::parser():kernel(NULL), iter(100), cores(1), smt(1), innerDim(NULL), radius(1), fold("1:1:1"), dp(true), prefetch(false), path("default"), outDir(NULL), opt("plain:spatial:temporal"), prgname("a.out"), mcFile(NULL), numOptions(15)
 {
     long_options = new my_option[numOptions+1];
 
@@ -29,8 +29,9 @@ parser::parser():kernel(NULL), iter(100), cores(1), smt(1), innerDim(NULL), radi
     long_options[9]  = {"path",    required_argument, 0,  'p', "Path valid values default or serpentine" };
     long_options[10]  = {"out",     required_argument, 0,  'o', "Output directory (if not provided output to stdout)" };
     long_options[11] = {"opt",     required_argument, 0,  'O', "Optimisations [options: plain,spatial,temporal]; use ':' for combining"};
-    long_options[12] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
-    long_options[13] = {0,         0,                 0,   0 ,  0 };
+    long_options[12] = {"mc_file", required_argument, 0,  'm', "Machine file for ECM prediction"};
+    long_options[13] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
+    long_options[14] = {0,         0,                 0,   0 ,  0 };
 
     gnuOptions = new option[numOptions+1];
 
@@ -51,7 +52,7 @@ bool parser::parse_arg(int argc, char **argv)
     prgname = argv[0];
     while (1) {
         int option_index = 0, c;
-        c = getopt_long(argc, argv, "0:k:i:c:t:R:r:f:p:o:O:hPs",
+        c = getopt_long(argc, argv, "0:k:i:c:t:R:r:f:p:o:O:m:hPs",
                 gnuOptions, &option_index);
 
         if (c == -1)
@@ -123,6 +124,11 @@ bool parser::parse_arg(int argc, char **argv)
             case 'O':
                 {
                     opt = optarg;
+                    break;
+                }
+            case 'm':
+                {
+                    mcFile = optarg;
                     break;
                 }
             case 'h':

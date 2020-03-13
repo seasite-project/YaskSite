@@ -207,7 +207,6 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
         SYSTEM(sysLogFileName, "%s/getHalo.sh %s %s/src/stencil_code.hpp > %s", TOOL_DIR, grid_name[i].c_str(), localDir, haloFile);
         readTable(haloFile, curr_grid.halo, 0, -1, 0, 0);
         free(haloFile);
-
         FILE* tsFile;
         POPEN(sysLogFileName, tsFile, "%s/getTimeSteps.sh %s %s/src/stencil_code.hpp", TOOL_DIR, grid_name[i].c_str(), localDir);
         curr_grid.time_steps = readIntVar(tsFile);
@@ -280,6 +279,8 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
             {
                 n_stencils++;
             }
+
+            printf("grid = %s, halo = %d\n", readGridVec[j].c_str(), halo_flag);
         }
 
         //mapped indices of write grids
@@ -298,6 +299,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
             ERROR_PRINT("Couldn't automatically assign stencil per equation group correctly\n");
         }
         curr_eq_group.num_stencils=std::min(rem_stencils,std::min(n_stencils,curr_eq_group.num_spatial_reads)); //It can fail if multiple eq. groups is there
+        printf("######## nstencils = %d, num_stencils = %d\n", n_stencils, curr_eq_group.num_stencils);
         rem_stencils -= n_stencils;
         //printf("...-----...---Reads = %d, Writes = %d, Stencils = %d\n", curr_eq_group.num_spatial_reads, curr_eq_group.num_spatial_writes, curr_eq_group.num_stencils);
 
@@ -752,7 +754,47 @@ void yaskSite::setDefaultBlock()
             bz = static_cast<int>(round(threadPerBlock*rz_p/((double)nthreads)));
         }
     }
+
+    printf("In default : Current block sizes (bx, by, bz) = (%d, %d, %d)\n", bx, by, bz);
 }
+
+
+int makeGoodBigNumber(int bigNum, int smallNum, int totCtr, int inc)
+{
+
+    if(smallNum<1)
+    {
+        smallNum=1;
+    }
+    int ctr = 0;
+    double minRem = bigNum%smallNum;
+    int min_bigNum = bigNum;
+
+    if((inc < 0) && (bigNum < smallNum))
+    {
+        min_bigNum = smallNum;
+    }
+    else
+    {
+        //make n_scale_down_olc good multiple of ry
+        while((bigNum%smallNum != 0)&&(ctr<totCtr))
+        {
+            bigNum=bigNum+inc;
+            ++ctr;
+            double currRem = static_cast<double>(bigNum%smallNum);
+
+            //printf("smallNum = %d, bigNum = %d, currRem = %f\n", smallNum, bigNum, currRem);
+            if(currRem < minRem)
+            {
+                min_bigNum = bigNum;
+                minRem = currRem;
+            }
+        }
+    }
+
+    return min_bigNum;
+}
+
 
 int makeGoodNumber(int bigNum, int smallNum, int totCtr)
 {
@@ -802,7 +844,7 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
         bx = 1;
         by_min = std::min(ry, (16 + 4*static_cast<int>(fold_y/4.0)*fold_y));
         bz_min = std::min(rz, 128 + 0*static_cast<int>(fold_z/4.0)*fold_z);
-        if(by_min < nthreads) //it can't cut if this is the case
+        if(ry < nthreads) //it can't cut if this is the case
         {
             bz_min = fold_z;
         }
@@ -904,9 +946,11 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
         //default outer loop will be parallelised
 
         //minimums depends on folds; check with benchmark good folds
-        double radius_x, radius_y;
+        double radius_x, radius_y, radius_z;
         getRadiusFolded(radius_x, this, x);
         getRadiusFolded(radius_y, this, y);
+        getRadiusFolded(radius_z, this, z);
+
 
         //int bx_min = std::min(rx, 16 + static_cast<int>(fold_x/4.0)*fold_x);
         //int by_min = std::min(ry, 8 + 2*static_cast<int>(fold_y/4.0)*fold_y);
@@ -914,7 +958,7 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
         by_min = std::min(ry, std::max(5,static_cast<int>(3*radius_y)));
         bz_min = std::min(rz, 64 + 8*static_cast<int>(fold_z/4.0)*fold_z);
 
-        if(bx_min*by_min < nthreads)
+        if(rx*ry < nthreads)
         {
             bz_min = fold_z;
         }
@@ -935,6 +979,13 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
         std::vector<int> select_ty;
         std::vector<int> select_tz;
 
+        bool min_set = false;
+        int cur_threads = nthreads;
+        int min_ctr = 0;
+        //make n_scale_down_olc good multiple of ry
+        n_scale_down_olc = makeGoodNumber(ry_p, n_scale_down_olc, 20);
+        //make good multiple of nthreads
+        n_scale_down_olc = makeGoodBigNumber(n_scale_down_olc, nthreads, nthreads);
 
         while(!found)
         {
@@ -943,12 +994,12 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
             middle_threads.clear();
             inner_threads.clear();
 
-            for(int i=nthreads; i>=1; --i)
+            for(int i=cur_threads; i>=1; --i)
             {
                 int out=i;
-                int rest=nthreads/i;
+                int rest=cur_threads/i;
 
-                if(out*rest == nthreads)
+                if(out*rest == cur_threads)
                 {
                     for(int j=rest; j>=1; --j)
                     {
@@ -970,9 +1021,10 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
             std::vector<int> inner_multiple;
 
             //make n_scale_down_olc good multiple of ry
-            n_scale_down_olc = makeGoodNumber(ry_p, n_scale_down_olc, 20);
+            //n_scale_down_olc = makeGoodNumber(ry_p, n_scale_down_olc, 20);
 
-            printf("olc_scale = %d, ilc_scale = %d\n", n_scale_down_olc, n_scale_down_ilc);
+            printf("threads = %d, olc_scale = %d, ilc_scale = %d\n", cur_threads, n_scale_down_olc, n_scale_down_ilc);
+            printf("min_set = %d, bx=%d, by=%d, bz=%d\n", min_set, bx_min, by_min, bz_min);
             for(int i=1; i<=n_scale_down_olc; ++i)
             {
                 /*In the order outer has more threads first*/
@@ -1027,6 +1079,12 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
                     curr_by = static_cast<int>(round(threadPerBlock*ry_p/((double)middle)));
                     curr_bz = static_cast<int>(round(threadPerBlock*rz_p/((double)in)));
 
+
+                    //make them multiple of radius else cut in between
+                    curr_bx = makeGoodBigNumber(curr_bx, radius_x, radius_x, -1);
+                    curr_by = makeGoodBigNumber(curr_by, radius_y, radius_y, -1);
+                    curr_bz = makeGoodBigNumber(curr_bz, radius_z, radius_z, -1);
+
                     if( (curr_bx >= bx_min) && (curr_by >= by_min) && (curr_bz >= bz_min) )
                     {
                         printf("out = %d, middle = %d, in =  %d\n", out, middle, in);
@@ -1037,7 +1095,7 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
                         //latency added to z dimension to make sure it is
                         //hurtful
                         cache_info temporalCache = CACHE(temporal_str);
-                        double lat = temporalCache.getLatency(1,nthreads);
+                        double lat = temporalCache.getLatency(1,cur_threads);
                         double cy_lup = 5; //just an assumption
                         //2.2 freq., assumption
                         double lup_per_lat = lat*2.2/cy_lup;
@@ -1065,11 +1123,65 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
 
             if(!found)
             {
-                bx_min = std::max(4, fold_x);
-                by_min = std::max(4, fold_y);
-                bz_min = std::max(4, fold_z);
+                if(!min_set)
+                {
+
+                    if(min_ctr < 1)
+                    {
+                        bx_min = std::min(rx, static_cast<int>(3*radius_x)); //can set to radius
+                        by_min = std::min(ry, static_cast<int>(3*radius_y)); //can set to radius
+                        bz_min = std::min(rz, static_cast<int>(16*radius_z));
+                        min_ctr++;
+                    }
+                    else if(min_ctr == 1)
+                    {
+                        bx_min = std::min(rx, static_cast<int>(2*radius_x)); //can set to radius
+                        by_min = std::min(ry, static_cast<int>(2*radius_y)); //can set to radius
+                        bz_min = std::min(rz, static_cast<int>(16*radius_z));
+                        min_ctr++;
+                    }
+                    else if(min_ctr == 2)
+                    {
+                        bx_min = std::min(rx, static_cast<int>(3*radius_x)); //can set to radius
+                        by_min = std::min(ry, static_cast<int>(3*radius_y)); //can set to radius
+                        bz_min = std::min(rz, static_cast<int>(8*radius_z));
+                        min_ctr++;
+                    }
+                    else if(min_ctr == 3)
+                    {
+                        bx_min = std::min(rx, static_cast<int>(2*radius_x)); //can set to radius
+                        by_min = std::min(ry, static_cast<int>(2*radius_y)); //can set to radius
+                        bz_min = std::min(rz, static_cast<int>(8*radius_z));
+                        min_ctr++;
+                    }
+                    else if(min_ctr == 4)
+                    {
+                        bx_min = std::min(rx, static_cast<int>(radius_x)); //can set to radius
+                        by_min = std::min(ry, static_cast<int>(radius_y)); //can set to radius
+                        bz_min = std::min(rz, static_cast<int>(16*radius_z));
+                        min_ctr++;
+                    }
+                    else if(min_ctr == 5)
+                    {
+                        bx_min = std::min(rx, static_cast<int>(radius_x)); //can set to radius
+                        by_min = std::min(ry, static_cast<int>(radius_y)); //can set to radius
+                        bz_min = std::min(rz, static_cast<int>(8*radius_z));
+                        min_ctr++;
+                    }
+                    else
+                    {
+                        bx_min = std::max(1, fold_x);
+                        by_min = std::max(1, fold_y);
+                        bz_min = std::max(4, fold_z);
+                        min_set = true;
+                    }
+                }
+                else
+                {
+                    cur_threads--;
+                }
             }
-            //nthreads--;
+            //cur_threads--;
         }
 
         std::vector<int> perm(reminder_size.size());
@@ -1186,7 +1298,7 @@ std::vector<int> yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_
         getMaxLayers(layer, stencilDetails, OUTER);
         cache_info OBC = CACHE(OBC_str);
         double sf_OBC = (sf_OBC_inp < 0) ? OBC.sf : sf_OBC_inp;
-        double OBC_words = (OBC.shared)?(OBC.getWords()*sf_OBC)/nthreads:(OBC.getWords()*sf_OBC);
+        double OBC_words = (OBC.shared)?(OBC.getWords()*sf_OBC)/OBC.cores:(OBC.getWords()*sf_OBC);
 
         double n_z = (layer*((double)rz_p))/(OBC_words);
         //round n_z to next greatest multiple of nthreads
@@ -1235,12 +1347,15 @@ std::vector<int> yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_
         printf("check OBC words = %f, sf = %f, shared = %s\n", OBC.getWords(), sf_OBC, OBC.shared?"shared":"not shared");
         //TODO: determine how many threads are currently sharing the resources
         //if its in shared mode
-        double OBC_words = (OBC.shared)?(OBC.getWords()*sf_OBC)/nthreads:(OBC.getWords()*sf_OBC);
-        double IBC_words = (IBC.shared)?(IBC.getWords()*sf_IBC)/nthreads:(IBC.getWords()*sf_IBC);
+        double OBC_words = (OBC.shared)?(OBC.getWords()*sf_OBC)/OBC.cores:(OBC.getWords()*sf_OBC);
+        double IBC_words = (IBC.shared)?(IBC.getWords()*sf_IBC)/IBC.cores:(IBC.getWords()*sf_IBC);
 
+
+#ifdef MODEL_PREFETCH_EFFECT
         //adding prefetching effects
-        OBC_words -= (OBC.prefetch_cl*8*layer_outer);
-        IBC_words -= (IBC.prefetch_cl*8*layer_inner);
+        OBC_words -= (OBC.prefetch_cl*8.0*layer_outer);
+        IBC_words -= (IBC.prefetch_cl*8.0*layer_inner);
+#endif
 
         printf("OBC = %f, ry = %d, rz = %d\n", OBC_words, ry_p, rz_p);
         double n_z = (layer_outer*((double)ry_p)*((double)rz_p))/(OBC_words);
@@ -1249,7 +1364,8 @@ std::vector<int> yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_
         //prefetching effect added
         double bz_start = std::min( (IBC_words/layer_inner), (double)(rz_p));
         //double bz_end = bz_min;
-
+        //
+        printf("check bz_start = %f\n", bz_start);
         //find bz_start: such that its perfect multiples of rz (to avoid reminder) and fold_z
         int bz_ratio_start = static_cast<int>(ceil(rz_p/bz_start));
         //int bz_ratio_end   = static_cast<int>(floor(rz_p/bz_end));
@@ -1307,6 +1423,7 @@ std::vector<int> yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_
             blocked = true;
         }
     }
+    printf("Current block sizes (bx, by, bz) = (%d, %d, %d)\n", bx, by, bz);
     retThreads[0]=blocked;
     return retThreads;
 }
@@ -1630,7 +1747,7 @@ void yaskSite::run()
         init();
     }
 
-    if(yaskSite_VERBOSITY > 1)
+    if(yaskSite_VERBOSITY > 2)
     {
         INFO_PRINT("Running %s : nthreads=%d, dim='t=%d,x=%d,y=%d,z=%d' region='t=%d,x=%d,y=%d,z=%d' block='x=%d,y=%d,z=%d' subBlock='x=%d,y=%d,z=%d'", stencilCode, nthreads, dt,dx,dy,dz, rt,rx,ry,rz, bx,by,bz, sbx,sby,sbz);
     }

@@ -45,16 +45,23 @@
     stencil->calcECM(validate);\
     stencil->printECM();\
     START_TIME(stencil_);\
-    stencil->run();\
+    double cur_time = 0;\
+    double ctr=0;\
+    while(cur_time<0.5)\
+    {\
+        stencil->run();\
+        ctr++;\
+        STOP_TIME(stencil_);\
+        cur_time = GET_TIME(stencil_);\
+    }\
     std::vector<double> ECM = stencil->getECM(true);\
     std::vector<double> ECM_validate = stencil->getECM_validate(true); \
     double ECM_mlups = stencil->getPerfECM();\
-    STOP_TIME(stencil_);\
     double dt=stencil->dt;\
     double dx=stencil->dx;\
     double dy=stencil->dy;\
     double dz=stencil->dz;\
-    double mlups=dt*dx*(dy*dz*1e-6);\
+    double mlups=ctr*dt*dx*(dy*dz*1e-6);\
     double time=GET_TIME(stencil_);\
     contribution ecm_contrib = stencil->getECMContributions();\
     fprintf(writeFile, "%6d, %3d, %5d, %5d, %5d, %8.5f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.4f, %8.4f, %8.4f, %8.4f\n", stencil->nthreads, stencil->dt, stencil->dx, stencil->dy, stencil->dz, time,mlups/time, ECM_validate[0], ECM_validate[1], ECM_validate[2], ECM_mlups, ECM[0], ECM[1], ECM[2], ecm_contrib.latency*100, ecm_contrib.boundary*100, ecm_contrib.prefetch*100, ecm_contrib.associativity*100);\
@@ -84,11 +91,11 @@ void main(int argc, char** argv)
           );
 */
 
-    MPI_Manager mpiMan(&argc, &argv);
 
     parser optParse;
     optParse.parse_arg(argc, argv);
 
+    MPI_Manager mpiMan(&argc, &argv, optParse.mcFile);
     bool prefetch=optParse.prefetch;
     std::vector<char*> kernelFullDesc = splitChar(optParse.kernel);
     char* kernel = kernelFullDesc[0];
@@ -165,10 +172,12 @@ void main(int argc, char** argv)
         //(here 200 times L3 is the total size)
         cache_info L3 = CACHE("L2"); //L3_cache macro defined by yaskSite library
         int L3_size = L3.bytes;
+        double grid_size = 10.0*1024.0*1024.0*1024.0; //10 GB
         int dim_x=1, dim_y=1, dim_z=1;
         if(dimension == 3)
         {
-            dim_x = 200;//static_cast<int>((200.0*L3_size)/((double)(2.0*8.0*dim*dim)));
+            dim_x = static_cast<int>((grid_size)/((double)(4.0*8.0*dim*dim)));
+            dim_x = static_cast<int>(dim_x/8.0) * 8; //make multiple of 8
             dim_y = dim;//16;
             dim_z = dim;
         }
@@ -199,7 +208,7 @@ void main(int argc, char** argv)
         //spatial blocked
         if(opt_bool[1])
         {
-            stencil_1->spatialTuner("L3", "L2",0.25, 0.5);
+            stencil_1->spatialTuner("L3", "L2",0.5, 0.5);
             //stencil_1->setSubBlock(750,5,512);
             //stencil_1->setBlock(600,30,200);
             PERF_RUN(stencil_1, files[1]);

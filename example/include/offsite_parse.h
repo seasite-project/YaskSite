@@ -24,8 +24,8 @@ struct os_parser
     char* cores;
     int smt;
     char* size;
-    int radius;
     char* fold;
+    int radius;
     bool prefetch;
     char* path;
     char* outDir;

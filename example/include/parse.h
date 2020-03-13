@@ -33,6 +33,7 @@ struct parser
     char* outDir;
     char* opt;
     char *prgname;
+    char *mcFile;
     int numOptions;
     my_option *long_options;
     option *gnuOptions;

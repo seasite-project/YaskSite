@@ -212,7 +212,7 @@ cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheI
     {
         shared = false;
     }
-
+    printf("###### cache cores = %d\n", cores);
     penalty = 0;
     POPEN(sysLogFileName, tmp, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;penalty cycles per mem cy\"", TOOL_DIR, mc_file, hierarchy);
     penalty = readDoubleVar(tmp);
@@ -303,6 +303,11 @@ double cache_info::getLatency(int rwRatio, int nthreads)
         {
             rwRatio = 1;
             //ERROR_PRINT("Wrong rw ratio");
+        }
+        int maxThreads = (int)(latency[rwRatio-1].size());
+        if(nthreads > maxThreads)
+        {
+            nthreads=maxThreads;
         }
         return latency[rwRatio-1][nthreads-1];
     }

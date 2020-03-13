@@ -18,7 +18,7 @@
     cy_cl = -1;\
     if(strcmp(__mode,"ECM")==0)\
     {\
-        __stencil->init();\
+        __stencil->init(true);\
         __stencil->calcECM();\
         __stencil->printECM();\
         double ecm_mlups = __stencil->getPerfECM();\
@@ -229,7 +229,7 @@ void main(int argc, char** argv)
     int inter_node_thread = thread_end+1;
     if(thread_end > thread_per_socket)
     {
-        inter_node_thread = thread_per_socket + 1;
+        inter_node_thread = std::max(thread_start, thread_per_socket + 1);
         //thread_end = thread_per_socket;
         printf("Only 1 ccNUMA domain supported, setting threads to range %d:%d\n", thread_start, thread_end);
     }
@@ -262,11 +262,13 @@ void main(int argc, char** argv)
     printf("dim = %d\n", dim);
 
     printf("stencilName = %s\n", stencilName);
-    yaskSite* stencil = new yaskSite(&mpiMan, derivedStencilName, dim, -1, fold[0], fold[1], fold[2], dp, prefetch);
+    yaskSite* stencil = new yaskSite(&mpiMan, derivedStencilName, dim, radius, fold[0], fold[1], fold[2], dp, prefetch);
     stencil->setDim(size[0], size[1], size[2], dt);
 
     std::vector<double> ecm_cy_cl_vec;
     std::vector<double> cy_cl_vec;
+
+    printf("############## check threads %d, %d, %d\n", thread_start, thread_end, inter_node_thread);
     for (int threads=thread_start; threads<inter_node_thread; ++threads)
     {
         stencil->setThread(threads, 1);
@@ -277,7 +279,7 @@ void main(int argc, char** argv)
             {
                 if(opt_idx == 1)
                 {
-                    stencil->spatialTuner("L2", "L2", 0.5, 0.5);
+                    stencil->spatialTuner("L3", "L2", 0.5, 0.5);
                 }
                 else if(opt_idx == 2)
                 {
@@ -289,7 +291,7 @@ void main(int argc, char** argv)
         }
     }
 
-    if(thread_end > inter_node_thread)
+    if(thread_end >= inter_node_thread)
     {
         //cacuate performance at 1 NUMA node
         stencil->setThread(thread_per_socket, 1);
@@ -300,13 +302,13 @@ void main(int argc, char** argv)
             {
                 if(opt_idx == 1)
                 {
-                    stencil->spatialTuner("L2", "L2", 0.5, 0.5);
+                    stencil->spatialTuner("L3", "L2", 0.5, 0.5);
                 }
                 else if(opt_idx == 2)
                 {
                     stencil->blockTuner("L3","L2","L1", 0.5,0.5,0.5);
                 }
-                RUN(stencil, mode, true);
+                RUN(stencil, mode, false);
             }
         }
 
@@ -317,7 +319,7 @@ void main(int argc, char** argv)
             if(ecm_cy_cl > 0)
             {
                 double oneNumaPerf = 1.0/ecm_cy_cl;
-                double allNumaPerf = numa_per_socket*oneNumaPerf*0.78; //0.78 is the efficiency of AMD ROME, currently a hack: it is 1 for Intel arch
+                double allNumaPerf = numa_per_socket*oneNumaPerf*0.67; //0.78 is the efficiency of AMD ROME, currently a hack: it is 1 for Intel arch
                 double ecm_perf = interpolate(threads, thread_per_socket, oneNumaPerf, thread_per_socket*numa_per_socket, allNumaPerf);
                 ecm_cy_cl_vec.push_back(1.0/ecm_perf);
             }
@@ -331,13 +333,13 @@ void main(int argc, char** argv)
                     {
                         if(opt_idx == 1)
                         {
-                            stencil->spatialTuner("L2", "L2", 0.5, 0.5);
+                            stencil->spatialTuner("L3", "L2", 0.5, 0.5);
                         }
                         else if(opt_idx == 2)
                         {
                             stencil->blockTuner("L3","L2","L1", 0.5,0.5,0.5);
                         }
-                        RUN(stencil, mode, true);
+                        RUN(stencil, mode, false);
                     }
                 }
                 cy_cl_vec.push_back(cy_cl);

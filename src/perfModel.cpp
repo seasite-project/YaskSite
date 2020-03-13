@@ -354,8 +354,8 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         double bx = stencil->data->bx;
         double by = stencil->data->by;
         double bz = stencil->data->bz;
-        double totThreads = stencil->data->nthreads;
-        if(currCache.shared && (totalGrids+numStencils)*bz*by*bx*totThreads > currCache.getWords())
+        //double totThreads = stencil->data->nthreads;
+        if(currCache.shared && (totalGrids+numStencils)*bz*by*bx*currCache.cores > currCache.getWords())
         {
             boundary_oh = spatialOh[1];
         }
@@ -905,7 +905,7 @@ bool perfModel::LC_violated(cache_info currCache, LC  type)
         blockSize = bz_;
     }
 
-    int nThreads = stencil->data->nthreads;
+    int nThreads = currCache.cores; //stencil->data->nthreads;
 
     double curr_cache_size = currCache.getWords()*currCache.sf;
     if(currCache.shared)
@@ -920,6 +920,7 @@ bool perfModel::LC_violated(cache_info currCache, LC  type)
     if(type == OUTER)
     {
         printf("outer layers = %f\n", layers);
+        printf("cache size = %f\n", curr_cache_size);
     }
 
     //if((layers*blockSize+currCahce.prefetch_cl*8*layers) <= curr_cache_size)
@@ -973,6 +974,13 @@ blockDetails perfModel::determineBlockDetails()
         if(!CACHES[i].shared)
         {
             curr_cache_size *= stencil->data->nthreads;
+        }
+        else
+        {
+            if(stencil->data->nthreads != CACHES[i].cores)
+            {
+                curr_cache_size *= ceil(stencil->data->nthreads/(double)CACHES[i].cores);
+            }
         }
         if( totalGrids*(rx*ry*rz) <= curr_cache_size )
         {
@@ -1327,7 +1335,7 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
         }
         if(cache.shared)
         {
-            set_size = static_cast<int>(set_size/(double)stencil->data->nthreads);
+            set_size = static_cast<int>(set_size/(double)cache.cores);
         }
 
         set_size = static_cast<int>(set_size*shrink_size);

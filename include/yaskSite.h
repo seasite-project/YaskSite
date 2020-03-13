@@ -11,6 +11,7 @@
 #include "perfModel.h"
 #include <string.h>
 
+int makeGoodBigNumber(int bigNum, int smallNum, int ctr, int inc=1);
 int makeGoodNumber(int bigNum, int smallNum, int ctr);
 
 struct Grid;

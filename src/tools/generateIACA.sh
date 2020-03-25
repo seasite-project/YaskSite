@@ -24,11 +24,11 @@ echo "movl     \$111, %ebx # INSERTED BY YASKSITE
 .byte     103        # INSERTED BY YASKSITE
 .byte     144        # INSERTED BY YASKSITE">$stencilTmpFolder/assembly_iaca_comp.s
 
+start_string="yask::StencilBundle_stencil_bundle_$((idxEqn-1))"
 #extract the required region based on idx
-awk "/^SIMD loop/,/^total instrs/{if(/^SIMD loop/)n++;if(n==$idxEqn)print}" $stencilTmpFolder/assembly.s>$stencilTmpFolder/extracted_assembly.s
-
-sed -e '0,/SIMD loop/d' -e '/total instrs/,$d' $stencilTmpFolder/extracted_assembly.s>>$stencilTmpFolder/assembly_iaca_comp.s
-
+awk "/${start_string}/,/total instrs/" $stencilTmpFolder/assembly.s>$stencilTmpFolder/extracted_assembly.s
+#awk "/^${start_string}/,/^total instrs/{if(/^${start_string}/)n++;if(n==$idxEqn)print}" $stencilTmpFolder/assembly.s>$stencilTmpFolder/extracted_assembly.s
+sed -e "0,/${start_string}/d" -e '/total instrs/,$d' $stencilTmpFolder/extracted_assembly.s>>$stencilTmpFolder/assembly_iaca_comp.s
 #Insert marker end to file
 echo "movl     \$222, %ebx # INSERTED BY YASKSITE
 .byte     100        # INSERTED BY YASKSITE

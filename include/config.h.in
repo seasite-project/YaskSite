@@ -8,7 +8,8 @@
 #define IACA_PATH "${IACA_PATH}"
 #define TOOL_DIR "${LIB_TOOL_DIR}"
 #define SRC_DIR "${SRC_DIR}"
-#define STENCIL_DIR "${TEMP_STENCIL_DIR}"
+#define STENCIL_DIR "${STENCIL_DIR}"
+#define STENCIL_RAW_DIR "${STENCIL_RAW_DIR}"
 #define INC_DIR "${INC_DIR}"
 #define TEMP_DIR "${TEMP_DIR}"
 #define yaskSite_PRINT_RANK ${yaskSite_PRINT_RANK}

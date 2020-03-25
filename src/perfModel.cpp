@@ -64,6 +64,8 @@ perfModel::perfModel(STENCIL* stencil_, double cpu_freq_, char* iacaOut):stencil
         printf("Overlap hypothesis = %s\n", overlap_hypothesis.c_str());
         //getBytePerCycles();
     }
+
+    printf("Am i here\n");
 }
 
 perfModel::~perfModel()
@@ -90,6 +92,11 @@ void perfModel::setWeight(double weight_)
     weight = weight_;
 }
 
+double perfModel::getWeight()
+{
+    return weight;
+}
+
 void perfModel::setDerived(bool derived_)
 {
     derived = derived_;
@@ -104,6 +111,7 @@ std::vector<std::string> readIACAout(char* iacaFile, char* entity)
     fileStream = fopen(iacaFile, "r");
     //Read port names into map
     char *str = (char*) malloc(sizeof(char)*256);
+    str = (char*)memset(str, 0, sizeof(char)*256);
     fscanf(fileStream, "%s", str);
     if(strcmp(str,  entity) != 0)
     {
@@ -151,7 +159,6 @@ void perfModel::parseIACA(char* iacaFolder)
     STRINGIFY(portFile, "%s/iaca_port.txt", iacaFolder);
     STRINGIFY(cycleFile, "%s/iaca_cycle.txt", iacaFolder);
     STRINGIFY(btFile, "%s/iaca_blockThroughput.txt", iacaFolder);
-
     std::vector<std::string> port = readIACAout(portFile, "Port");
     std::vector<std::string> cycles = readIACAout(cycleFile, "Cycles");
     //get block throughput

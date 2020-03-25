@@ -50,7 +50,7 @@ yaskSite::yaskSite(MPI_Manager* mpi_man_, char* stencilName_, int dim_, int radi
     initStencil(mpi_man_, stencilName_, dim_, radius_, fold_z_, fold_y_, fold_x_, dp_, prefetch_, path_, likwid);
 }
 
-void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, int radius_, int fold_z_, int fold_y_, int fold_x_, bool dp_, bool prefetch_, char* path_, bool likwid)/*:mpi_man(mpi_man_), stencil(stencil_), arch(TARGET_ARCH), yaskDir(YASK_PATH), stencilCode(NULL), localDir(NULL), sysLogFileName(NULL), nthreads(1), threadPerBlock(1), fold_x(fold_x_), fold_y(fold_y_), fold_z(fold_z_), sbx(-1), sby(-1), sbz(-1), bx(-1), by(-1), bz(-1), rt(-1), rx(-1), ry(-1), rz(-1), dt(-1), dx(-1), dy(-1), dz(-1), s(-1), totalTime(0), radius(radius_), dim(dim_), buildWithLikwid(likwid), path(path_), stencilReady(false), subBlockUpdated(false), blockUpdated(false), regionUpdated(false), dimUpdated(false), threadUpdated(false), onceRun(false), prefetch(prefetch_), cacheStale(false), dl_handle(NULL), dynInit(&YASKinit), dynFinalize(&YASKfinalize), dynStencil(&YASKstencil), dynGetPtr(&YASKgetElPtr), stencilContext(NULL), stencilSettings(NULL)*/
+void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, int radius_, int fold_z_, int fold_y_, int fold_x_, bool dp_, bool prefetch_, char* path_, bool likwid)/*:mpi_man(mpi_man_), stencil(stencil_), arch(TARGET_ARCH), yaskDir(YASK_PATH), stencilCode(NULL), localDir(NULL), sysLogFileName(NULL), nthreads(1), threadPerBlock(1), fold_x(fold_x_), fold_y(fold_y_), fold_z(fold_z_), sbx(-1), sby(-1), sbz(-1), bx(-1), by(-1), bz(-1), rt(-1), rx(-1), ry(-1), rz(-1), dt(-1), dx(-1), dy(-1), dz(-1), s(-1), totalTime(0), radius(radius_), dim(dim_), buildWithLikwid(likwid), path(path_), stencilReady(false), subBlockUpdated(false), blockUpdated(false), regionUpdated(false), dimUpdated(false), threadUpdated(false), onceRun(false), prefetch(prefetch_), cacheStale(false), dl_handle(NULL), dynInit(&YASKinit), dynFinalize(&YASKfinalize), dynStencil(&YASKstencil), dynGetElement(&YASKgetElement), stencilFactory(NULL), stencilSoln(NULL)*/
 {
     /*INIT START*/
     mpi_man = mpi_man_;
@@ -105,14 +105,17 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     dynInit = &YASKinit;
     dynFinalize = &YASKfinalize;
     dynStencil = &YASKstencil;
-    dynGetPtr = &YASKgetElPtr;
+    dynGetElement = &YASKgetElement;
+    dynSetElement = &YASKsetElement;
+    dynSetAll = &YASKsetAll;
     dynGetGridPtr = &YASKgetGridPtr;
-    dynSetGridPtr = &YASKsetGridPtr;
+    dynFuseGrid = &YASKfuseGrid;
     dynGetHalo = &YASKgetHalo;
-    dynSetHalo = YASKsetHalo;
+    dynYASK_AT = &YASKautoTuner;
+    //dynSetHalo = YASKsetHalo;
 
-    stencilContext = NULL;
-    stencilSettings = NULL;
+    stencilFactory = NULL;
+    stencilSoln = NULL;
 
     if(dp)
     {
@@ -137,7 +140,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
 
     FILE* isRadiusFile;
     //check whether we have radius defined stencils
-    POPEN(sysLogFileName, isRadiusFile, "%s/codeGenerator/isStencilRadius.sh %s %s %s", TOOL_DIR, stencil, STENCIL_DIR, TOOL_DIR);
+    POPEN(sysLogFileName, isRadiusFile, "%s/codeGenerator/isStencilRadius.sh %s %s %s", TOOL_DIR, stencil, STENCIL_RAW_DIR, TOOL_DIR);
     int isRadius = readIntVar(isRadiusFile);
     PCLOSE(isRadiusFile);
 
@@ -157,11 +160,12 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     delete[] path_wo_space;
 
     SYSTEM(sysLogFileName, "mkdir -p %s/bin", localDir);
+    SYSTEM(sysLogFileName, "cp -r %s/stencils %s/.", currPath, localDir);
+    //move the generated stencil, if this is derived stencil
+    printf("check if the following is there %s/stencils_gen/%s.cpp", currPath, stencil);
+    SYSTEM(sysLogFileName, "mv  %s/stencils_gen/%s.* %s/stencils/.", currPath, stencil, localDir);
 
     STRINGIFY(sysLogFileName, "%s/sysCallLog.log", localDir);
-
-    //copy yask.sh; this will be deprecated
-    SYSTEM(sysLogFileName, "mv %s/bin/yask.sh %s/bin/.", yaskDir, localDir);
 
     //stencil code
     STRINGIFY(stencilCode,"stencil_%s_%s_%s_%d_%d_%d_%s_%s_%s", stencil, radius_str, arch, fold_x, fold_y, fold_z, (dp)?"dp":"sp", (prefetch)?"pre_on":"pre_off", (strcmp(path,"")==0)?"default":path);
@@ -170,7 +174,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
 
     //check if the existing cache is new or old
     FILE* cacheCheckFile;
-    POPEN(sysLogFileName, cacheCheckFile, "%s/codeGenerator/needCacheUpdate.sh %s %s %s %s", TOOL_DIR, stencil, STENCIL_DIR, localDir, TOOL_DIR);
+    POPEN(sysLogFileName, cacheCheckFile, "%s/codeGenerator/needCacheUpdate.sh %s %s %s %s", TOOL_DIR, stencil, STENCIL_RAW_DIR, localDir, TOOL_DIR);
     cacheStale=readIntVar(cacheCheckFile);
     PCLOSE(cacheCheckFile);
 
@@ -183,7 +187,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     //automatically detect radius if not specified
     if(radius==-1)
     {
-        POPEN(sysLogFileName, radFile, "%s/getRadius.sh %s/src/stencil_code.hpp", TOOL_DIR, localDir);
+        POPEN(sysLogFileName, radFile, "%s/getRadius.sh %s/build/stencil_code.hpp", TOOL_DIR, localDir);
         radius=readIntVar(radFile);
         PCLOSE(radFile);
     }
@@ -191,7 +195,11 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     //Read grid details
     char *gridFile;
     STRINGIFY(gridFile, "%s/gridFile.txt",localDir);
-    SYSTEM(sysLogFileName, "%s/getGrids.sh %s/src/stencil_code.hpp %s", TOOL_DIR, localDir, gridFile);
+    if(mpi_man->myRank == 0) // only one rank as file writes occur
+    {
+        SYSTEM(sysLogFileName, "%s/getGrids.sh %s/build_out.txt %s", TOOL_DIR, localDir, gridFile);
+    }
+    mpi_man->global_barrier();
     std::vector<std::string> grid_name;
     std::vector<int> grid_dim;
     readTable(gridFile, grid_name, 0, -1, 0, 0);
@@ -204,11 +212,18 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
 
         char* haloFile;
         STRINGIFY(haloFile, "%s/haloFile.txt",localDir);
-        SYSTEM(sysLogFileName, "%s/getHalo.sh %s %s/src/stencil_code.hpp > %s", TOOL_DIR, grid_name[i].c_str(), localDir, haloFile);
+
+        if(mpi_man->myRank == 0) // only one rank as file writes occur
+        {
+            SYSTEM(sysLogFileName, "%s/getHalo.sh %s %s/build/stencil_code.hpp > %s", TOOL_DIR, grid_name[i].c_str(), localDir, haloFile);
+        }
+        mpi_man->global_barrier();
         readTable(haloFile, curr_grid.halo, 0, -1, 0, 0);
         free(haloFile);
         FILE* tsFile;
-        POPEN(sysLogFileName, tsFile, "%s/getTimeSteps.sh %s %s/src/stencil_code.hpp", TOOL_DIR, grid_name[i].c_str(), localDir);
+
+        POPEN(sysLogFileName, tsFile, "%s/getTimeSteps.sh %s %s/build/stencil_code.hpp", TOOL_DIR, grid_name[i].c_str(), localDir);
+
         curr_grid.time_steps = readIntVar(tsFile);
         PCLOSE(tsFile);
 
@@ -218,32 +233,42 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     //Read eqGroup details
     char *eqGroupFile;
     STRINGIFY(eqGroupFile, "%s/eqGroupFile.txt",localDir);
-    SYSTEM(sysLogFileName, "%s/getEqnGroups.sh %s/src/stencil_code.hpp %s", TOOL_DIR, localDir, eqGroupFile);
+    if(mpi_man->myRank == 0)
+    {
+        SYSTEM(sysLogFileName, "%s/getEqnGroups.sh %s/build_out.txt %s/build/stencil_code.hpp %s", TOOL_DIR, localDir, localDir, eqGroupFile);
+    }
+    mpi_man->global_barrier();
     std::vector<std::string> eqGroupName;
     std::vector<std::string> readGrids;
     std::vector<std::string> writeGrids;
     std::vector<int> n_reads;
     std::vector<int> n_writes;
-    //std::vector<int> n_stencils;
+    std::vector<int> n_stencils;
     readTable(eqGroupFile, eqGroupName, 0, -1, 0, 0);
     readTable(eqGroupFile, readGrids, 0, -1, 1, 1);
     readTable(eqGroupFile, writeGrids, 0, -1, 2, 2);
     readTable(eqGroupFile, n_reads, 0, -1, 3, 3);
     readTable(eqGroupFile, n_writes, 0, -1, 4, 4);
-    // readTable(eqGroupFile, n_stencils, 0, -1, 5, 5); // this one is wrong
+    readTable(eqGroupFile, n_stencils, 0, -1, 5, 5); // this one is wrong
     free(eqGroupFile);
 
     num_eqns=(int)eqGroupName.size();
     s = 0;
     maxNumStencils = 0;
 
+    /*
     FILE *totStencilFile;
-    POPEN(sysLogFileName, totStencilFile, "%s/getTotalStencils.sh %s/stencilCode.hpp", TOOL_DIR, localDir);
+    POPEN(sysLogFileName, totStencilFile, "%s/getTotalStencils.sh %s/stencilCode.cpp", TOOL_DIR, localDir);
     int total_stencils=readIntVar(totStencilFile);
+    bool baseStencil = false;
+    if(total_stencils == -1)
+    {
+        baseStencil = true;
+    }
     PCLOSE(totStencilFile);
-
-    printf("totalStencils = %d................\n", total_stencils);
+    printf("totalStencils = %d.......\n", total_stencils);
     int rem_stencils= total_stencils;
+    */
     for(int i=0; i<(int)eqGroupName.size(); ++i)
     {
         EQ_GROUP curr_eq_group;
@@ -256,14 +281,14 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
         std::vector<std::string> readGridVec = split(readGrids[i],',');
         std::vector<std::string> writeGridVec = split(writeGrids[i],',');
 
-        int n_stencils = 0;
+        //int n_stencils = 0;
         //mapped indices of read grids
         for(int j=0; j<(int)readGridVec.size(); ++j)
         {
             int idx = gridMap[readGridVec[j]];
             curr_eq_group.read_grids.push_back(grids[idx]);
 
-            int halo_flag = 0;
+    /*        int halo_flag = 0;
             std::vector<int> curr_halos = grids[idx].halo;
             //if no halo it means there is no stencil operation
             for(int k=0; k<(int)curr_halos.size(); ++k)
@@ -281,6 +306,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
             }
 
             printf("grid = %s, halo = %d\n", readGridVec[j].c_str(), halo_flag);
+            */
         }
 
         //mapped indices of write grids
@@ -292,15 +318,21 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
 
         curr_eq_group.finalize();
 
+        printf("reads = %d, writes = %d\n", curr_eq_group.num_spatial_reads, curr_eq_group.num_spatial_writes);
         //max is the value of s
         s=std::max(s, curr_eq_group.num_spatial_reads+curr_eq_group.num_spatial_writes);
-        if(rem_stencils < 0)
+        /*if(rem_stencils < 0)
         {
             ERROR_PRINT("Couldn't automatically assign stencil per equation group correctly\n");
+        }*/
+        curr_eq_group.num_stencils=n_stencils[i];
+        if(curr_eq_group.num_stencils > curr_eq_group.num_reads)
+        {
+            ERROR_PRINT("Stencils greater than read grids; i.e., %d > %d", curr_eq_group.num_stencils, curr_eq_group.num_reads);
         }
-        curr_eq_group.num_stencils=std::min(rem_stencils,std::min(n_stencils,curr_eq_group.num_spatial_reads)); //It can fail if multiple eq. groups is there
-        printf("######## nstencils = %d, num_stencils = %d\n", n_stencils, curr_eq_group.num_stencils);
-        rem_stencils -= n_stencils;
+        //std::min(rem_stencils,std::min(n_stencils,curr_eq_group.num_spatial_reads)); //It can fail if multiple eq. groups is there
+        //printf("######## nstencils = %d, num_stencils = %d\n", n_stencils, curr_eq_group.num_stencils);
+        //rem_stencils -= n_stencils;
         //printf("...-----...---Reads = %d, Writes = %d, Stencils = %d\n", curr_eq_group.num_spatial_reads, curr_eq_group.num_spatial_writes, curr_eq_group.num_stencils);
 
         maxNumStencils=std::max(maxNumStencils, curr_eq_group.num_stencils);
@@ -348,6 +380,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
    // free(mc_file);
     printf("CPU freq = %f GHz\n", cpu_freq);
 
+
     for(int i=0; i<numMainEqns; ++i)
     {
         char* iacaOut;
@@ -360,13 +393,33 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
             free(CAP_arch);
             STRINGIFY(CAP_arch, "SKX");
         }
-        SYSTEM(sysLogFileName,"%s/generateIACA.sh %d %s \"%s\" %s %s", TOOL_DIR, i+1, localDir, IACA_PATH, CAP_arch, iacaOut);
 
+        //only one rank generates the file
+        if(mpi_man->myRank==0)
+        {
+            SYSTEM(sysLogFileName,"%s/generateIACA.sh %d %s \"%s\" %s %s", TOOL_DIR, i+1, localDir, IACA_PATH, CAP_arch, iacaOut);
+        }
+
+        mpi_man->global_barrier();
 
         models.push_back(new perfModel(stencilDetails, cpu_freq, iacaOut));
 
         free(CAP_arch);
         delete[] iacaOut;
+    }
+
+    mpi_man->global_barrier();
+
+    for(int i=0; i<mpi_man->nRanks; ++i)
+    {
+        if(i==mpi_man->myRank)
+        {
+#pragma omp parallel
+            {
+                printf("I am thread %d on rank %d set to cpu %d\n", omp_get_thread_num(), mpi_man->myRank, sched_getcpu());
+            }
+        }
+        mpi_man->global_barrier();
     }
 }
 
@@ -388,7 +441,7 @@ yaskSite::~yaskSite()
 
     //if there is an active kernel
     //delete it
-    if(stencilContext)
+    if(stencilFactory)
     {
         if(dynFinalize(this)<0)
         {
@@ -423,7 +476,8 @@ void yaskSite::cleanDir()
 
 
 #define BUILD_CMD\
-    "make -C %s EXTRA_CXXFLAGS=\"-fPIC -D__PURE_INTEL_C99_HEADERS__\" %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=%d REGION_LOOP_OPTS=\"-dims 'rw,rx,ry,rz' -ompConstruct 'omp parallel for schedule(static,1) proc_bind(close)' -calcPrefix 'eg->calc_'\" SUB_BLOCK_LOOP_INNER_MODS=\"%s\" SUB_BLOCK_LOOP_OUTER_MODS=\"%s\" BLOCK_LOOP_OPTS=\"-dims 'bw,bx,by,bz' -ompConstruct ''\" layout_txyz=Layout_1234 layout_twxyz=Layout_12345 likwid=%d halo=%d", yaskDir, stencil_with_radius, arch, fold_x, fold_y, fold_z, (dp)?8:4, (prefetch)?"prefetch(L2)":"", path, (int) buildWithLikwid, radius\
+    "mkdir -p %s/asm && make -j -C %s EXTRA_CXXFLAGS=\"-fPIC -D__PURE_INTEL_C99_HEADERS__\" %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=%d REGION_LOOP_OPTS=\"-ndims 4 -inVar region_idxs -ompConstruct 'omp parallel for schedule(static,1) proc_bind(close)'\" pfd_l1=%d pfd_l2=%d MINI_BLOCK_LOOP_OPTS=\"-ndims 4 -inVar adj_mb_idxs -ompConstruct ''\" layout_txyz=Layout_1234 layout_twxyz=Layout_12345 halo=%d YASK_OUT_BASE=%s YC_STENCIL_DIR=%s/stencils EXTRA_YC_FLAGS=\"-print-eqs\" EXTRA_YK_CXXFLAGS=\"-Fa%s/asm/\" > %s/build_out.txt", localDir, yaskDir, stencil_with_radius, arch, fold_x, fold_y, fold_z, (dp)?8:4, (prefetch)?1:0, (prefetch)?1:0, radius, localDir, localDir, localDir, localDir\
+
 
 /*
 #define BUILD_CMD\
@@ -465,12 +519,16 @@ void yaskSite::build()
             STRINGIFY(stencil_with_radius, "stencil=%s radius=%d", stencil, radius);
         }
 
-        LOAD_PRINT_START("Building %s : %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=%d prefetch=%s layout_txyz=Layout_1234 path=%s", stencilCode, stencil_with_radius, arch, fold_x, fold_y, fold_z, (dp)?8:4, (prefetch)?"on":"off", (strcmp(path,"")==0)?"default":path);
-
-        SYSTEM(sysLogFileName, BUILD_CMD);
+        //only one rank generates the stencil
+        if(mpi_man->myRank == 0)
+        {
+            LOAD_PRINT_START("Building %s : %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=%d prefetch=%s layout_txyz=Layout_1234 path=%s", stencilCode, stencil_with_radius, arch, fold_x, fold_y, fold_z, (dp)?8:4, (prefetch)?"on":"off", (strcmp(path,"")==0)?"default":path);
+            SYSTEM(sysLogFileName, BUILD_CMD);
+        }
+        mpi_man->global_barrier();
         delete[] stencil_with_radius;
 
-        SYSTEM(sysLogFileName, "cp %s/bin/yask.%s.%s.exe %s/bin/.", yaskDir, stencil, arch, localDir);
+        //SYSTEM(sysLogFileName, "cp %s/bin/yask.%s.%s.exe %s/bin/.", yaskDir, stencil, arch, localDir);
 
         //create YASK library
         SYSTEM(sysLogFileName, "%s/createYASKLib.sh %s %s %s %s %s %s", TOOL_DIR, yaskDir, stencil, arch, SRC_DIR, INC_DIR, localDir);
@@ -520,39 +578,64 @@ void yaskSite::build()
 
     //reset error
     dlerror();
-    dynGetPtr = (fn3_t) dlsym(dl_handle, "YASKgetElPtr");
+    dynGetElement = (fn3_t) dlsym(dl_handle, "YASKgetElement");
     if(dlerror())
     {
-        ERROR_PRINT("Error couldn't find symbol with name YASKgetElPtr");
+        ERROR_PRINT("Error couldn't find symbol with name YASKgetElement");
+    }
+
+    //reset error
+    dlerror();
+    dynSetElement = (fn4_t) dlsym(dl_handle, "YASKsetElement");
+    if(dlerror())
+    {
+        ERROR_PRINT("Error couldn't find symbol with name YASKsetElement");
+    }
+
+    //reset error
+    dlerror();
+    dynSetAll = (fn5_t) dlsym(dl_handle, "YASKsetAll");
+    if(dlerror())
+    {
+        ERROR_PRINT("Error couldn't find symbol with name YASKsetAll");
     }
 
     dlerror();
-    dynGetGridPtr = (fn4_t) dlsym(dl_handle, "YASKgetGridPtr");
+    dynGetGridPtr = (fn6_t) dlsym(dl_handle, "YASKgetGridPtr");
     if(dlerror())
     {
         ERROR_PRINT("Error couldn't find symbol with name YASKgetGridPtr");
     }
 
     dlerror();
-    dynSetGridPtr = (fn5_t) dlsym(dl_handle, "YASKsetGridPtr");
+    dynFuseGrid = (fn7_t) dlsym(dl_handle, "YASKfuseGrid");
     if(dlerror())
     {
-        ERROR_PRINT("Error couldn't find symbol with name YASKsetGridPtr");
+        ERROR_PRINT("Error couldn't find symbol with name YASKfuseGrid");
     }
 
     dlerror();
-    dynGetHalo = (fn6_t) dlsym(dl_handle, "YASKgetHalo");
+    dynGetHalo = (fn8_t) dlsym(dl_handle, "YASKgetHalo");
     if(dlerror())
     {
         ERROR_PRINT("Error couldn't find symbol with name YASKgetHalo");
     }
 
     dlerror();
+    dynYASK_AT = (fn9_t) dlsym(dl_handle, "YASKautoTuner");
+    if(dlerror())
+    {
+        ERROR_PRINT("Error couldn't find symbol with name YASKautoTuner");
+    }
+
+
+    /*
+    dlerror();
     dynSetHalo = (fn7_t) dlsym(dl_handle, "YASKsetHalo");
     if(dlerror())
     {
         ERROR_PRINT("Error couldn't find symbol with name YASKsetHalo");
-    }
+    }*/
 
 
     delete[] lib;
@@ -666,7 +749,7 @@ void yaskSite::setDefaultRegion()
 {
     regionUpdated = true;
 
-    rt = dt;
+    rt = 0; //no temporal //dt;
     if(dim==1)
     {
         rx = 1;
@@ -985,8 +1068,10 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
         //make n_scale_down_olc good multiple of ry
         n_scale_down_olc = makeGoodNumber(ry_p, n_scale_down_olc, 20);
         //make good multiple of nthreads
-        n_scale_down_olc = makeGoodBigNumber(n_scale_down_olc, nthreads, nthreads);
-
+        if(n_scale_down_olc > 0.5*nthreads)
+        {
+            n_scale_down_olc = makeGoodBigNumber(n_scale_down_olc, nthreads, nthreads);
+        }
         while(!found)
         {
             reminder_size.clear();
@@ -1081,10 +1166,11 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
 
 
                     //make them multiple of radius else cut in between
-                    curr_bx = makeGoodBigNumber(curr_bx, radius_x, radius_x, -1);
-                    curr_by = makeGoodBigNumber(curr_by, radius_y, radius_y, -1);
-                    curr_bz = makeGoodBigNumber(curr_bz, radius_z, radius_z, -1);
-
+                    //The block reminder hurts more than fold reminder
+                    /*curr_bx = makeGoodBigNumber(curr_bx, (int)radius_x, (int)radius_x, -1);
+                    curr_by = makeGoodBigNumber(curr_by, (int)radius_y, (int)radius_y, -1);
+                    curr_bz = makeGoodBigNumber(curr_bz, (int)radius_z, (int)radius_z, -1);
+                    */
                     if( (curr_bx >= bx_min) && (curr_by >= by_min) && (curr_bz >= bz_min) )
                     {
                         printf("out = %d, middle = %d, in =  %d\n", out, middle, in);
@@ -1423,6 +1509,7 @@ std::vector<int> yaskSite::spatialTuner(char* OBC_str, char* IBC_str, double sf_
             blocked = true;
         }
     }
+
     printf("Current block sizes (bx, by, bz) = (%d, %d, %d)\n", bx, by, bz);
     retThreads[0]=blocked;
     return retThreads;
@@ -1654,11 +1741,12 @@ bool yaskSite::blockTuner(char* temporalCache, char* spatialOBC, char* spatialIB
 
 //TODO pinning strategy
 #define RUN_CMD "cd %s && OMP_NUM_THREADS=%d bin/yask.sh -stencil %s -arch %s -exe_prefix 'taskset -c %d-%d' -block_threads %d -dt %d -dx %d -dy %d -dz %d -bx %d -by %d -bz %d -sbx %d -sby %d -sbz %d && cd -", localDir, nthreads, stencil, arch, 0, nthreads-1, threadPerBlock, dt, dx, dy, dz, bx, by, bz, sbx, sby, sbz
-
+/*
 void yaskSite::runBench()
 {
     SYSTEM(sysLogFileName, RUN_CMD);
-}
+}*/
+
 
 bool yaskSite::needUpdate()
 {
@@ -1679,6 +1767,11 @@ void yaskSite::assignUpdate(bool val)
     regionUpdated=val;
     blockUpdated=val;
     subBlockUpdated=val;
+}
+
+void yaskSite::setYASK_AT(bool enable)
+{
+    dynYASK_AT(this, enable);
 }
 
 void yaskSite::init(bool noAlloc)
@@ -1733,9 +1826,13 @@ void yaskSite::init(bool noAlloc)
         {
             models[i]->setReadWriteGrids(eqGroups[mainEqGroups[i]].num_spatial_reads, eqGroups[mainEqGroups[i]].num_spatial_writes,eqGroups[mainEqGroups[i]].num_spatial_read_write, eqGroups[mainEqGroups[i]].num_stencils);
             models[i]->setWeight( (eqGroups[mainEqGroups[i]].num_points / (double) total_spatial_size) );
+            printf("eqG = %d, weight = %f\n", i, models[i]->getWeight());
             eqGroups[mainEqGroups[i]].model = models[i];
         }
     }
+
+    //disable YASK's auto tuner
+    setYASK_AT(false);
 }
 
 //This function will create individual *.o files by linking to
@@ -1744,6 +1841,7 @@ void yaskSite::run()
 {
     if(needUpdate())
     {
+
         init();
     }
 
@@ -1816,7 +1914,7 @@ int yaskSite::getOutput(double* out, const char* grid_name)
         {
             for(int z=z_start, loc_z=0; z<=z_end; ++z, ++loc_z)
             {
-                out[loc_x*dy*dz+loc_y*dz+loc_z] = this->getOutputAt(gridName[idx],x,y,z,false);
+                out[loc_x*dy*dz+loc_y*dz+loc_z] = this->getOutputAt(gridName[idx],x,y,z);
             }
         }
     }
@@ -1848,7 +1946,7 @@ int yaskSite::getOutput(float* out, const char* grid_name)
         {
             for(int z=z_start, loc_z=0; z<=z_end; ++z, ++loc_z)
             {
-                out[loc_x*dy*dz+loc_y*dz+loc_z] = (float)this->getOutputAt(gridName[idx],x,y,z,false);
+                out[loc_x*dy*dz+loc_y*dz+loc_z] = (float)(this->getOutputAt(gridName[idx],x,y,z));
             }
         }
     }
@@ -1857,7 +1955,7 @@ int yaskSite::getOutput(float* out, const char* grid_name)
 
 /*input array has to be of size dx*dy*dz and should contain
  * elements to be set in lexicographic ordering*/
-int yaskSite::setInputScalar(double in, const char* grid_name, bool halo)
+int yaskSite::setInputScalar(double in, const char* grid_name)
 {
     int idx = find_string(gridName, grid_name);
     bool all = false;
@@ -1891,100 +1989,7 @@ int yaskSite::setInputScalar(double in, const char* grid_name, bool halo)
 
     for(unsigned int i=0; i<selectedIdx.size(); ++i)
     {
-        EXTRACT_IDX(gridIdx[selectedIdx[i]]);
-
-        if(halo)
-        {
-            int halo_x = grids[gridMap[gridName[selectedIdx[i]]]].halo[0];
-            int halo_y = grids[gridMap[gridName[selectedIdx[i]]]].halo[1];
-            int halo_z = grids[gridMap[gridName[selectedIdx[i]]]].halo[2];
-
-            x_start -= halo_x;
-            x_end += halo_x;
-            y_start -= halo_y;
-            y_end += halo_y;
-            z_start -= halo_z;
-            z_end += halo_z;
-        }
-
-#pragma omp parallel for collapse(3)
-        for(int x=x_start, loc_x=0; x<=x_end; ++x, ++loc_x)
-        {
-            for(int y=y_start, loc_y=0; y<=y_end; ++y, ++loc_y)
-            {
-                for(int z=z_start, loc_z=0; z<=z_end; ++z, ++loc_z)
-                {
-                    this->setInputAt(in,gridName[selectedIdx[i]],x,y,z,false);
-                }
-            }
-        }
-    }
-    return 1;
-}
-
-/*input array has to be of size dx*dy*dz and should contain
- * elements to be set in lexicographic ordering*/
-int yaskSite::setInputScalar(float in, const char* grid_name, bool halo)
-{
-    int idx = find_string(gridName, grid_name);
-    bool all = false;
-
-    if(idx < 0)
-    {
-        if(strcmp(grid_name, "all")==0)
-        {
-            all = true;
-        }
-        else
-        {
-            ERROR_PRINT("The requested grid = %s does not exist", grid_name);
-            return -1;
-        }
-    }
-
-    std::vector<int> selectedIdx;
-
-    if(all)
-    {
-        for(unsigned int i=0; i<gridName.size(); ++i)
-        {
-            selectedIdx.push_back(i);
-        }
-    }
-    else
-    {
-        selectedIdx.push_back(idx);
-    }
-
-    for(unsigned int i=0; i<selectedIdx.size(); ++i)
-    {
-        EXTRACT_IDX(gridIdx[selectedIdx[i]]);
-
-        if(halo)
-        {
-            int halo_x = grids[gridMap[gridName[selectedIdx[i]]]].halo[0];
-            int halo_y = grids[gridMap[gridName[selectedIdx[i]]]].halo[1];
-            int halo_z = grids[gridMap[gridName[selectedIdx[i]]]].halo[2];
-
-            x_start -= halo_x;
-            x_end += halo_x;
-            y_start -= halo_y;
-            y_end += halo_y;
-            z_start -= halo_z;
-            z_end += halo_z;
-        }
-
-#pragma omp parallel for collapse(3)
-        for(int x=x_start, loc_x=0; x<=x_end; ++x, ++loc_x)
-        {
-            for(int y=y_start, loc_y=0; y<=y_end; ++y, ++loc_y)
-            {
-                for(int z=z_start, loc_z=0; z<=z_end; ++z, ++loc_z)
-                {
-                    this->setInputAt(in,gridName[selectedIdx[i]],x,y,z,false);
-                }
-            }
-        }
+        this->dynSetAll(this, gridName[selectedIdx[i]], in);
     }
     return 1;
 }
@@ -2035,7 +2040,7 @@ int yaskSite::setInput(double* in, const char* grid_name)
             {
                 for(int z=z_start, loc_z=0; z<=z_end; ++z, ++loc_z)
                 {
-                    this->setInputAt(in[loc_x*dy*dz+loc_y*dz+loc_z],gridName[selectedIdx[i]],x,y,z,false);
+                    this->setInputAt(in[loc_x*dy*dz+loc_y*dz+loc_z],gridName[selectedIdx[i]],x,y,z);
                 }
             }
         }
@@ -2091,7 +2096,7 @@ int yaskSite::setInput(float* in, const char* grid_name)
             {
                 for(int z=z_start, loc_z=0; z<=z_end; ++z, ++loc_z)
                 {
-                    this->setInputAt(in[loc_x*dy*dz+loc_y*dz+loc_z],gridName[selectedIdx[i]],x,y,z,false);
+                    this->setInputAt(in[loc_x*dy*dz+loc_y*dz+loc_z],gridName[selectedIdx[i]],x,y,z);
                 }
             }
         }
@@ -2102,18 +2107,9 @@ int yaskSite::setInput(float* in, const char* grid_name)
 
 void* yaskSite::getGridPtr(const char* grid_name)
 {
-    bool found = false;
-    //check if the grid_name exists
-    for(auto iter=gridName.begin(); iter!=gridName.end(); ++iter)
-    {
-        if(strcmp(*iter,grid_name)==0)
-        {
-            found = true;
-            break;
-        }
-    }
+    int idx = find_string(gridName, grid_name);
 
-    if(!found)
+    if(idx<0)
     {
         ERROR_PRINT("%s grid not found\n", grid_name);
         return NULL;
@@ -2125,23 +2121,12 @@ void* yaskSite::getGridPtr(const char* grid_name)
 
 Grid yaskSite::operator[] (char* grid_name)
 {
-    void* ptr = getGridPtr(grid_name);
-    return Grid(this,ptr,grids[gridMap[grid_name]]);
-}
-
-void yaskSite::setGridPtr(const char* grid_name, void *ptr)
-{
-    dynSetGridPtr(this, grid_name, ptr);
+    return Grid(this,grids[gridMap[grid_name]]);
 }
 
 int yaskSite::getHaloLayer(const char* grid, int dim_)
 {
     return dynGetHalo(this, grid, dim_);
-}
-
-void yaskSite::setHaloLayer(const char* grid, int dim_, int layers)
-{
-    dynSetHalo(this, grid, dim_, layers);
 }
 
 
@@ -2166,101 +2151,8 @@ int yaskSite::checkCompatibility(yaskSite* otherStencil)
     return 2;
 }
 
-//copies current data of other stencil's newest calculation to this stencil's t0
-//so the new stencil can continue executing the same problem
-int yaskSite::transferData(yaskSite* stencilOther, char* data, int ts)
-{
-    if(needUpdate())
-    {
-        init();
-    }
-
-    //check for compatibility between stencil
-    int compatible = checkCompatibility(stencilOther);
-    if(compatible == 0)
-    {
-        ERROR_PRINT("Can't transfer data between stencils");
-        return -1;
-    }
-
-    int grid_start, grid_end, other_grid_start;
-
-    //grids give idx to each grid
-    //and creates a vector of strings
-    if(strcmp(data, "all")==0)
-    {
-        grid_start=0;
-        other_grid_start=grid_start;
-        grid_end=gridName.size();
-
-        //check if both grid names are equal; else quit
-        for(int i=grid_start; i<grid_end; ++i)
-        {
-            if(strcmp(gridName[i],stencilOther->gridName[i])!=0)
-            {
-                ERROR_PRINT("The requested grid = %s does not exist in the stencil to be copied from", gridName[i]);
-                return -1;
-            }
-        }
-
-    }
-    else
-    {
-        grid_start  = find_string(gridName, data);
-        if(grid_start<0)
-        {
-            ERROR_PRINT("The requested grid = %s does not exist", data);
-            return -1;
-        }
-
-        grid_end=grid_start+1;
-
-        other_grid_start = find_string(stencilOther->gridName, data);
-    }
-
-    //find newest timestep to transfer;
-    //int t = (stencilOther->dt);
-    for(int idx=grid_start, other_idx=other_grid_start; idx<grid_end; ++idx, ++other_idx)
-    {
-        if(ts == 0)
-        {
-            stencilOther->setGridPtr(gridName[idx],  getGridPtr(gridName[idx]));
-        }
-        else
-        {
-            std::ptrdiff_t diff = ((char*)getPtrAt(gridName[idx], ts, 0, 0, 0) - (char*)getPtrAt(gridName[idx], 0, 0, 0, 0));
-            stencilOther->setGridPtr(gridName[idx], (void*)((char*) getGridPtr(gridName[idx])+diff));
-        }
-
-        for(int dim_=0; dim_<3; ++dim_)
-        {
-            stencilOther->setHaloLayer(gridName[idx], dim_, getHaloLayer(gridName[idx], dim_));
-        }
-        /*
-   EXTRACT_IDX(gridIdx[idx]);
-
-
-#pragma omp parallel for collapse(3)
-        for(int x=x_start; x<=x_end; ++x)
-        {
-            for(int y=y_start; y<=y_end; ++y)
-            {
-                for(int z=z_start; z<=z_end; ++z)
-                {
-                    *(this->getPtrAt(gridName[idx],0,x,y,z,false)) = *(stencilOther->getPtrAt(stencilOther->gridName[other_idx],t,x,y,z,false));
-                }
-            }
-        }
-        */
-
-
-    }
-
-    return 1;
-}
-
 /*The paramter will be added only once the kernel is created*/
-void* yaskSite::getParam(const char* param_name)
+double yaskSite::getParam(const char* param_name)
 {
     int idx = find_string(paramName, param_name);
     if(idx < 0)
@@ -2271,18 +2163,30 @@ void* yaskSite::getParam(const char* param_name)
             printf("%d. %s\n", i+1, paramName[i]);
         }
 
-        return NULL;
+        return -1;
     }
 
-    if(dp)
+    return getElement(param_name);
+}
+
+void yaskSite::setParam(double val, const char* param_name)
+{
+    int idx = find_string(paramName, param_name);
+    if(idx < 0)
     {
-        return ((double*)(paramList[idx]));
+        ERROR_PRINT("Paramter %s not found\n Available parameters are:", param_name);
+        for(int i=0; i<((int)paramName.size());++i)
+        {
+            printf("%d. %s\n", i+1, paramName[i]);
+        }
+
     }
     else
     {
-        return ((float*)(paramList[idx]));
+        setElement(val, param_name);
     }
 }
+
 
 void yaskSite::calcECM(bool validate)
 {

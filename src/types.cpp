@@ -70,6 +70,7 @@ bool EQ_GROUP::finalize()
             {
                 if(write_grids[i].time_steps == 1)
                 {
+                    printf("read write for %s\n", read_name.c_str());
                     ++num_spatial_read_write;
                 }
                 //Else I cannot tell, so assuming WA is there
@@ -477,6 +478,7 @@ void initializeCaches(char *mcFile_user)
     int numCaches = readIntVar(tmp);
     PCLOSE(tmp);
 
+#pragma omp parallel for
     for(int cacheId=0; cacheId<numCaches; ++cacheId)
     {
         CACHES.push_back(cache_info(cacheId, mc_file));

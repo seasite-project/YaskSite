@@ -207,6 +207,7 @@ if(dim==2)\
 #define GET_PERM_OUT(str, stencil, data)\
     (strcmp(str,"x:y")==0)?stencil->getOutputAt(data,i,j,0):(strcmp(str,"y:x")==0)?stencil->getOutputAt(data,j,i,0):(strcmp(str,"y:z")==0)?stencil->getOutputAt(data,0,i,j):(strcmp(str,"z:y")==0)?stencil->getOutputAt(data,0,j,i):(strcmp(str,"x:z")==0)?stencil->getOutputAt(data,i,0,j):(strcmp(str,"z:x")==0)?stencil->getOutputAt(data,j,0,i):-1;
 
+/*
 #define CAST_Grid_TXYZ_ptr(stencil, grid_name_, pre_cmd,  ...)\
 {\
     YASK_STENCIL_CONTEXT *_context_ = (YASK_STENCIL_CONTEXT*) stencil->stencilContext;\
@@ -248,6 +249,6 @@ if(dim==2)\
             pre_cmd ((Grid_TXYZ<1>*) (_context_->gridMap[string(grid_name_)])) ## __VA_ARGS__;\
     }\
 }
-
+*/
 
 #endif

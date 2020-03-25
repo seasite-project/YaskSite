@@ -2,6 +2,7 @@
 #include "print.h"
 #include <stdlib.h>
 #include "types.h"
+#include "macros.h"
 
 #ifdef yaskSite_HAVE_OpenMP
 #include <omp.h>
@@ -15,28 +16,76 @@
     #include <likwid.h>
 #endif
 
-MPI_Manager::MPI_Manager(int* argc_, char*** argv_, char* mcFile, int printRank_):argc(argc_), argv(argv_), nRanks(1), myRank(0), printRank(printRank_)
+MPI_Manager::MPI_Manager(int* argc_, char*** argv_, char* mcFile, int printRank_):argc(argc_), argv(argv_), nRanks(1), myRank(0), group(0), shm_nRanks(0), shm_myRank(0), shm_group(0), maxThreads(1), printRank(printRank_)
 {
 #ifdef yaskSite_HAVE_MPI
-    int provided = 0;
-    MPI_Init_thread(argc, argv, MPI_THREAD_SERIALIZED, &provided);
-    if(provided < MPI_THREAD_SERIALIZED)
-    {
-        ERROR_PRINT("MPI error: MPI_THREAD_SERIALIZED not provided.\n");
-        exit(-1);
-    }
+    int is_init = false;
+    MPI_Initialized(&is_init);
 
+    // No MPI communicator provided.
+    if (!is_init) {
+        int provided = 0;
+        MPI_Init_thread(argc, argv, MPI_THREAD_MULTIPLE, &provided);
+        if (provided < MPI_THREAD_SERIALIZED) {
+            ERROR_PRINT("error: MPI_THREAD_SERIALIZED or MPI_THREAD_MULTIPLE not provided");
+            exit(-1);
+        }
+        is_init = true;
+    }
+    else
+    {
+        WARNING_PRINT("MPI already initialized, yasksite will not reinitialize");
+    }
     comm = MPI_COMM_WORLD;
     MPI_Comm_rank(comm, &myRank);
     MPI_Comm_size(comm,  &nRanks);
+    MPI_Comm_group(comm, &group);
+
+    if(nRanks < 1)
+    {
+        ERROR_PRINT("error: MPI_Comm_size() returns less than one rank");
+        exit(-1);
+    }
+
+    // Create a shm communicator.
+    MPI_Comm_split_type(comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &shm_comm);
+    MPI_Comm_rank(shm_comm, &shm_myRank);
+    MPI_Comm_group(shm_comm, &shm_group);
+    MPI_Comm_size(shm_comm, &shm_nRanks);
+
+
 #else
     comm = 0;
+    shm_comm = 0;
 #endif
 
     //
 #ifdef yaskSite_HAVE_OpenMP
     //just triggering openmp
-    omp_get_num_procs();
+    //omp_get_num_procs();
+    // Set env vars needed by OMP.
+    // TODO: make this visible to the user.
+    int ret = setenv("OMP_PLACES", "cores", 0); // default placement for outer loop.
+    if(ret!=0)
+    {
+        ERROR_PRINT("Error setting environment OMP_PLACES");
+    }
+    ret = setenv("KMP_HOT_TEAMS_MODE", "1", 0); // more efficient nesting.
+    if(ret!=0)
+    {
+        ERROR_PRINT("Error setting environment KMP_HOT_TEAMS_MODE");
+    }
+    ret = setenv("KMP_HOT_TEAMS_MAX_LEVEL", "2", 0); // 2-level nesting.
+    if(ret!=0)
+    {
+        ERROR_PRINT("Error setting environment KMP_HOT_TEAMS_MAX_LEVEL");
+    }
+
+    // Save initial value of OMP max threads.
+    // Side effect: causes OMP to dump debug info if env var set.
+    //if (!max_threads)
+     maxThreads = omp_get_max_threads();
+
 #endif
 
     global_barrier();

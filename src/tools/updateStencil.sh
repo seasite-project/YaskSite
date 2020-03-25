@@ -5,42 +5,25 @@
 
 #SYNTAX ./updateStencil.sh [location of stencils] [location of YASK] [temp_folder location]
 locTemplate=$1
-locYASK=$2
-tempFolder=$3
+stencil_dir=$2
 
-stencilFiles=$(find $locTemplate -type f -path "*.hpp" -printf "%f\n")
+mkdir -p $stencil_dir
+cp $locTemplate/*.hpp $stencil_dir/.
+stencilFiles=$(find $stencil_dir -type f -path "*.hpp" -printf "%f\n")
 
-#update stencil.hpp to include the file
-stencil_hpp=$2/src/foldBuilder/stencils.hpp
-
-
-#make a exclusive folder for yaskSite && copy to proper location
-yaskSiteStencilFolder=$locYASK/src/foldBuilder/stencils/yaskSiteStencils
-
-#delete the contents in the folder
-rm -f $yaskSiteStencilFolder/*
-mkdir -p $yaskSiteStencilFolder
-
-#remove all yaskSiteStencils defined before; this ensures no deprecated stencils resides
-sed -i "/.*\"yaskSiteStencils\/.*/d" $stencil_hpp
-
-temp_dir_gen=$tempFolder/temp_dir_generated
-mkdir -p $temp_dir_gen
 
 for file in $stencilFiles; do
-  #replace YASKSITE register with YASK register
-    sed -e "s@"YS_REGISTER_STENCIL.*,"@"REGISTER_STENCIL\("@g" $1/$file > $temp_dir_gen/$file
-    sed -i "s@"REGISTER_STENCIL.[^a-zA-Z^\d]"@"REGISTER_STENCIL\("@g" $temp_dir_gen/$file #remove space if present
+    #replace YASKSITE register with YASK register
+    #sed -i "s@YS_REGISTER_STENCIL.*,\(.*\))@static \1 \1_instance@g" $stencil_dir/$file
 
-    cp -u  $temp_dir_gen/$file $yaskSiteStencilFolder/.
+    classes=$(grep "YS_REGISTER_STENCIL.*" $stencil_dir/$file | cut -d"," -f 2 | cut -d")" -f1)
+    #replace with empty in .hpp
+    sed -i "s@YS_REGISTER_STENCIL.*);@@g" $stencil_dir/$file
 
-    if grep -q ".*\"yaskSiteStencils\/$file\".*" $stencil_hpp; then
-        echo "It seems yaskSite stencils from previous build resides"
-        sed -i -e "s@.*\"$file\".*@#include \"yaskSiteStencils\/$file\"@g" $stencil_hpp
-    else
-        echo "#include \"yaskSiteStencils/$file\"">> $stencil_hpp
-    fi
-
+    base_name=$(basename ${file} ".hpp")
+    echo "#include \"$file\"" > "${stencil_dir}/${base_name}.cpp"
+    for class in $classes;  do
+        class_name=$(echo $class)
+        echo "static ${class_name} ${class_name}_instance;" >> "${stencil_dir}/${base_name}.cpp"
+    done
 done
-
-rm -r $temp_dir_gen

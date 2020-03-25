@@ -8,7 +8,7 @@ stencilDir=$2
 cachedDir=$3
 toolDir=$4
 outFile=$5
-cachedStencil="$cachedDir/stencilCode.hpp"
+cachedStencil="$cachedDir/stencilCode.cpp"
 
 file=$($toolDir/codeGenerator/getStencilFile.sh $stencilName $stencilDir)
 

@@ -20,10 +20,10 @@ $toolDir/rmLine.sh "BASE_STENCIL=" $code_file
 
 #check if it is a radius defined stencil
 isRadius=$($toolDir/isStencilRadius.sh $stencil_name $generateDir "$toolDirBase")
-default_template_file="$toolDir/template.h"
+default_template_file="$toolDir/template.hpp"
 
 if [[ $isRadius == 1 ]]; then
-    default_template_file="$toolDir/template_radius.h"
+    default_template_file="$toolDir/template_radius.hpp"
 fi
 
 #detect if the base stencil has radius
@@ -58,10 +58,8 @@ declare_code=""
 define_code=""
 
 for grid in $grids; do
-    declare_code=$(printf "$declare_code Grid $grid;")
-    define_code=$(printf "$define_code INIT_GRID_4D($grid, t, x, y, z);")
+    declare_code=$(printf "$declare_code yc_var_proxy $grid = yc_var_proxy(\"$grid\", get_soln(), {t ,x, y, z});")
 done
-
 # Grid Array generation; they are simply unrolled
 grid_arrays=$($toolDir/getObj.sh GRID_ARRAY $code_file)
 $toolDir/rmLine.sh "GRID_ARRAY .*" $code_file
@@ -72,14 +70,11 @@ for grid_array in $grid_arrays; do
     for ((idx=0; idx<$num_grids; ++idx)); do
         unrolled_grid=$grid_name"_"$idx
         grids="$grids $unrolled_grid"
-        declare_code=$(printf "$declare_code Grid $unrolled_grid;")
-        define_code=$(printf "$define_code INIT_GRID_4D($unrolled_grid, t, x, y, z);")
+        declare_code=$(printf "$declare_code yc_var_proxy $unrolled_grid = yc_var_proxy(\"$unrolled_grid\", get_soln(), {t ,x, y, z});")
     done
 done
 
-
 $toolDir/substitute.sh "DECLARE_EXTRA_GRIDS" "$declare_code" $generated_file
-$toolDir/substitute.sh "DEFINE_EXTRA_GRIDS" "$define_code" $generated_file
 
 
 #3. Param generation
@@ -91,12 +86,10 @@ declare_code=""
 define_code=""
 
 for param in $params; do
-    declare_code=$(printf "$declare_code Param $param;")
-    define_code=$(printf "$define_code INIT_PARAM($param);")
+    declare_code=$(printf "$declare_code yc_var_proxy $param = yc_var_proxy(\"$pram\", get_soln());")
 done
 
 $toolDir/substitute.sh "DECLARE_EXTRA_PARAMS" "$declare_code" $generated_file
-$toolDir/substitute.sh "DEFINE_EXTRA_PARAMS" "$define_code" $generated_file
 
 gridPts=$($toolDir/getObj.sh GRID_POINT $code_file)
 $toolDir/rmLine.sh "GRID_POINT .*" $code_file
@@ -111,13 +104,13 @@ for gridPt_array in $gridPt_arrays; do
     for ((idx=0; idx<$num_gridPts; ++idx)); do
         unrolled_grid=$gridPt_name"_"$idx
         gridPts="$gridPts $unrolled_grid"
-        declare_code=$(printf "$declare_code GridValue $unrolled_grid;")
+        declare_code=$(printf "$declare_code yc_number_node_ptr $unrolled_grid;")
     done
 done
 
 declare_code=""
 for gridPt in $gridPts; do
-    declare_code=$(printf "$declare_code GridValue $gridPt;")
+    declare_code=$(printf "$declare_code yc_number_node_ptr $gridPt;")
 done
 
 
@@ -210,7 +203,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 
         #2. generate CODE
         stencilCode="$base_class::boundaryHandling($stencilInp_wo_t,t+$ts,x,y,z, at_first_x,at_last_x, at_first_y, at_last_y, at_first_z, at_last_z);
-        GridValue tmp_ys_$tmpCtr;
+        yc_number_node_ptr tmp_ys_$tmpCtr;
         $base_class::addPoints(tmp_ys_$tmpCtr,$stencilInp_wo_t,t+$ts,x,y,z);"
         code=$(echo "$code$stencilCode")
 

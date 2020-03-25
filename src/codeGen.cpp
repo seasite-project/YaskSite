@@ -26,9 +26,9 @@ void codeGen::generateCode()
 
     printf("script called\n");
     //now call script to generate the required stencil file
-    SYSTEM(NULL, "%s/codeGenerator/codeGenerator.sh %s %s/%s.hpp %s %s %s", TOOL_DIR, tmpInpCodeFile, STENCIL_DIR, derivedStencil, STENCIL_DIR, TOOL_DIR, TEMP_DIR);
+    SYSTEM(NULL, "%s/codeGenerator/codeGenerator.sh %s %s/%s.hpp %s %s %s", TOOL_DIR, tmpInpCodeFile, STENCIL_RAW_DIR, derivedStencil, STENCIL_RAW_DIR, TOOL_DIR, TEMP_DIR);
     printf("script finished\n");
 
     //now update the list of stencils to include the new file
-    SYSTEM(NULL, "%s/updateStencil.sh %s %s %s", TOOL_DIR, STENCIL_DIR, YASK_PATH, TEMP_DIR);
+    SYSTEM(NULL, "mkdir -p %s/stencils_gen && %s/updateStencil.sh %s %s/stencils_gen", TEMP_DIR, TOOL_DIR, STENCIL_RAW_DIR, TEMP_DIR);
 }

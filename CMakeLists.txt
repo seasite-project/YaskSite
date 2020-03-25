@@ -48,11 +48,11 @@ set (HEADERS
 set(LOG_SYS_CALL 0 CACHE BOOL "Log system calls (default: disabled)")
 
 #set(YASK_ABSOLUTE_PATH "not set" CACHE PATH "Set the absolute path to Intel YASK folder")
-set(YASK_ABSOLUTE_PATH "${PROJECT_SOURCE_DIR}/yask") # currently I need a patched version of YASK
+set(YASK_ABSOLUTE_PATH "${PROJECT_BINARY_DIR}/yask/src/yask") # currently I need a patched version of YASK
 set(TOOL_DIR "${PROJECT_SOURCE_DIR}/src/tools")
 set(LIB_TOOL_DIR "${CMAKE_INSTALL_PREFIX}/tools/yaskSite/tools")
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
-set(STENCIL_DIR "${PROJECT_SOURCE_DIR}/src/stencils")
+set(STENCIL_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src/stencils")
 set(INC_DIR "${PROJECT_SOURCE_DIR}/include")
 set(CACHE_BUILD OFF CACHE BOOL "Cache the stencil builds for later runs. Enabling cache requires approx. 50 MB diskspace per stencil")
 set(USE_LIKWID ON CACHE BOOL "Set the variable to ON if you need to use LIKWID, currently you have to ON it")
@@ -92,20 +92,33 @@ endif()
 
 set(TEMP_DIR "~/tmp_YaskSite" CACHE PATH "This is a temporary scratch and caching directory, Please ensure the directory is readable and writable")
 file(MAKE_DIRECTORY ${TEMP_DIR})
-set(TEMP_STENCIL_DIR "${TEMP_DIR}/stencils")
+set(STENCIL_DIR "${TEMP_DIR}/stencils")
+set(STENCIL_RAW_DIR "${TEMP_DIR}/stencils_raw")
 
 get_filename_component(CMAKE_CXX_COMPILER_SHORT ${CMAKE_CXX_COMPILER} NAME)
 get_filename_component(CMAKE_C_COMPILER_SHORT ${CMAKE_C_COMPILER} NAME)
 
 
-ExternalProject_Add(yaml-cpp
-    PREFIX ${PROJECT_BINARY_DIR}/yaml-cpp
-    URL https://github.com/jbeder/yaml-cpp/zipball/master
-    DOWNLOAD_NAME yaml-cpp.zip
-    CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER_SHORT} CXX=${CMAKE_CXX_COMPILER_SHORT} cmake ../yaml-cpp -DYAML_CPP_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    BUILD_COMMAND make
-    INSTALL_COMMAND make install
+#ExternalProject_Add(yaml-cpp
+#    PREFIX ${PROJECT_BINARY_DIR}/yaml-cpp
+#    URL https://github.com/jbeder/yaml-cpp/zipball/master
+#    DOWNLOAD_NAME yaml-cpp.zip
+#    CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER_SHORT} CXX=${CMAKE_CXX_COMPILER_SHORT} cmake ../yaml-cpp -DYAML_CPP_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+#    BUILD_COMMAND make
+#    INSTALL_COMMAND make install
+#)
+
+
+ExternalProject_Add(yask
+    PREFIX ${PROJECT_BINARY_DIR}/yask
+    GIT_REPOSITORY https://github.com/intel/yask.git
+    GIT_TAG 61a1b514b9113a3de6156457ee1c37e6982cecd5
+    PATCH_COMMAND ${PROJECT_SOURCE_DIR}/ys_patch/patchScript.sh ${YASK_ABSOLUTE_PATH}
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
 )
+
 
 message(STATUS "Detecting cache sizes")
 #configure cache sizes
@@ -393,7 +406,7 @@ add_custom_target(updateStencil ALL
 #2. update stencils
 add_custom_command(TARGET updateStencil
     POST_BUILD
-    COMMAND mkdir -p ${TEMP_DIR}/stencils && cp -r ${STENCIL_DIR}/*.hpp "${TEMP_DIR}/stencils/." && ${TOOL_DIR}/updateStencil.sh ${TEMP_STENCIL_DIR} ${YASK_ABSOLUTE_PATH} ${TEMP_DIR}
+    COMMAND mkdir -p ${STENCIL_RAW_DIR} && cp -r ${STENCIL_SOURCE_DIR}/*.hpp "${STENCIL_RAW_DIR}/." && ${TOOL_DIR}/updateStencil.sh  ${STENCIL_RAW_DIR} ${STENCIL_DIR}
     )
 
 
@@ -499,8 +512,8 @@ configure_file(${PROJECT_SOURCE_DIR}/yasksite-config.cmake.in ${PROJECT_BINARY_D
 include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/symee)
 add_library(yaskSite ${SOURCES})
 
-add_dependencies(yaskSite yaml-cpp)
-
+#add_dependencies(yaskSite yaml-cpp)
+add_dependencies(yaskSite yask)
 if(ENABLE_LOOPADAPT)
     message(STATUS "check ${LOOPADAPT_LIB_DIR}")
     target_link_libraries(yaskSite "${LOOPADAPT_LIB_DIR}")
@@ -524,3 +537,7 @@ else ()
     install(TARGETS yaskSite EXPORT yaskSite-targets ARCHIVE DESTINATION lib/yaskSite)
 endif()
 
+file(WRITE ${PROJECT_BINARY_DIR}/buildYamlCpp.sh "CXX=${CMAKE_CXX_COMPILER_SHORT} LIB_INC=${CMAKE_INSTALL_PREFIX}/include LIBS=${CMAKE_INSTALL_PREFIX}/lib/libyaml-cpp.a make -C ${LIB_TOOL_DIR}/yamlParser"
+    )
+install(CODE "execute_process(COMMAND chmod u+x ${PROJECT_BINARY_DIR}/buildYamlCpp.sh)")
+install(CODE "execute_process(COMMAND ${PROJECT_BINARY_DIR}/buildYamlCpp.sh)")

@@ -9,9 +9,8 @@
 #include "macros.h"
 
 #ifdef GENERATED
-
-#include "stencil_calc.hpp"
-
+#include "yask_kernel_api.hpp"
+#include "yask_stencil.hpp"
 #ifdef yaskSite_HAVE_MPI
 #include <mpi.h>
 #endif
@@ -34,36 +33,31 @@ extern "C" {
         //NUMA problems that can arise.
         bool needAlloc = opt->dimUpdated;
 
-        StencilSettings* setting;
-        YASK_STENCIL_CONTEXT *context;
+        // The factory from which all other kernel objects are made.
+        yk_factory *kfac;
+        yk_solution_ptr *soln;
+
 
         if(needAlloc)
         {
-            if(opt->stencilSettings)
-            {
-                printf("Not null\n");
-            }
             //delete all settings and context if dimension
             //is updated
-            if(opt->stencilSettings)
+            if(opt->stencilSoln)
             {
                 //delete old setting if it exists
-                StencilSettings* settingOld = (StencilSettings*) opt->stencilSettings;
-                delete settingOld;
+                yk_solution_ptr* solnOld = (yk_solution_ptr*) opt->stencilSoln;
+                delete solnOld;
             }
-            if(opt->stencilContext)
+            if(opt->stencilFactory)
             {
                 //delete old context if it exists
-                YASK_STENCIL_CONTEXT* contextOld = (YASK_STENCIL_CONTEXT*) opt->stencilContext;
-                delete contextOld;
+                yk_factory* factorytOld = (yk_factory*) opt->stencilFactory;
+                delete factorytOld;
             }
 
-            //We need setting also has pointer, due to the internal 
-            //design of YASK; which I think is a bad design
-            setting = new StencilSettings;
-            // Object containing data and parameters for stencil eval.
-            context = new YASK_STENCIL_CONTEXT(*setting);
 
+            kfac = new yk_factory;
+            auto env = make_shared<KernelEnv>();
             //set mpi
             if(!(opt->mpi_man))
             {
@@ -71,186 +65,230 @@ extern "C" {
             }
             else
             {
-                context->comm = opt->mpi_man->comm;
-                context->num_ranks = opt->mpi_man->nRanks;
-                context->my_rank = opt->mpi_man->myRank;
+                env->comm = opt->mpi_man->comm;
+                env->num_ranks = opt->mpi_man->nRanks;
+                env->group = opt->mpi_man->group;
+                env->my_rank = opt->mpi_man->myRank;
 
-#if yaskSite_VERBOSITY < 2
-                std::ostream* null_os = new ofstream;
-                context->set_ostr(null_os);
-#endif
+                env->shm_comm = opt->mpi_man->shm_comm;
+                env->num_shm_ranks = opt->mpi_man->shm_nRanks;
+                env->shm_group = opt->mpi_man->shm_group;
+                env->my_shm_rank = opt->mpi_man->shm_myRank;
 
+                env->max_threads = opt->nthreads;
+                //mpi_man->maxThreads;
             }
+
+            //define soln
+            soln = new yk_solution_ptr;
+            (*soln) = kfac->new_solution(env);
+
+            ostream* osp = &cout;
+#if yaskSite_VERBOSITY < 2
+            yask_output_factory ofac;
+            auto null_out = ofac.new_null_output();
+            (*soln)->set_debug_output(null_out);
+            osp = &null_out->get_ostream();
+#else
+            int rank_num = env->get_rank_index();
+            if (rank_num != opt->mpi_man->printRank) {
+                yask_output_factory ofac;
+                auto null_out = ofac.new_null_output();
+                (*soln)->set_debug_output(null_out);
+                osp = &null_out->get_ostream();
+                cout << "Suppressing output on rank " << rank_num << ".\n";
+            }
+#endif
         }
         else
         {
-            setting = (StencilSettings*) opt->stencilSettings;
-            context = (YASK_STENCIL_CONTEXT *) opt->stencilContext;
+            soln = (yk_solution_ptr*) opt->stencilSoln;
+            kfac = (yk_factory *) opt->stencilFactory;
         }
 
-        setting->dt = opt->dt;
-        setting->dw = 1; //currently we consider only till 3D cases
-        setting->dx = opt->dx;
-        setting->dy = opt->dy;
-        setting->dz = opt->dz;
 
-        setting->rt = opt->rt;
-        setting->rx = opt->rx;
-        setting->ry = opt->ry;
-        setting->rz = opt->rz;
+        //(*soln)->set_rank_domain_size("t", opt->dt);
+        (*soln)->set_rank_domain_size("x", opt->dx);
+        (*soln)->set_rank_domain_size("y", opt->dy);
+        (*soln)->set_rank_domain_size("z", opt->dz);
 
-        //bg*, sbg* is also not used currently; no 'grouped'
-        //block loops
-        setting->bx = opt->bx;
-        setting->by = opt->by;
-        setting->bz = opt->bz;
+        (*soln)->set_region_size("t", opt->rt);
+        (*soln)->set_region_size("x", opt->rx);
+        (*soln)->set_region_size("y", opt->ry);
+        (*soln)->set_region_size("z", opt->rz);
 
-        setting->sbx = opt->sbx;
-        setting->sby = opt->sby;
-        setting->sbz = opt->sbz;
+        (*soln)->set_block_size("x", opt->bx);
+        (*soln)->set_block_size("y", opt->by);
+        (*soln)->set_block_size("z", opt->bz);
 
-        //MPI settings is left to default
-        setting->max_threads = opt->nthreads;
-        setting->num_block_threads = opt->threadPerBlock;
+        char* cmd;
+        STRINGIFY(cmd, "-block_threads %d -mbx %d -mby %d -mbz %d -sbx %d -sby %d -sbz %d", opt->threadPerBlock, opt->bx, opt->by, opt->bz, opt->sbx, opt->sby, opt->sbz);
 
+        (*soln)->apply_command_line_options(cmd);
+        (*soln)->set_default_numa_preferred(yask_numa_local);
+        // Alloc memory, create lists of grids, etc. Also reflects changes in
+        // settings
+        (*soln)->prepare_solution();
         if(needAlloc)
         {
+            auto context = dynamic_pointer_cast<StencilContext>(*soln);
+
             if(!noAlloc)
             {
                 // Alloc memory, create lists of grids, etc.
-                context->allocAll();
+                //(*soln)->prepare_solution();
                 context->initData();
             }
-
-            int totalParams = ((int) opt->paramName.size());
-
-            //copy some useful datas
 
             //now copy parameter values
             opt->paramName.clear();
             opt->paramList.clear();
-
-            for(auto it = context->paramMap.begin(); it != context->paramMap.end(); ++it) {
-                opt->paramName.push_back(it->first.c_str());
-                void* param = (void*)it->second->get_storage();
-                opt->paramList.push_back(param);
-            }
-
             //reallocate opt->grids
             opt->gridName.clear();
             opt->gridIdx.clear();
-
-            //now copy grid names
-            for(auto it = context->gridMap.begin(); it != context->gridMap.end(); ++it) {
-                opt->gridName.push_back(it->first.c_str());
+            for (auto var : (*soln)->get_vars())
+            {
+                if(var->get_dim_names().size() == 0)
+                {
+                    opt->paramName.push_back(var->get_name().c_str());
+                    void* param = (void*)(var->get_raw_storage_buffer());
+                    opt->paramList.push_back(param);
+                }
+                else
+                {
+                    opt->gridName.push_back(var->get_name().c_str());
+                    std::vector<int> currIdx(6);
+                    int ctr=0;
+                    std::vector<const char *> dname_list = {"x", "y", "z"};
+                    for (auto it=dname_list.begin(); it != dname_list.end(); it++)
+                    {
+                        currIdx[2*ctr]=var->get_first_rank_domain_index(*it);
+                        currIdx[2*ctr+1]=var->get_last_rank_domain_index(*it);
+                        ctr++;
+                    }
+                    opt->gridIdx.push_back(currIdx);
+                }
             }
 
-            //No need to sort since it would already be from map
-            //std::sort(opt->gridName.begin(), opt->gridName.end());
-
-            for(int i=0; i<context->gridMap.size(); ++i)
+            for (auto& sp : context->stPacks)
             {
-                Grid_TXYZ<2>* grid= (Grid_TXYZ<2>*) context->gridMap[((std::string)opt->gridName[i])];
-                std::vector<int> currIdx(6);
-                currIdx[0]=grid->get_first_x();
-                currIdx[1]=grid->get_last_x();
-                currIdx[2]=grid->get_first_y();
-                currIdx[3]=grid->get_last_y();
-                currIdx[4]=grid->get_first_z();
-                currIdx[5]=grid->get_last_z();
-                opt->gridIdx.push_back(currIdx);
+                for (auto sb : *sp)
+                {
+                    std::string eqGroup_name = sb->get_name();
+                    opt->eqGroups[opt->eqGroupMap[eqGroup_name]].num_points = sb->getBB().bb_num_points;
+                }
             }
-
-            //calculate num_points in each eqGroups
-            for(int i=0; i<context->eqGroups.size(); ++i)
-            {
-                std::string eqGroup_name = context->eqGroups[i]->get_name();
-                opt->eqGroups[opt->eqGroupMap[eqGroup_name]].num_points = context->eqGroups[i]->bb_num_points;
+            if (!noAlloc && (context->tot_domain_pts < 1)) {
+                ERROR_PRINT("Exiting because there are zero points to evaluate.");
+                exit_yask(1);
             }
         }
+        opt->stencilSoln = ((void*) soln);
+        opt->stencilFactory =  ((void*) kfac);
 
-        if (!noAlloc && (context->tot_numpts_dt < 1)) {
-            ERROR_PRINT("Exiting because there are zero points to evaluate.");
-            exit_yask(1);
-        }
-
-        opt->stencilSettings = ((void*) setting);
-        opt->stencilContext =  ((void*) context);
-
-        context->global_barrier();
+        //context->global_barrier();
         return 0;
+    }
+
+    void YASKautoTuner(yaskSite* opt, bool enable)
+    {
+        yk_solution_ptr* soln = (yk_solution_ptr*) opt->stencilSoln;
+        (*soln)->reset_auto_tuner(enable, true);
     }
 
     int YASKfinalize(yaskSite* opt)
     {
-        StencilSettings* setting = (StencilSettings*) opt->stencilSettings;
-        YASK_STENCIL_CONTEXT* context = (YASK_STENCIL_CONTEXT*) opt->stencilContext;
+        yk_solution_ptr* soln = (yk_solution_ptr*) opt->stencilSoln;
+        yk_factory* kFac = (yk_factory*) opt->stencilFactory;
 
-        context->global_barrier();
+        //context->global_barrier();
+        (*soln)->end_solution();
 
-        delete setting;
-        delete context;
+        delete soln;
+        delete kFac;
         return 0;
     }
 
     int YASKstencil( yaskSite* opt, int timeOffset)
     {
-        YASK_STENCIL_CONTEXT* context = (YASK_STENCIL_CONTEXT*) opt->stencilContext;
+        yk_solution_ptr* soln = (yk_solution_ptr*) opt->stencilSoln;
+        (*soln)->run_solution(timeOffset, timeOffset+opt->dt-1);
 
-        context->ofs_t = timeOffset;
-        context->calc_rank_opt();
-
-        context->global_barrier();
-
+        //context->global_barrier();
         return 0;
     }
 
-    void* YASKgetElPtr(yaskSite* opt, const char* data, int t, int x, int y, int z, bool checkBounds)
+    double YASKgetElement(yaskSite* opt, const char* data, int t, int x, int y, int z)
     {
-        CAST_Grid_TXYZ_ptr(opt, data, return, ->getElemPtr(t,x,y,z,checkBounds));
+        yk_solution_ptr* soln = (yk_solution_ptr*) opt->stencilSoln;
+        std::vector<int> rawIndices = {t,x,y,z};
+        std::vector<idx_t> indices;
+        for(int i=0; i<4; ++i)
+        {
+            //404 is reserved, so no folding above 400 :)
+            if(rawIndices[i] != -404)
+            {
+                indices.push_back(rawIndices[i]);
+            }
+        }
+        return (*soln)->get_var(data)->get_element(indices);
     }
 
-    void YASKsetGridPtr(yaskSite *opt, const char *grid_name, void *ptr)
+    void YASKsetElement(yaskSite* opt, const char* data, int t, int x, int y, int z, double val)
     {
-        CAST_Grid_TXYZ_ptr(opt, grid_name, , ->set_storage(ptr, 0));
+        yk_solution_ptr* soln = (yk_solution_ptr*) opt->stencilSoln;
+        std::vector<int> rawIndices = {t,x,y,z};
+        std::vector<idx_t> indices;
+        for(int i=0; i<4; ++i)
+        {
+            //404 is reserved, so no folding above 400 :)
+            if(rawIndices[i] != -404)
+            {
+                indices.push_back(rawIndices[i]);
+            }
+        }
+
+        (*soln)->get_var(data)->set_element(val, indices);
+    }
+
+    void YASKsetAll(yaskSite* opt, const char* data, double val)
+    {
+        yk_solution_ptr* soln = (yk_solution_ptr*) opt->stencilSoln;
+        (*soln)->get_var(data)->set_all_elements_same(val);
+    }
+
+    void YASKfuseGrid(yaskSite *to_opt, const char *to_grid_name, yaskSite *from_opt, const char *from_grid_name)
+    {
+        yk_solution_ptr* to_soln = (yk_solution_ptr*) to_opt->stencilSoln;
+        yk_solution_ptr* from_soln = (yk_solution_ptr*) from_opt->stencilSoln;
+        (*to_soln)->get_var(to_grid_name)->fuse_vars((*from_soln)->get_var(from_grid_name));
     }
 
     void* YASKgetGridPtr(yaskSite *opt, const char *grid_name)
     {
-        CAST_Grid_TXYZ_ptr(opt, grid_name, return, ->get_storage());
+        yk_solution_ptr* soln = (yk_solution_ptr*) opt->stencilSoln;
+        return (void*)((*soln)->get_var(grid_name)->get_raw_storage_buffer());
     }
 
     int YASKgetHalo(yaskSite *opt, const char *grid_name, int dim)
     {
-        YASK_STENCIL_CONTEXT *context = (YASK_STENCIL_CONTEXT*) opt->stencilContext;
-        Grid_TXYZ<1>* grid= (Grid_TXYZ<1>*) context->gridMap[((std::string)grid_name)];
+        yk_solution_ptr* soln = (yk_solution_ptr*) opt->stencilSoln;
+        char *dim_name;
         if(dim==0)
-            return grid->get_halo_x();
+            dim_name="x";
         else if(dim==1)
-            return grid->get_halo_y();
+            dim_name="y";
         else
-            return grid->get_halo_z();
-    }
+            dim_name="z";
+        idx_t left_halo = (*soln)->get_var(grid_name)->get_left_halo_size(dim_name);
+        idx_t right_halo = (*soln)->get_var(grid_name)->get_right_halo_size(dim_name);
 
-    void YASKsetHalo(yaskSite *opt, const char *grid_name, int dim, int val)
-    {
-        YASK_STENCIL_CONTEXT *context = (YASK_STENCIL_CONTEXT*) opt->stencilContext;
-        Grid_TXYZ<1>* grid= (Grid_TXYZ<1>*) context->gridMap[((std::string)grid_name)];
-        if(dim==0)
+        if(left_halo != right_halo)
         {
-            grid->set_halo_x(val);
-            grid->set_pad_x(grid->get_pad_x());
+            ERROR_PRINT("left halo != right_halo for dim = %s, YaskSite currently only supports homogeneous radius", dim_name);
         }
-        else if(dim==1)
-        {
-            grid->set_halo_y(val);
-            grid->set_pad_y(grid->get_pad_y());
-        }
-        else
-        {
-            grid->set_halo_z(val);
-            grid->set_pad_z(grid->get_pad_z());
-        }
+
+        return right_halo;
     }
 
 }
@@ -279,7 +317,13 @@ extern "C"
         return -1;
     }
 
-    void* YASKgetElPtr(yaskSite*opt, const char* data, int t, int x, int y, int z, bool checkBounds)
+    void YASKautoTuner(yaskSite* opt, bool enable)
+    {
+        UNUSED(opt);
+        UNUSED(enable);
+    }
+
+    double YASKgetElement(yaskSite*opt, const char* data, int t, int x, int y, int z)
     {
         UNUSED(opt);
         UNUSED(data);
@@ -287,15 +331,33 @@ extern "C"
         UNUSED(x);
         UNUSED(y);
         UNUSED(z);
-        UNUSED(checkBounds);
-        return NULL;
+        return -1;
     }
 
-    void YASKsetGridPtr(yaskSite *opt, const char *grid, void *ptr)
+    void YASKsetElement(yaskSite*opt, const char* data, int t, int x, int y, int z, double val)
     {
         UNUSED(opt);
-        UNUSED(grid);
-        UNUSED(ptr);
+        UNUSED(data);
+        UNUSED(t);
+        UNUSED(x);
+        UNUSED(y);
+        UNUSED(z);
+        UNUSED(val);
+    }
+
+    void YASKsetAll(yaskSite* opt, const char* data, double val)
+    {
+        UNUSED(opt);
+        UNUSED(data);
+        UNUSED(val);
+    }
+
+    void YASKfuseGrid(yaskSite *to_opt, const char *to_grid_name, yaskSite *from_opt, const char *from_grid_name)
+    {
+        UNUSED(to_opt);
+        UNUSED(to_grid_name);
+        UNUSED(from_opt);
+        UNUSED(from_grid_name);
     }
 
     void* YASKgetGridPtr(yaskSite *opt, const char *grid)
@@ -313,12 +375,5 @@ extern "C"
         return -1;
     }
 
-    void YASKsetHalo(yaskSite *opt, const char *grid_name, int dim, int val)
-    {
-        UNUSED(opt);
-        UNUSED(grid_name);
-        UNUSED(dim);
-        UNUSED(val);
-    }
 }
 #endif

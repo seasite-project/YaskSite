@@ -15,12 +15,22 @@ struct MPI_Manager
     char*** argv;
     int nRanks;
     int myRank;
+    int group;
+
+    int shm_nRanks;
+    int shm_myRank;
+    int shm_group;
+
+    int maxThreads;
+
     int printRank;
 
 #ifdef yaskSite_HAVE_MPI
     MPI_Comm comm;
+    MPI_Comm shm_comm;
 #else
     int comm;
+    int shm_comm;
 #endif
 
     MPI_Manager(int* argc, char*** argv, char* mcFile=NULL, int printRank=yaskSite_PRINT_RANK);

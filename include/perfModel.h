@@ -104,6 +104,7 @@ class perfModel
 
     void setReadWriteGrids(int numReadGrids_, int numWriteGrids_, int numReadWriteGrids_, int numStencils_);
     void setWeight(double weight_);
+    double getWeight();
     void setDerived(bool derived_);
 
     void model(int scale=1, bool validate=false);

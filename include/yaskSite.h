@@ -141,16 +141,20 @@ class yaskSite
         fn1_t dynFinalize;
         typedef int (*fn2_t) (yaskSite*,int);
         fn2_t dynStencil;
-        typedef void* (*fn3_t) (yaskSite*,const char*,int,int,int,int,bool);
-        fn3_t dynGetPtr;
-        typedef void* (*fn4_t) (yaskSite*,const char*);
-        fn4_t dynGetGridPtr;
-        typedef void (*fn5_t) (yaskSite*,const char*, void*);
-        fn5_t dynSetGridPtr;
-        typedef int (*fn6_t) (yaskSite*,const char*, int);
-        fn6_t dynGetHalo;
-        typedef void (*fn7_t) (yaskSite*,const char*, int, int);
-        fn7_t dynSetHalo;
+        typedef double (*fn3_t) (yaskSite*,const char*,int,int,int,int);
+        fn3_t dynGetElement;
+        typedef void (*fn4_t) (yaskSite*,const char*,int,int,int,int, double);
+        fn4_t dynSetElement;
+        typedef void (*fn5_t) (yaskSite*,const char*, double);
+        fn5_t dynSetAll;
+        typedef void* (*fn6_t) (yaskSite*,const char*);
+        fn6_t dynGetGridPtr;
+        typedef void (*fn7_t) (yaskSite*,const char*, yaskSite*, const char*);
+        fn7_t dynFuseGrid;
+        typedef int (*fn8_t) (yaskSite*,const char*, int);
+        fn8_t dynGetHalo;
+        typedef void (*fn9_t) (yaskSite*, bool);
+        fn9_t dynYASK_AT;
 
         int checkCompatibility(yaskSite* otherStencil);
 
@@ -159,8 +163,8 @@ class yaskSite
 
     public:
         //For YASK
-        void* stencilContext;
-        void* stencilSettings;
+        void* stencilFactory;
+        void* stencilSoln;
         std::vector<const char*> gridName;
         std::vector<std::vector<int>> gridIdx;
         std::vector<const char*> paramName;
@@ -178,6 +182,7 @@ class yaskSite
         void setDim(int z, int y, int x=1, int t=1, bool resetOthers=true);
         void setThread(int nthreads_, int threadPerBlock_=1, bool resetOthers=true);
 
+        void setYASK_AT(bool enable);
         //tunes block size and subBlock size
         std::vector<int> spatialTuner(char* OBC_str, char* IBC_str="L2", double sf_OBC=-1, double sf_IBC=-1, char* temporal_str="MEM");
 
@@ -195,68 +200,48 @@ class yaskSite
         void run();
 
         //access fns
-        inline void* getPtrAt(const char* grid_name, int t, int x, int y, int z, bool checkBounds=false)
+        inline double getElement(const char* grid_name, int t=-404, int x=-404, int y=-404, int z=-404)
         {
-             return (dynGetPtr(this, grid_name, t, x, y, z, checkBounds));
+             return (dynGetElement(this, grid_name, t, x, y, z));
         }
+        inline void setElement(double val, const char* grid_name, int t=-404, int x=-404, int y=-404, int z=-404)
+        {
+             dynSetElement(this, grid_name, t, x, y, z, val);
+        }
+
 
         /*Specialized such that only data from newest grid is the output*/
-        inline double getOutputAt(const char* grid_name, int x, int y, int z, bool checkBounds=false)
+        inline double getOutputAt(const char* grid_name, int x, int y, int z)
         {
-            if(dp)
-            {
-                return *((double*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds)));
-            }
-            else
-            {
-                return *((float*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds)));
-            }
+            return getElement(grid_name, totalTime, x, y, z);
+
+        }
+        inline void setInputAt(double val, const char* grid_name, int x, int y, int z)
+        {
+            setElement(val, grid_name, totalTime, x, y, z);
         }
 
-        inline void setInputAt(double val, const char* grid_name, int x, int y, int z, bool checkBounds=false)
+        inline void fuseGrid(const char* to_grid_name, yaskSite* fromStencil, const char* from_grid_name)
         {
-            if(dp)
-            {
-                *((double*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds))) = val;
-            }
-            else
-            {
-                *((float*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds))) = (float)val;
-            }
+            dynFuseGrid(this, to_grid_name, fromStencil, from_grid_name);
         }
 
-        inline void setInputAt(float val, const char* grid_name, int x, int y, int z, bool checkBounds=false)
-        {
-            if(dp)
-            {
-                *((double*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds))) = val;
-            }
-            else
-            {
-                *((float*)(dynGetPtr(this, grid_name, totalTime, x, y, z, checkBounds))) = val;
-            }
-        }
 
         int getOutput(double* val, const char* grid_name);
         int getOutput(float* val, const char* grid_name);
 
-        int setInputScalar(double val, const char* grid_name, bool halo=false);
-        int setInputScalar(float val, const char* grid_name, bool halo=false);
+        int setInputScalar(double val, const char* grid_name);
 
         int setInput(double* val, const char* grid_name);
         int setInput(float* val, const char* grid_name);
 
         void* getGridPtr(const char* grid);
         Grid operator[] (char* grid_name);
-        void setGridPtr(const char* grid, void* ptr);
 
         int getHaloLayer(const char *grid, int dim_);
-        void setHaloLayer(const char *grid, int dim_, int val);
 
-        int transferData(yaskSite* stencilOther, char* data, int ts=0);
-
-        void* getParam(const char* param_name);
-
+        double getParam(const char* param_name);
+        void setParam(double val, const char* param_name);
 
         void calcECM(bool validate=false);
         void printECM();
@@ -281,56 +266,36 @@ class yaskSite
 struct Grid
 {
     yaskSite* stencil;
-    void* ptr;
+    int currTime;
     GRID grid_details; //offline grid
 
-    Grid(yaskSite* stencil_, void* ptr_, GRID grid_details_):stencil(stencil_),ptr(ptr_),grid_details(grid_details_)
+    Grid(yaskSite* stencil_, GRID grid_details_):stencil(stencil_),currTime(0),grid_details(grid_details_)
     {
     }
 
-    Grid(const Grid& other):stencil(other.stencil),ptr(other.ptr),grid_details(other.grid_details)
+    Grid(const Grid& other):stencil(other.stencil),currTime(other.currTime),grid_details(other.grid_details)
     {
     }
 
     inline Grid& operator=(Grid& other)
     {
         stencil = other.stencil;
-        ptr = other.ptr;
+        currTime = other.currTime;
         grid_details = other.grid_details;
         return *this;
     }
 
-    inline Grid operator[] (int ts)
+    /*can't manipulate time the current API
+     * inline Grid operator[] (int ts)
     {
-        if(ts==0)
-        {
-            return (*this);
-        }
-        else
-        {
-            std::ptrdiff_t ts_diff = ((char*)stencil->getPtrAt(grid_details.name.c_str(), ts, 0, 0, 0) - (char*)stencil->getPtrAt(grid_details.name.c_str(), 0, 0, 0, 0));
-            if(ts_diff==0)
-            {
-                return (*this);
-            }
-            else
-            {
-                return Grid(stencil, (char*)ptr+ts_diff, grid_details);
-            }
-        }
-    }
+        currTime = ts;
+        return *this;
+    }*/
 };
 
 inline bool operator<<(Grid lhs, Grid rhs)
 {
-    lhs.ptr=rhs.ptr;
-    lhs.stencil->setGridPtr(lhs.grid_details.name.c_str(), rhs.ptr);
-
-    for(int dim_=0; dim_<3; ++dim_)
-    {
-        lhs.stencil->setHaloLayer(lhs.grid_details.name.c_str(), dim_, rhs.stencil->getHaloLayer(rhs.grid_details.name.c_str(), dim_));
-    }
-
+    lhs.stencil->fuseGrid(lhs.grid_details.name.c_str(), rhs.stencil, rhs.grid_details.name.c_str());
     return true;
 }
 

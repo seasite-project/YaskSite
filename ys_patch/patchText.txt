@@ -1,0 +1,10 @@
+os << " Reads the following var(s): ";
+i=0;
+for (auto* g : eg1->getInputVars()) {
+    if (i++)
+        os << ", ";
+    os << g->getName();
+}
+os << ".\n";
+
+

@@ -172,7 +172,7 @@ void main(int argc, char** argv)
         //(here 200 times L3 is the total size)
         cache_info L3 = CACHE("L2"); //L3_cache macro defined by yaskSite library
         int L3_size = L3.bytes;
-        double grid_size = 10.0*1024.0*1024.0*1024.0; //10 GB
+        double grid_size = 10*1024.0*1024.0*1024.0; //10 GB
         int dim_x=1, dim_y=1, dim_z=1;
         if(dimension == 3)
         {

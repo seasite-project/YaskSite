@@ -13,7 +13,7 @@ my_option::my_option()
 {
 }
 
-os_parser::os_parser():iter(100), cores(NULL), smt(1), size(NULL), fold("auto"), radius(-1), prefetch(false), path("default"), opt("plain:spatial:temporal"), prgname("a.out"), mode("VALIDATE"), dp(true), mcFile(NULL), numOptions(14)
+os_parser::os_parser():iter(100), cores(NULL), smt(1), size(NULL), fold("auto"), radius(-1), baseStencil(NULL), prefetch(false), path("default"), opt("plain:spatial:temporal"), prgname("a.out"), mode("VALIDATE"), dp(true), mcFile(NULL), numOptions(15)
 {
     long_options = new my_option[numOptions+1];
 
@@ -23,14 +23,15 @@ os_parser::os_parser():iter(100), cores(NULL), smt(1), size(NULL), fold("auto"),
     long_options[3]  = {"size",   required_argument, 0,  's', "Domain size inner:middle:outer " };
     long_options[4]  = {"fold",    required_argument, 0,  'f', "Vector Folding fold_x:fold_y:fold_z " };
     long_options[5]  = {"radius",    required_argument, 0,  'r', "Stencil radius " };
-    long_options[6]  = {"prefetch",no_argument,       0,  'P', "Enable prefetching" };
-    long_options[7]  = {"single prec.",no_argument, 0,  'S', "Enable for calculating in single precision" };
-    long_options[8]  = {"path",    required_argument, 0,  'p', "Path valid values default or serpentine" };
-    long_options[9] = {"opt",     required_argument, 0,  'o', "Optimisations [options: plain,spatial,temporal]; use ':' for combining"};
-    long_options[10] = {"mc_file", required_argument, 0,  'm', "Machine file for ECM prediction"};
-    long_options[11] = {"mode",     required_argument, 0,  'M', "Mode : available options: ECM, BENCH, VALIDATE"};
-    long_options[12] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
-    long_options[13] = {0,         0,                 0,   0 ,  0 };
+    long_options[6]  = {"base",    required_argument, 0,  'b', "Base stencil file. Note if the stencil already exists by default, this stencil will overwrite" };
+    long_options[7]  = {"prefetch",no_argument,       0,  'P', "Enable prefetching" };
+    long_options[8]  = {"single prec.",no_argument, 0,  'S', "Enable for calculating in single precision" };
+    long_options[9]  = {"path",    required_argument, 0,  'p', "Path valid values default or serpentine" };
+    long_options[10] = {"opt",     required_argument, 0,  'o', "Optimisations [options: plain,spatial,temporal]; use ':' for combining"};
+    long_options[11] = {"mc_file", required_argument, 0,  'm', "Machine file for ECM prediction"};
+    long_options[12] = {"mode",     required_argument, 0,  'M', "Mode : available options: ECM, BENCH, VALIDATE"};
+    long_options[13] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
+    long_options[14] = {0,         0,                 0,   0 ,  0 };
 
     gnuOptions = new option[numOptions+1];
 
@@ -51,7 +52,7 @@ bool os_parser::parse_arg(int argc, char **argv)
     prgname = argv[0];
     while (1) {
         int option_index = 0, c;
-        c = getopt_long(argc, argv, "0:i:c:t:s:f:r:p:o:m:M:hPS",
+        c = getopt_long(argc, argv, "0:i:c:t:s:f:r:b:p:o:m:M:hPS",
                 gnuOptions, &option_index);
 
         if (c == -1)
@@ -92,6 +93,11 @@ bool os_parser::parse_arg(int argc, char **argv)
             case 'r':
                 {
                     radius = atoi(optarg);
+                    break;
+                }
+            case 'b':
+                {
+                    baseStencil = optarg;
                     break;
                 }
             case 'P':

@@ -12,9 +12,9 @@ arr=($file)
 num_files=${#arr[@]}
 
 if [[ $num_files == 0 ]]; then
-    echo "Stencil - $stencil_name not defined"
+   >&2  echo "Stencil - $stencil_name not defined"
 elif [[ $num_files -ne 1 ]]; then
-    echo "ERROR; more than 1 definition for stencil - $stencil_name"
+   >&2 echo "ERROR; more than 1 definition for stencil - $stencil_name"
 fi
 
 echo $file

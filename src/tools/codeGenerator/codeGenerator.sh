@@ -32,9 +32,9 @@ template_file=${6:-"$default_template_file"}
 cp $template_file $generated_file
 #echo "getting base file"
 base_file_w_path=$($toolDir/getStencilFile.sh $stencil_name $generateDir)
-base_file=`basename $base_file_w_path`
+base_file=$(basename $base_file_w_path)
 #echo "got base"
-
+echo "check base file = ${base_file}"
 if [ -z "$base_file" ]; then
     base_file="Dummy.hpp"
     base_class="Dummy"
@@ -86,7 +86,7 @@ declare_code=""
 define_code=""
 
 for param in $params; do
-    declare_code=$(printf "$declare_code yc_var_proxy $param = yc_var_proxy(\"$pram\", get_soln());")
+    declare_code=$(printf "$declare_code yc_var_proxy $param =  yc_var_proxy(\"$param\", get_soln());")
 done
 
 $toolDir/substitute.sh "DECLARE_EXTRA_PARAMS" "$declare_code" $generated_file

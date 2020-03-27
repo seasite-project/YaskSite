@@ -161,10 +161,12 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
 
     SYSTEM(sysLogFileName, "mkdir -p %s/bin", localDir);
     SYSTEM(sysLogFileName, "cp -r %s/stencils %s/.", currPath, localDir);
-    //move the generated stencil, if this is derived stencil
-    printf("check if the following is there %s/stencils_gen/%s.cpp", currPath, stencil);
-    SYSTEM(sysLogFileName, "mv  %s/stencils_gen/%s.* %s/stencils/.", currPath, stencil, localDir);
-
+    //move the generated stencil, if this are extra stencils
+    for(int i=0; i<(int)extraStencils.size(); ++i)
+    {
+        printf("check extra Stencils = %s\n", extraStencils[i].c_str());
+        SYSTEM(sysLogFileName, "mv  %s/stencils_gen/%s.* %s/stencils/.", currPath, extraStencils[i].c_str(), localDir);
+    }
     STRINGIFY(sysLogFileName, "%s/sysCallLog.log", localDir);
 
     //stencil code

@@ -17,7 +17,7 @@ cc=mpiicpc
 
 #src_files=$(cat "$YASK_FOLDER/Makefile" | grep -E "STENCIL_BASES.*:=.*" | sed -n -e 's/^.*:=//p' | awk '{$0=tolower($0);$1=$1}1')
 make_report="yask_kernel.$stencil.$arch.make-report.txt"
-mv "$YASK_FOLDER/build/$make_report" "$LOC_FOLDER/."
+#mv "$YASK_FOLDER/build/$make_report" "$LOC_FOLDER/."
 cxx_flags=$(cat "$LOC_FOLDER/build/$make_report" | grep -P "^YK_CXXFLAGS=" | cut -d"=" -f2- | sed -e "s@\"@@g")
 
 #copy it to a much convenient location for later parsing
@@ -59,7 +59,7 @@ rm -f $LOC_FOLDER/build/*.o
 rm -f $LOC_FOLDER/build/*.optrpt
 rm -f $LOC_FOLDER/build/*.s
 rm -rf $LOC_FOLDER/bin
-#rm -rf $LOC_FOLDER/asm
+rm -rf $LOC_FOLDER/asm
 rm -rf $LOC_FOLDER/build/compiler
 rm -rf $LOC_FOLDER/build/kernel
 rm -f $LOC_FOLDER/lib/libyask_compiler.so

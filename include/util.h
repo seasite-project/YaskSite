@@ -153,6 +153,8 @@ double interpolate(double f_y, double f_x, double y, double x, double z);
 
 int tolCeil(double num, double tol=0.24);
 
+std::string file_basename(char const *path, char *ext=NULL);
+
 #define DOUBLE(a)\
     static_cast<double>(a)
 

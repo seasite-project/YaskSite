@@ -1,5 +1,5 @@
-#ifndef _HEAT_OFFSITE_H
-#define _HEAT_OFFSITE_H
+#ifndef _HEAT_H
+#define _HEAT_H
 
 //Implement various kinds of stencils required in the SeASiTe project.
 //If new stencils are required update this file
@@ -9,7 +9,7 @@ using namespace yask;
 
 namespace {
 
-    class HeatBase_offsite : public yc_solution_with_radius_base {
+    class HeatBase : public yc_solution_with_radius_base {
 
         protected:
             // Indices & dimensions.
@@ -37,7 +37,7 @@ namespace {
             virtual void boundaryHandling(yc_var_proxy& grid, const yc_number_node_ptr& t, const yc_number_node_ptr& x, const yc_number_node_ptr& y, const yc_number_node_ptr& z, const yc_bool_node_ptr& at_first_x, const yc_bool_node_ptr& at_last_x, const yc_bool_node_ptr& at_first_y, const yc_bool_node_ptr& at_last_y, const yc_bool_node_ptr& at_first_z, const yc_bool_node_ptr& at_last_z) =0;
         public:
 
-            HeatBase_offsite(const string& name, int radius=1) : yc_solution_with_radius_base(name, radius) { }
+            HeatBase(const string& name, int radius=1) : yc_solution_with_radius_base(name, radius) { }
 
             // Define equation at t+1 based on values at t.
             virtual void define() {
@@ -62,7 +62,7 @@ namespace {
             }
     };
 
-    class Heat1dStencil_offsite : public HeatBase_offsite {
+    class Heat1dStencil : public HeatBase {
         protected:
             virtual double coeff(int di, int dj, int dk) const
             {
@@ -110,15 +110,15 @@ namespace {
 
 
         public:
-            Heat1dStencil_offsite(int radius=1) :
-                HeatBase_offsite("Heat1D", radius) { }
-            Heat1dStencil_offsite(const string& name, int radius=1) :
-                HeatBase_offsite(name, radius) { }
+            Heat1dStencil(int radius=1) :
+                HeatBase("Heat1D", radius) { }
+            Heat1dStencil(const string& name, int radius=1) :
+                HeatBase(name, radius) { }
 
     };
-    YS_REGISTER_STENCIL_RADIUS("Heat1D",Heat1dStencil_offsite);
+    YS_REGISTER_STENCIL_RADIUS("Heat1D",Heat1dStencil);
 
-    class Heat2dStencil_offsite : public Heat1dStencil_offsite {
+    class Heat2dStencil : public Heat1dStencil {
         protected:
             virtual double coeff(int di, int dj, int dk) const
             {
@@ -141,7 +141,7 @@ namespace {
                         coeff( 0,-r, 0) * data(t, x, y-r, z  );
                 }
 
-                Heat1dStencil_offsite::points(v, data, t, x, y, z);
+                Heat1dStencil::points(v, data, t, x, y, z);
 
             }
 
@@ -154,7 +154,7 @@ namespace {
             //Neumann boundary of first order
             virtual void boundaryHandling(yc_var_proxy& data, const yc_number_node_ptr& t, const yc_number_node_ptr& x, const yc_number_node_ptr& y, const yc_number_node_ptr& z, const yc_bool_node_ptr& at_first_x, const yc_bool_node_ptr& at_last_x, const yc_bool_node_ptr& at_first_y, const yc_bool_node_ptr& at_last_y, const yc_bool_node_ptr& at_first_z, const yc_bool_node_ptr& at_last_z)
             {
-                /*    Heat1dStencil_offsite::boundaryHandling(data, t,x,y,z,at_first_x,at_last_x,at_first_y,at_last_y,at_first_z,at_last_z);
+                /*    Heat1dStencil::boundaryHandling(data, t,x,y,z,at_first_x,at_last_x,at_first_y,at_last_y,at_first_z,at_last_z);
 
                       data(t, x, y, z) EQUALS (data(t-1,x,y+1,z)*1.0)
                       IF_DOMAIN at_first_y;
@@ -166,16 +166,16 @@ namespace {
 
 
         public:
-            Heat2dStencil_offsite(int radius=1) :
-                Heat1dStencil_offsite("Heat2D", radius) { }
-            Heat2dStencil_offsite(const string& name, int radius=1) :
-                Heat1dStencil_offsite(name, radius) { }
+            Heat2dStencil(int radius=1) :
+                Heat1dStencil("Heat2D", radius) { }
+            Heat2dStencil(const string& name, int radius=1) :
+                Heat1dStencil(name, radius) { }
 
     };
-    YS_REGISTER_STENCIL_RADIUS("Heat2D",Heat2dStencil_offsite);
+    YS_REGISTER_STENCIL_RADIUS("Heat2D",Heat2dStencil);
 
 
-    class Heat3dStencil_offsite : public Heat2dStencil_offsite {
+    class Heat3dStencil : public Heat2dStencil {
         protected:
             virtual double coeff(int di, int dj, int dk) const
             {
@@ -197,7 +197,7 @@ namespace {
                     v += coeff( r, 0, 0) * data(t, x+r, y, z ) +
                         coeff(-r, 0, 0) * data(t, x-r, y, z );
                 }
-                Heat2dStencil_offsite::points(v, data, t, x, y, z);
+                Heat2dStencil::points(v, data, t, x, y, z);
             }
 
             virtual void addPoints(yc_number_node_ptr& v, yc_var_proxy& data, const yc_number_node_ptr& t, const yc_number_node_ptr& x, const yc_number_node_ptr& y, const yc_number_node_ptr& z)
@@ -210,7 +210,7 @@ namespace {
             virtual void boundaryHandling(yc_var_proxy& data, const yc_number_node_ptr& t, const yc_number_node_ptr& x, const yc_number_node_ptr& y, const yc_number_node_ptr& z, const yc_bool_node_ptr& at_first_x, const yc_bool_node_ptr& at_last_x, const yc_bool_node_ptr& at_first_y, const yc_bool_node_ptr& at_last_y, const yc_bool_node_ptr& at_first_z, const yc_bool_node_ptr& at_last_z)
             {
                 /*
-                   Heat2dStencil_offsite::boundaryHandling(data, t,x,y,z,at_first_x,at_last_x,at_first_y,at_last_y,at_first_z,at_last_z);
+                   Heat2dStencil::boundaryHandling(data, t,x,y,z,at_first_x,at_last_x,at_first_y,at_last_y,at_first_z,at_last_z);
                    data(t, x, y, z) EQUALS (data(t-1,x+1,y,z)*1.0)
                    IF_DOMAIN at_first_x;
                    data(t, x, y, z) EQUALS (data(t-1,x-1,y,z)*1.0)
@@ -220,13 +220,13 @@ namespace {
 
 
         public:
-            Heat3dStencil_offsite(int radius=1) :
-                Heat2dStencil_offsite("Heat3D", radius) { }
-            Heat3dStencil_offsite(const string& name, int radius=1) :
-                Heat2dStencil_offsite(name, radius) { }
+            Heat3dStencil(int radius=1) :
+                Heat2dStencil("Heat3D", radius) { }
+            Heat3dStencil(const string& name, int radius=1) :
+                Heat2dStencil(name, radius) { }
 
     };
-    YS_REGISTER_STENCIL_RADIUS("Heat3D",Heat3dStencil_offsite);
+    YS_REGISTER_STENCIL_RADIUS("Heat3D",Heat3dStencil);
 }
 
 #endif

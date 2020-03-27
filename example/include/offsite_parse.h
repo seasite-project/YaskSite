@@ -26,6 +26,7 @@ struct os_parser
     char* size;
     char* fold;
     int radius;
+    char* baseStencil;
     bool prefetch;
     char* path;
     char* outDir;

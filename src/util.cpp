@@ -247,3 +247,30 @@ int tolCeil(double num, double tol)
 
     return static_cast<int>(num);
 }
+
+std::string file_basename(char const *path, char *ext)
+{
+    const char *s = strrchr(path, '/');
+    char* base_str;
+    if (!s)
+        base_str = strdup(path);
+    else
+        base_str = strdup(s + 1);
+
+    std::string out_str(base_str);
+    free(base_str);
+
+    if(ext)
+    {
+        //remove extension
+        size_t pos = out_str.find(ext);
+
+        if (pos != std::string::npos)
+        {
+            // If found then erase it from string
+            out_str.erase(pos, std::string(ext).length());
+        }
+    }
+
+    return out_str;
+}

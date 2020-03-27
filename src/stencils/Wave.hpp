@@ -1,5 +1,5 @@
-#ifndef _WAVE_OFFSITE_H
-#define _WAVE_OFFSITE_H
+#ifndef _WAVE_H
+#define _WAVE_H
 //Implement various kinds of stencils required in the SeASiTe project.
 //If new stencils are required update this file
 #include "yask_compiler_api.hpp"
@@ -7,7 +7,7 @@ using namespace std;
 using namespace yask;
 
 namespace {
-    class WaveBase_offsite : public yc_solution_with_radius_base {
+    class WaveBase : public yc_solution_with_radius_base {
 
         protected:
 
@@ -41,7 +41,7 @@ namespace {
             virtual void boundaryHandling(yc_var_proxy& grid, const yc_number_node_ptr& t, const yc_number_node_ptr& x, const yc_number_node_ptr& y, const yc_number_node_ptr& z, const yc_bool_node_ptr& at_first_x, const yc_bool_node_ptr& at_last_x, const yc_bool_node_ptr& at_first_y, const yc_bool_node_ptr& at_last_y, const yc_bool_node_ptr& at_first_z, const yc_bool_node_ptr& at_last_z) =0;
         public:
 
-            WaveBase_offsite(const string& name, int radius=4) : yc_solution_with_radius_base(name, radius) {
+            WaveBase(const string& name, int radius=4) : yc_solution_with_radius_base(name, radius) {
                 //can support max. upto 3D space dimension
             }
 
@@ -71,7 +71,7 @@ namespace {
             }
     };
 
-    class Wave1dStencil_offsite : public WaveBase_offsite {
+    class Wave1dStencil : public WaveBase {
         protected:
             virtual double coeff(int dr) const
             {
@@ -113,15 +113,15 @@ namespace {
 
 
         public:
-            Wave1dStencil_offsite(int radius=4) :
-                WaveBase_offsite("Wave1D", radius) { }
-            Wave1dStencil_offsite(const string& name, int radius=4) :
-                WaveBase_offsite(name, radius) { }
+            Wave1dStencil(int radius=4) :
+                WaveBase("Wave1D", radius) { }
+            Wave1dStencil(const string& name, int radius=4) :
+                WaveBase(name, radius) { }
 
     };
-    YS_REGISTER_STENCIL_RADIUS("Wave1D",Wave1dStencil_offsite);
+    YS_REGISTER_STENCIL_RADIUS("Wave1D",Wave1dStencil);
 
-    class Wave2dStencil_offsite : public Wave1dStencil_offsite {
+    class Wave2dStencil : public Wave1dStencil {
         protected:
             virtual double coeff(int dr) const
             {
@@ -135,7 +135,7 @@ namespace {
                 {
                     v += coeff( r ) * (data(t, x, y+r, z  ) + data(t, x, y-r, z  ));
                 }
-                Wave1dStencil_offsite::points(v, data, t, x, y, z);
+                Wave1dStencil::points(v, data, t, x, y, z);
             }
 
             virtual void addPoints(yc_number_node_ptr& v, yc_var_proxy& data, const yc_number_node_ptr& t, const yc_number_node_ptr& x, const yc_number_node_ptr& y, const yc_number_node_ptr& z)
@@ -150,7 +150,7 @@ namespace {
             //Neumann boundary of first order
             virtual void boundaryHandling(yc_var_proxy& data, const yc_number_node_ptr& t, const yc_number_node_ptr& x, const yc_number_node_ptr& y, const yc_number_node_ptr& z, const yc_bool_node_ptr& at_first_x, const yc_bool_node_ptr& at_last_x, const yc_bool_node_ptr& at_first_y, const yc_bool_node_ptr& at_last_y, const yc_bool_node_ptr& at_first_z, const yc_bool_node_ptr& at_last_z)
             {
-                    Wave1dStencil_offsite::boundaryHandling(data, t,x,y,z,at_first_x,at_last_x,at_first_y,at_last_y,at_first_z,at_last_z);
+                    Wave1dStencil::boundaryHandling(data, t,x,y,z,at_first_x,at_last_x,at_first_y,at_last_y,at_first_z,at_last_z);
 
                       data(t, x, y, z) EQUALS (data(t-1,x,y+1,z)*1.0)
                       IF_DOMAIN at_first_y;
@@ -161,16 +161,16 @@ namespace {
 
 
         public:
-            Wave2dStencil_offsite(int radius=4) :
-                Wave1dStencil_offsite("Wave2D", radius) { }
-            Wave2dStencil_offsite(const string& name, int radius=4) :
-                Wave1dStencil_offsite(name, radius) { }
+            Wave2dStencil(int radius=4) :
+                Wave1dStencil("Wave2D", radius) { }
+            Wave2dStencil(const string& name, int radius=4) :
+                Wave1dStencil(name, radius) { }
 
     };
-    YS_REGISTER_STENCIL_RADIUS("Wave2D",Wave2dStencil_offsite);
+    YS_REGISTER_STENCIL_RADIUS("Wave2D",Wave2dStencil);
 
 
-    class Wave3dStencil_offsite : public Wave2dStencil_offsite {
+    class Wave3dStencil : public Wave2dStencil {
         protected:
             virtual double coeff(int dr) const
             {
@@ -184,7 +184,7 @@ namespace {
                 {
                     v += coeff( r ) * (data(t, x+r, y, z ) + data(t, x-r, y, z ));
                 }
-                Wave2dStencil_offsite::points(v, data, t, x, y, z);
+                Wave2dStencil::points(v, data, t, x, y, z);
             }
 
             virtual void addPoints(yc_number_node_ptr& v, yc_var_proxy& data, const yc_number_node_ptr& t, const yc_number_node_ptr& x, const yc_number_node_ptr& y, const yc_number_node_ptr& z)
@@ -199,7 +199,7 @@ namespace {
             //Neumann boundary of first order
             virtual void boundaryHandling(yc_var_proxy& data, const yc_number_node_ptr& t, const yc_number_node_ptr& x, const yc_number_node_ptr& y, const yc_number_node_ptr& z, const yc_bool_node_ptr& at_first_x, const yc_bool_node_ptr& at_last_x, const yc_bool_node_ptr& at_first_y, const yc_bool_node_ptr& at_last_y, const yc_bool_node_ptr& at_first_z, const yc_bool_node_ptr& at_last_z)
             {
-/*                   Wave2dStencil_offsite::boundaryHandling(data, t,x,y,z,at_first_x,at_last_x,at_first_y,at_last_y,at_first_z,at_last_z);
+/*                   Wave2dStencil::boundaryHandling(data, t,x,y,z,at_first_x,at_last_x,at_first_y,at_last_y,at_first_z,at_last_z);
                    data(t, x, y, z) EQUALS (data(t-1,x+1,y,z)*1.0)
                    IF_DOMAIN at_first_x;
                    data(t, x, y, z) EQUALS (data(t-1,x-1,y,z)*1.0)
@@ -209,14 +209,14 @@ namespace {
 
 
         public:
-            Wave3dStencil_offsite(int radius=4) :
-                Wave2dStencil_offsite("Wave3D", radius) { }
-            Wave3dStencil_offsite(const string& name, int radius=4) :
-                Wave2dStencil_offsite(name, radius) { }
+            Wave3dStencil(int radius=4) :
+                Wave2dStencil("Wave3D", radius) { }
+            Wave3dStencil(const string& name, int radius=4) :
+                Wave2dStencil(name, radius) { }
 
     };
 
-    YS_REGISTER_STENCIL_RADIUS("Wave3D",Wave3dStencil_offsite);
+    YS_REGISTER_STENCIL_RADIUS("Wave3D",Wave3dStencil);
 }
 
 #endif

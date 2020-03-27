@@ -3,6 +3,8 @@
 
 #include "config.h"
 #include "macros.h"
+#include <vector>
+#include <string>
 
 //Right now generates derived stencil from a base stencil
 /*genCode example:
@@ -15,6 +17,8 @@
    OUT = INP + dt*(b(1)*k1 + b(2)*k2 + b(3)*k3);"
 */
 
+extern std::vector<std::string> extraStencils;
+
 class codeGen
 {
     char *derivedStencil;
@@ -26,6 +30,7 @@ class codeGen
 
     public:
     codeGen(char* derivedStencil_, char* baseStencil_, char* genCode_);
+    codeGen(char* stencil_file);
     ~codeGen();
 };
 

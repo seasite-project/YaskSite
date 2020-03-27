@@ -156,12 +156,20 @@ void main(int argc, char** argv)
     }
 
     printf("code = %s", codeStr);
-    codeGen code(derivedStencilName, stencilName, codeStr);
 
-    free(codeStr);
 
     os_parser optParse;
     optParse.parse_arg(argc, argv);
+    //generate base stencil if required
+    if(optParse.baseStencil)
+    {
+        codeGen code_base(optParse.baseStencil);
+    }
+
+
+    codeGen code(derivedStencilName, stencilName, codeStr);
+
+    free(codeStr);
 
     char* mc_file = optParse.mcFile;
 

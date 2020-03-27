@@ -295,7 +295,20 @@ struct Grid
 
 inline bool operator<<(Grid lhs, Grid rhs)
 {
+   /*const char* lhs_grid_name = lhs.grid_details.name.c_str();
+    const char* rhs_grid_name = rhs.grid_details.name.c_str();
+    /printf("fusing %s and %s\n", lhs_grid_name, rhs_grid_name);
+    rhs.stencil->setElement(0.123, rhs_grid_name, 0, 10, 10, 10);
+    rhs.stencil->setElement(0.321, rhs_grid_name, 1, 10, 10, 10);
+    printf("I am setting on RHS at (10,10,10) = 0.123\n");
+    printf("before fusion %p and %p\n", lhs.stencil->getGridPtr(lhs_grid_name), rhs.stencil->getGridPtr(rhs_grid_name));
+    printf("val at lhs(%d,10,10,10) and rhs(%d,10,10,10) = %f and %f\n", 0, 0, lhs.stencil->getElement(lhs_grid_name, 0, 10, 10, 10), rhs.stencil->getElement(rhs_grid_name, 0, 10, 10, 10));
+    */
     lhs.stencil->fuseGrid(lhs.grid_details.name.c_str(), rhs.stencil, rhs.grid_details.name.c_str());
+    /*printf("after fusion %p and %p\n", lhs.stencil->getGridPtr(lhs_grid_name), rhs.stencil->getGridPtr(rhs_grid_name));
+    printf("val at lhs(%d,10,10,10) and rhs(%d,10,10,10) = %f and %f\n", lhs.stencil->totalTime, rhs.stencil->totalTime, lhs.stencil->getElement(lhs_grid_name, lhs.stencil->totalTime, 10, 10, 10), rhs.stencil->getElement(rhs_grid_name, rhs.stencil->totalTime, 10, 10, 10));
+    */
+
     return true;
 }
 

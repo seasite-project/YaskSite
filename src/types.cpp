@@ -36,7 +36,7 @@ bool EQ_GROUP::finalize()
         int curr_dim = read_grids[i].dim;
         if( ( (curr_dim != 0)&&(curr_dim!=3) ) && (curr_dim!=4) )
         {
-            ERROR_PRINT("Grid Dimension not compatible check, dimension = %d : eq. Group %s", curr_dim, name.c_str());
+            ERROR_PRINT("Grid Dimension not compatible check, grid = %s, dimension = %d : eq. Group %s", read_grids[i].name.c_str(), curr_dim, name.c_str());
             /*ret = false;
             break;*/
         }

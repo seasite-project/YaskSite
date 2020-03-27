@@ -121,6 +121,8 @@ extern "C" {
         (*soln)->set_block_size("y", opt->by);
         (*soln)->set_block_size("z", opt->bz);
 
+        (*soln)->set_step_wrap(true); // so I can access any step size, API will take care of wrapping
+
         char* cmd;
         STRINGIFY(cmd, "-block_threads %d -mbx %d -mby %d -mbz %d -sbx %d -sby %d -sbz %d", opt->threadPerBlock, opt->bx, opt->by, opt->bz, opt->sbx, opt->sby, opt->sbz);
 

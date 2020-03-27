@@ -406,7 +406,7 @@ add_custom_target(updateStencil ALL
 #2. update stencils
 add_custom_command(TARGET updateStencil
     POST_BUILD
-    COMMAND mkdir -p ${STENCIL_RAW_DIR} && cp -r ${STENCIL_SOURCE_DIR}/*.hpp "${STENCIL_RAW_DIR}/." && ${TOOL_DIR}/updateStencil.sh  ${STENCIL_RAW_DIR} ${STENCIL_DIR}
+    COMMAND rm -rf ${STENCIL_RAW_DIR} && mkdir -p ${STENCIL_RAW_DIR} && cp -r ${STENCIL_SOURCE_DIR}/*.hpp "${STENCIL_RAW_DIR}/." && ${TOOL_DIR}/updateStencil.sh  ${STENCIL_RAW_DIR} ${STENCIL_DIR}
     )
 
 

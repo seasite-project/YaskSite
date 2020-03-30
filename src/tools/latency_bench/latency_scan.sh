@@ -21,7 +21,7 @@ numCache=$($tool_dir/cacheInfo/numCache.sh $mc_file)
 for((cache_id=0; cache_id<=$numCache; cache_id+=1)); do
     #memory
     out_file="$out_folder/$cache_id"
-    cacheStale=$($tool_dir/bw_bench/needCalibration.sh $out_file)
+    cacheStale=1 #$($tool_dir/bw_bench/needCalibration.sh $out_file)
     cacheName=$($tool_dir/cacheInfo/getCacheInfo.sh $mc_file $cache_id "name")
     SIZE=0
     old=0

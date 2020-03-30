@@ -196,6 +196,11 @@ extern "C" {
     {
         yk_solution_ptr* soln = (yk_solution_ptr*) opt->stencilSoln;
         (*soln)->reset_auto_tuner(enable, true);
+        if(enable)
+        {
+            (*soln)->run_auto_tuner_now(true);
+            (*soln)->reset_auto_tuner(false); //disable after AT
+        }
     }
 
     int YASKfinalize(yaskSite* opt)

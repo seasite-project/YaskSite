@@ -362,7 +362,7 @@ void cache_info::readBytePerCycle(char* mc_file)
                 success = true;
             }
 
-            printf("%s hierarchy = %d values\n %f\n", name.c_str(),hierarchy, value);
+            //printf("%s hierarchy = %d values\n %f\n", name.c_str(),hierarchy, value);
             bytePerCycle.push_back({value});
             PCLOSE(file);
 
@@ -478,7 +478,7 @@ void initializeCaches(char *mcFile_user)
     int numCaches = readIntVar(tmp);
     PCLOSE(tmp);
 
-#pragma omp parallel for
+//#pragma omp parallel for
     for(int cacheId=0; cacheId<numCaches; ++cacheId)
     {
         CACHES.push_back(cache_info(cacheId, mc_file));

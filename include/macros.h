@@ -41,11 +41,13 @@ if(dim==2)\
 }\
 
 
-#if yaskSite_VERBOSITY<2
+//#if yaskSite_VERBOSITY<2
 
 /*This will make problems for command that need to pipe
  *
- * #define SYSTEM(sysLogFile, ...)\
+ */
+
+/*#define SYSTEM(sysLogFile, ...)\
 {\
     char *__cmd__, *__pipedCmd__;\
     asprintf(&__cmd__, __VA_ARGS__);\
@@ -55,6 +57,8 @@ if(dim==2)\
     free( __cmd__);\
     free(__pipedCmd__);\
 }\
+
+#else
 */
 
 #define SYSTEM(sysLogFile, ...)\
@@ -65,19 +69,7 @@ if(dim==2)\
     delete[] __cmd__;\
 }\
 
-
-
-#else
-
-#define SYSTEM(sysLogFile, ...)\
-{\
-    char* __cmd__;\
-    asprintf(&__cmd__, __VA_ARGS__);\
-    systemCallUtil(__cmd__, sysLogFile);\
-    delete[] __cmd__;\
-}\
-
-#endif
+//#endif
 
 #define STRINGIFY(__str__, ...)\
 {\

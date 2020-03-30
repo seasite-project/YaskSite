@@ -31,13 +31,16 @@
 {\
     FILE* writeFile;\
     writeFile = (file!=NULL) ?fopen(file,"a"):stdout;\
-    fprintf(writeFile, "%6s, %3s, %5s, %5s, %5s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s\n", "Threads", "dt", "dx", "dy", "dz",  "s", "mlups", "L2", "L3", "MEM", "ECMmlups", "ECML2", "ECML3", "ECMMEM", "Lat(%)", "Bound(%)", "Pref(%)", "Assoc(%)");\
+    fprintf(writeFile, "%6s, %3s, %5s, %5s, %5s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s, %8s\n", "Threads", "dt", "dx", "dy", "dz", "s", "mlups", "L2", "L3", "MEM", "ECMmlups", "ECML2", "ECML3", "ECMMEM", "Lat(%)", "Bound(%)", "Pref(%)", "Assoc(%)", "AT time(s)");\
     if(file!=NULL) fclose(writeFile);\
 }
 
-#define PERF_RUN(stencil, file)\
+#define PERF_RUN(stencil, file, AT_time, preInit)\
 {\
-    stencil->init();\
+    if(preInit)\
+    {\
+        stencil->init();\
+    }\
     FILE* writeFile;\
     writeFile = (file!=NULL) ?fopen(file,"a"):stdout;\
     INIT_TIME(stencil_);\
@@ -63,8 +66,9 @@
     double dz=stencil->dz;\
     double mlups=ctr*dt*dx*(dy*dz*1e-6);\
     double time=GET_TIME(stencil_);\
+    printf("AT time = %f\n", AT_time);\
     contribution ecm_contrib = stencil->getECMContributions();\
-    fprintf(writeFile, "%6d, %3d, %5d, %5d, %5d, %8.5f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.4f, %8.4f, %8.4f, %8.4f\n", stencil->nthreads, stencil->dt, stencil->dx, stencil->dy, stencil->dz, time,mlups/time, ECM_validate[0], ECM_validate[1], ECM_validate[2], ECM_mlups, ECM[0], ECM[1], ECM[2], ecm_contrib.latency*100, ecm_contrib.boundary*100, ecm_contrib.prefetch*100, ecm_contrib.associativity*100);\
+    fprintf(writeFile, "%6d, %3d, %5d, %5d, %5d, %8.5f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.2f, %8.4f, %8.4f, %8.4f, %8.4f, %8.5f\n", stencil->nthreads, stencil->dt, stencil->dx, stencil->dy, stencil->dz, time,mlups/time, ECM_validate[0], ECM_validate[1], ECM_validate[2], ECM_mlups, ECM[0], ECM[1], ECM[2], ecm_contrib.latency*100, ecm_contrib.boundary*100, ecm_contrib.prefetch*100, ecm_contrib.associativity*100, AT_time);\
     if(file!=NULL) fclose(writeFile);\
 }\
 
@@ -119,7 +123,7 @@ void main(int argc, char** argv)
 
     char* opt_range = optParse.opt;
     std::vector<char*> opt = splitChar(opt_range);
-    std::vector<bool> opt_bool(3,false);
+    std::vector<bool> opt_bool(4,false);
 
     if(findChar(opt,"plain")>=0)
     {
@@ -133,9 +137,14 @@ void main(int argc, char** argv)
     {
         opt_bool[2] = true;
     }
+    if(findChar(opt,"AT")>=0)
+    {
+        opt_bool[3] = true;
+    }
+
 
     char* outDir = optParse.outDir;
-    std::vector<char*> files(3, NULL);
+    std::vector<char*> files(4, NULL);
     if(outDir != NULL)
     {
         //for default path
@@ -154,11 +163,13 @@ void main(int argc, char** argv)
             STRINGIFY(files[1],"%s/spatial.txt",file_path);
         if(opt_bool[2])
             STRINGIFY(files[2],"%s/temporal.txt",file_path);
+        if(opt_bool[3])
+            STRINGIFY(files[3],"%s/AT.txt",file_path);
 
         free(file_path);
     }
 
-    for(int i=0; i<3; ++i)
+    for(int i=0; i<=3; ++i)
     {
         if(opt_bool[i])
         {
@@ -172,13 +183,13 @@ void main(int argc, char** argv)
         //(here 200 times L3 is the total size)
         cache_info L3 = CACHE("L2"); //L3_cache macro defined by yaskSite library
         int L3_size = L3.bytes;
-        double grid_size = 2.0*1024.0*1024.0*1024.0; //2 GB
+        double grid_size = 10*1024.0*1024.0*1024.0; //10 GB
         int dim_x=1, dim_y=1, dim_z=1;
         if(dimension == 3)
         {
-            //dim_x = dim; //200;//static_cast<int>((200.0*L3_size)/((double)(2.0*8.0*dim*dim)));
             dim_x = static_cast<int>((grid_size)/((double)(4.0*8.0*dim*dim)));
             dim_x = static_cast<int>(dim_x/8.0) * 8; //make multiple of 8
+            dim_x = dim;
             dim_y = dim;//16;
             dim_z = dim;
         }
@@ -199,25 +210,32 @@ void main(int argc, char** argv)
 
         //DISABLE_PREFETCHER(threads);
 
-
+        INIT_TIME(AT);
         //plain run
         if(opt_bool[0])
         {
-            PERF_RUN(stencil_1, files[0]);
+            START_TIME(AT);
+            STOP_TIME(AT);
+            double AT_time = GET_TIME(AT);
+            PERF_RUN(stencil_1, files[0], AT_time, true);
         }
 
         //spatial blocked
         if(opt_bool[1])
         {
+            START_TIME(AT);
             stencil_1->spatialTuner("L3", "L2",0.5, 0.5);
+            STOP_TIME(AT);
+            double AT_time = GET_TIME(AT);
             //stencil_1->setSubBlock(750,5,512);
             //stencil_1->setBlock(600,30,200);
-            PERF_RUN(stencil_1, files[1]);
+            PERF_RUN(stencil_1, files[1], AT_time, true);
         }
 
         //temporal & spatial blocked
         if(opt_bool[2])
         {
+            START_TIME(AT);
             if(f_y ==4 || f_x ==4 || strcmp(stencil_1->arch,"ivb")!=0)
             {
                 stencil_1->blockTuner("L3","L2","L2", 0.5,0.5,0.5);
@@ -226,18 +244,31 @@ void main(int argc, char** argv)
             {
                 stencil_1->blockTuner("L3","L2","L1", 0.5,0.8,0.8);
             }
+            STOP_TIME(AT);
             //stencil_1->ry = 15;
-            PERF_RUN(stencil_1, files[2]);
+            double AT_time = GET_TIME(AT);
+            PERF_RUN(stencil_1, files[2], AT_time, true);
         }
 
+        if(opt_bool[3])
+        {
+            stencil_1->setBlock(32,32,32); //default block size to start as in yask.sh exe
+            stencil_1->init();
+            START_TIME(AT);
+            stencil_1->setYASK_AT(true);
+            STOP_TIME(AT);
+            double AT_time = GET_TIME(AT);
+            PERF_RUN(stencil_1, files[3], AT_time, false);
+        }
         //ENABLE_PREFETCHER(threads);
 
         //free stencil_1
         delete stencil_1;
+
+
     }
 
-
-    for(int i=0; i<3; ++i)
+    for(int i=0; i<=3; ++i)
     {
         free(files[i]);
     }

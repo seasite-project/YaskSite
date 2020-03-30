@@ -478,7 +478,7 @@ void yaskSite::cleanDir()
 
 
 #define BUILD_CMD\
-    "mkdir -p %s/asm && make -j -C %s EXTRA_CXXFLAGS=\"-fPIC -D__PURE_INTEL_C99_HEADERS__\" %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=%d REGION_LOOP_OPTS=\"-ndims 4 -inVar region_idxs -ompConstruct 'omp parallel for schedule(static,1) proc_bind(close)'\" pfd_l1=%d pfd_l2=%d MINI_BLOCK_LOOP_OPTS=\"-ndims 4 -inVar adj_mb_idxs -ompConstruct ''\" layout_txyz=Layout_1234 layout_twxyz=Layout_12345 halo=%d YASK_OUT_BASE=%s YC_STENCIL_DIR=%s/stencils EXTRA_YC_FLAGS=\"-print-eqs\" EXTRA_YK_CXXFLAGS=\"-Fa%s/asm/\" > %s/build_out.txt", localDir, yaskDir, stencil_with_radius, arch, fold_x, fold_y, fold_z, (dp)?8:4, (prefetch)?1:0, (prefetch)?1:0, radius, localDir, localDir, localDir, localDir\
+    "mkdir -p %s/asm && make -C %s EXTRA_CXXFLAGS=\"-fPIC -D__PURE_INTEL_C99_HEADERS__\" %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=%d REGION_LOOP_OPTS=\"-ndims 4 -inVar region_idxs -ompConstruct 'omp parallel for schedule(static,1) proc_bind(close)'\" pfd_l1=%d pfd_l2=%d MINI_BLOCK_LOOP_OPTS=\"-ndims 4 -inVar adj_mb_idxs -ompConstruct ''\" layout_txyz=Layout_1234 layout_twxyz=Layout_12345 halo=%d YASK_OUT_BASE=%s YC_STENCIL_DIR=%s/stencils EXTRA_YC_FLAGS=\"-print-eqs\" EXTRA_YK_CXXFLAGS=\"-Fa%s/asm/\" > %s/build_out.txt", localDir, yaskDir, stencil_with_radius, arch, fold_x, fold_y, fold_z, (dp)?8:4, (prefetch)?1:0, (prefetch)?1:0, radius, localDir, localDir, localDir, localDir\
 
 
 /*
@@ -524,18 +524,21 @@ void yaskSite::build()
         //only one rank generates the stencil
         if(mpi_man->myRank == 0)
         {
+            printf("BUILD CMD = \n");
+            printf(BUILD_CMD);
+            printf("\n");
             LOAD_PRINT_START("Building %s : %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=%d prefetch=%s layout_txyz=Layout_1234 path=%s", stencilCode, stencil_with_radius, arch, fold_x, fold_y, fold_z, (dp)?8:4, (prefetch)?"on":"off", (strcmp(path,"")==0)?"default":path);
             SYSTEM(sysLogFileName, BUILD_CMD);
+            mpi_man->global_barrier();
+            delete[] stencil_with_radius;
+
+            //SYSTEM(sysLogFileName, "cp %s/bin/yask.%s.%s.exe %s/bin/.", yaskDir, stencil, arch, localDir);
+
+            //create YASK library
+            SYSTEM(sysLogFileName, "%s/createYASKLib.sh %s %s %s %s %s %s", TOOL_DIR, yaskDir, stencil, arch, SRC_DIR, INC_DIR, localDir);
+
+            LOAD_PRINT_END();
         }
-        mpi_man->global_barrier();
-        delete[] stencil_with_radius;
-
-        //SYSTEM(sysLogFileName, "cp %s/bin/yask.%s.%s.exe %s/bin/.", yaskDir, stencil, arch, localDir);
-
-        //create YASK library
-        SYSTEM(sysLogFileName, "%s/createYASKLib.sh %s %s %s %s %s %s", TOOL_DIR, yaskDir, stencil, arch, SRC_DIR, INC_DIR, localDir);
-
-        LOAD_PRINT_END();
 
         //dlopen and link them
         //generated library
@@ -1116,9 +1119,9 @@ std::vector<int> yaskSite::setDefaultBlock_min_rem(int n_scale_down_olc, int n_s
             {
                 /*In the order outer has more threads first*/
                 int in=i;
-                int out=static_cast<int>(n_scale_down_olc/static_cast<double>(i));
+                int out=ceil(n_scale_down_olc/static_cast<double>(i));
 
-                if(out*in == (n_scale_down_olc))
+                //if(out*in == (n_scale_down_olc))
                 {
                     outer_multiple.push_back(out);
                     inner_multiple.push_back(in);

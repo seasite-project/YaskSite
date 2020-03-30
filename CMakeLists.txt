@@ -54,16 +54,16 @@ set(LIB_TOOL_DIR "${CMAKE_INSTALL_PREFIX}/tools/yaskSite/tools")
 set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
 set(STENCIL_SOURCE_DIR "${PROJECT_SOURCE_DIR}/src/stencils")
 set(INC_DIR "${PROJECT_SOURCE_DIR}/include")
-set(CACHE_BUILD OFF CACHE BOOL "Cache the stencil builds for later runs. Enabling cache requires approx. 50 MB diskspace per stencil")
+set(CACHE_BUILD ON CACHE BOOL "Cache the stencil builds for later runs. Enabling cache requires approx. 50 MB diskspace per stencil")
 set(USE_LIKWID ON CACHE BOOL "Set the variable to ON if you need to use LIKWID, currently you have to ON it")
 set(IACA_PATH "" CACHE PATH "Set the path of iaca.sh file, if not provided will try to download and install Intel IACA")
 set(MLC_PATH "" CACHE PATH "Set the path of mlc file, if not provided will try to download and install Intel MLC")
 set(LD_PORTS "2:D;3:D" CACHE PATH "Set the LOAD ports of the machine; (Intel-default)")
-set(MODEL_BOUNDARY_EFFECT 1 CACHE BOOL "Considers effect from boundary when modelling")
-set(MODEL_PREFETCH_EFFECT 1 CACHE BOOL "Considers effect from prefetching when modelling")
-set(MODEL_LATENCY_EFFECT 1 CACHE BOOL "Considers effect from latency when modelling")
-set(MODEL_ASSOCIATIVITY_EFFECT 1 CACHE BOOL "Uses k-way associative cache model instead of perfect LRU")
-set(MODEL_REMAINDER_EFFECT 1 CACHE BOOL "Considers effect from remainder blocks when modelling")
+set(MODEL_BOUNDARY_EFFECT 0 CACHE BOOL "Considers effect from boundary when modelling")
+set(MODEL_PREFETCH_EFFECT 0 CACHE BOOL "Considers effect from prefetching when modelling")
+set(MODEL_LATENCY_EFFECT 0 CACHE BOOL "Considers effect from latency when modelling")
+set(MODEL_ASSOCIATIVITY_EFFECT 0 CACHE BOOL "Uses k-way associative cache model instead of perfect LRU")
+set(MODEL_REMAINDER_EFFECT 0 CACHE BOOL "Considers effect from remainder blocks when modelling")
 set(MC_FILE "" CACHE FILEPATH "Path to machine file")
 
 if (${USE_LIKWID})
@@ -99,14 +99,14 @@ get_filename_component(CMAKE_CXX_COMPILER_SHORT ${CMAKE_CXX_COMPILER} NAME)
 get_filename_component(CMAKE_C_COMPILER_SHORT ${CMAKE_C_COMPILER} NAME)
 
 
-#ExternalProject_Add(yaml-cpp
-#    PREFIX ${PROJECT_BINARY_DIR}/yaml-cpp
-#    URL https://github.com/jbeder/yaml-cpp/zipball/master
-#    DOWNLOAD_NAME yaml-cpp.zip
-#    CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER_SHORT} CXX=${CMAKE_CXX_COMPILER_SHORT} cmake ../yaml-cpp -DYAML_CPP_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-#    BUILD_COMMAND make
-#    INSTALL_COMMAND make install
-#)
+ExternalProject_Add(yaml-cpp
+    PREFIX ${PROJECT_BINARY_DIR}/yaml-cpp
+    URL https://github.com/jbeder/yaml-cpp/zipball/master
+    DOWNLOAD_NAME yaml-cpp.zip
+    CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER_SHORT} CXX=${CMAKE_CXX_COMPILER_SHORT} cmake ../yaml-cpp -DYAML_CPP_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    BUILD_COMMAND make
+    INSTALL_COMMAND make install
+)
 
 
 ExternalProject_Add(yask
@@ -512,7 +512,7 @@ configure_file(${PROJECT_SOURCE_DIR}/yasksite-config.cmake.in ${PROJECT_BINARY_D
 include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/symee)
 add_library(yaskSite ${SOURCES})
 
-#add_dependencies(yaskSite yaml-cpp)
+add_dependencies(yaskSite yaml-cpp)
 add_dependencies(yaskSite yask)
 if(ENABLE_LOOPADAPT)
     message(STATUS "check ${LOOPADAPT_LIB_DIR}")

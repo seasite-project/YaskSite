@@ -300,7 +300,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
     //I put 0 contribution from this cache/MEM
     if( currCache.hierarchy > opt->fit_domain->hierarchy)
     {
-        return {0.0,0.0};
+        return {0.0,0.0,0.0};
     }
     else if(currCache.hierarchy > opt->temporal->hierarchy)
     {
@@ -350,7 +350,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
                   }*/
         double latency_oh_per_LUP = getLatencyEffects(currCache, rwRatio);
         ECM_latency[currCache.hierarchy] = latency_oh_per_LUP_temp + latency_oh_per_LUP/static_cast<double>(stencil->data->dt);
-        return { victim_scale*(((totalSpatialContrib)/static_cast<double>(stencil->data->dt))+(1+rest_contrib)*temporalOh[0]), ((totalSpatialContrib-numPureWriteGrids)/(double)numWriteGrids) };
+        return { victim_scale*(((totalSpatialContrib)/static_cast<double>(stencil->data->dt))+(1+rest_contrib)*temporalOh[0]), ((totalSpatialContrib-numPureWriteGrids)/(double)numWriteGrids), (double) numReadGrids };
     }
     //if greater than Outer blocked LC
     else if(currCache.hierarchy > opt->spatialOBC->hierarchy)
@@ -375,6 +375,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         int dim = stencil->dim;
         bool jump = (dim>2)?olc_jump:ilc_jump;
         int rwRatio = static_cast<int>((totalGrids - numPureWriteGrids)/(double)(numWriteGrids));
+        double streams = totalGrids;
         if(jump)
         {
             double outer_fold=1;
@@ -388,7 +389,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
             }
             int stencil_contrib_outer = 2*( static_cast<int>((stencil->radius-1)/(outer_fold)) + 1 );
             int stencil_centre = 1;
-            double streams = (numStencils*(stencil_contrib_outer + stencil_centre) + totalGrids - numStencils);
+            streams = (numStencils*(stencil_contrib_outer + stencil_centre) + totalGrids - numStencils);
             prefetch_oh = streams*prefetch_oh_per_LUP;
             boundary_oh = spatialOh[2];
             extra_data = prefetch_oh + boundary_oh;
@@ -405,7 +406,8 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         //        printf("....total Grids = %d, numWriteGrids = %d\n", totalGrids, numWriteGrids);
         double latency_oh = getLatencyEffects(currCache, rwRatio);
         ECM_latency[currCache.hierarchy] = latency_oh;
-        return { victim_scale*totalData, (totalData-numPureWriteGrids)/((double)numWriteGrids) };
+        return { victim_scale*totalData, (totalData-numPureWriteGrids)/((double)numWriteGrids), (double)numReadGrids};
+
     }
     //TODO: only for symmetric stencils currently
     //if greater than Inner blocked LC
@@ -463,7 +465,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
 
         double latency_oh = getLatencyEffects(currCache, rwRatio);
         ECM_latency[currCache.hierarchy] = latency_oh;
-        return {victim_scale*totalData, ((totalData-numPureWriteGrids)/(double)numWriteGrids)};
+        return {victim_scale*totalData, ((totalData-numPureWriteGrids)/(double)numWriteGrids), streams-numPureWriteGrids};
     }
     //no blocking condition
     else
@@ -490,7 +492,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         double latency_oh = getLatencyEffects(currCache, rwRatio);
         ECM_latency[currCache.hierarchy] = latency_oh;
 
-        return {victim_scale*totalData, ((totalData-numPureWriteGrids)/(double)numWriteGrids)};
+        return {victim_scale*totalData, ((totalData-numPureWriteGrids)/(double)numWriteGrids), streams-numPureWriteGrids};
     }
 }
 
@@ -1998,7 +2000,13 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
 
     //L3->L2
     std::vector<double> l3_l2_data = getDataContrib("L3",&opt,temporalStoreMode);
-    double l3_l2_transfer_rate = CACHE("L3").getBytePerCycle((int)l3_l2_data[1], nthreads);//bytePerCycle["L3"][0];
+    //if cache is full-duplex number of load stream (one sided) matters than the ratio
+    int neededRatio = (int)l3_l2_data[1];
+    if(CACHE("L3").duplexity == 2)
+    {
+        neededRatio = (int)l3_l2_data[2];
+    }
+    double l3_l2_transfer_rate = CACHE("L3").getBytePerCycle(neededRatio, nthreads);//bytePerCycle["L3"][0];
     bytePerCycle_map["L3"].push_back(l3_l2_transfer_rate);
     double l3_l2 = (l3_l2_data[0]*bytePerWord)/l3_l2_transfer_rate;
     ECM.push_back((l3_l2/data_factor)*scale);
@@ -2389,7 +2397,17 @@ double perfModel::applyNOL()
     {
         nOL+=ECM[i];
     }*/
-    nOL = evalECM_str(ECM);
+
+    std::vector<double> ECM_total = ECM;
+    //add all contributons of a hierarchy 
+    for(int i=0; i<((int)ECM_latency.size()); ++i)
+    {
+        ECM_total[i+1] += ECM_latency[i];
+        ECM_total[i+1] += ECM_prefetch_cy[i];
+        ECM_total[i+1] += ECM_boundary_cy[i];
+        ECM_total[i+1] += ECM_assoc_cy[i];
+    }
+    nOL = evalECM_str(ECM_total);
     printf("nOL = %f\n", nOL);
     nOL+=ECM_penalty;
 
@@ -2430,7 +2448,8 @@ double perfModel::applyNOL()
     }*/
     nOL_assoc = evalECM_str(ECM_assoc_cy);
 
-    double total_nOL = nOL+nOL_latency;
+    //double total_nOL = nOL+nOL_latency;
+    double total_nOL = nOL;
     double perf = 0;
     if(total_nOL < ECM[0])
     {
@@ -2447,7 +2466,7 @@ double perfModel::applyNOL()
         ecm_contribution.boundary = nOL_boundary/total_nOL;
         ecm_contribution.prefetch = nOL_prefetch/total_nOL;
         ecm_contribution.associativity = nOL_assoc/total_nOL;
-        perf = nOL+nOL_latency;
+        perf = total_nOL;
     }
     return perf;
 }

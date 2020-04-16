@@ -1,0 +1,55 @@
+size_t ndone = 0;
+
+if(doneElems)
+{
+   ndone =  doneElems->size();
+}
+bool aligned = true;
+
+string firstMvName;
+//check if simple copying is enough
+if(ndone == 0)
+{
+    // one vector element from gp.
+    auto& ve = elems[0];
+
+    // Look up existing input var.
+    assert(_vecVars.count(ve._vec));
+    firstMvName = _vecVars[ve._vec];
+
+
+    for (size_t pelem = 0; pelem < elems.size(); pelem++) {
+        // skip if done.
+        if (doneElems && doneElems->count(pelem))
+            continue;
+
+        // one vector element from gp.
+        auto& ve = elems[pelem];
+
+        // Look up existing input var.
+        assert(_vecVars.count(ve._vec));
+        string mvName = _vecVars[ve._vec];
+
+        // which element?
+        int alignedElem = ve._offset; // 1-D layout of this element.
+
+        if( (alignedElem != (int)pelem) || (mvName != firstMvName) )
+        {
+            aligned=false;
+            break;
+        }
+    }
+}
+else
+{
+    aligned = false;
+}
+
+if(aligned)
+{
+    os << linePrefix << pvName << " = " << firstMvName << "; // for " <<
+        gp.getVarName() << _lineSuffix;
+
+    return;
+}
+

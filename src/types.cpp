@@ -252,10 +252,37 @@ double cache_info::getBytePerCycle(int rwRatio, int nthreads)
     }
     else
     {
-        int numRW = (int)bytePerCycle.size();
-        int numThreads = (int)bytePerCycle[0].size();
+        int  small_range = -1;
+        int large_range = -1;
+        for(auto it=bytePerCycle.begin(); it!=bytePerCycle.end(); ++it)
+        {
+            if(it->first < rwRatio)
+            {
+                small_range = it->first;
+                if(std::next(it) != bytePerCycle.end())
+                {
+                    large_range = std::next(it)->first;
+                }
+                else
+                {
+                    large_range = small_range;
+                }
+            }
+        }
 
-        if(rwRatio > numRW)
+        //find which one is more appropriate
+        int target_val = small_range;
+
+        if(abs(large_range-rwRatio) < abs(small_range-rwRatio))
+        {
+            target_val = large_range;
+        }
+
+        printf("Chose for %s rwRatio of %d\n", name.c_str(), target_val);
+
+        int numThreads = bytePerCycle[target_val].size();
+
+       /* if(rwRatio > numRW)
         {
             rwRatio = numRW;
         }
@@ -263,7 +290,7 @@ double cache_info::getBytePerCycle(int rwRatio, int nthreads)
         {
             rwRatio = 1;
             //ERROR_PRINT("Wrong rw ratio");
-        }
+        }*/
 
         if(nthreads > numThreads)
         {
@@ -273,7 +300,7 @@ double cache_info::getBytePerCycle(int rwRatio, int nthreads)
         {
             ERROR_PRINT("Could not retrieve bandwidth informations\n");
         }
-        double BPC = bytePerCycle[rwRatio-1][nthreads-1];
+        double BPC =  bytePerCycle[target_val][nthreads-1];
 
         if(!victim && duplexity == 2) //TODO: deal in a nicer way
         {
@@ -344,9 +371,10 @@ void cache_info::readBytePerCycle(char* mc_file)
         for(unsigned i=0; i<bw_table.size(); ++i)
         {
             printf("%f\n",bw_table[i]/(cpu_freq));
-            bytePerCycle.push_back({bw_table[i]/(cpu_freq)});
+            bytePerCycle[i+1] = {bw_table[i]/(cpu_freq)};
         }
 
+        bytePerCycle[-1] = bytePerCycle[1];//just a default value
         free(bw_str);
     }
     else
@@ -363,7 +391,7 @@ void cache_info::readBytePerCycle(char* mc_file)
             }
 
             //printf("%s hierarchy = %d values\n %f\n", name.c_str(),hierarchy, value);
-            bytePerCycle.push_back({value});
+            bytePerCycle[-1] = {value};
             PCLOSE(file);
 
             POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;upstream throughput;1\"", TOOL_DIR, mc_file, hierarchy);
@@ -386,25 +414,30 @@ void cache_info::readBytePerCycle(char* mc_file)
                 duplexity = 2;
                 //ERROR_PRINT("Currently %s cache with only half-duplexity treated, setting the cache as half-duplex", name.c_str());
             }
-            POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;data path bw\" | wc -l", TOOL_DIR, mc_file, name.c_str());
-            int numRW = readIntVar(file);
+            POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;data path bw\" | grep -Eo \"[0-9]{1,4}:\" | tr \"\\n\" \",\" | sed -e \"s@:@@g\"", TOOL_DIR, mc_file, name.c_str());
+            std::string RW_ratio_str = readStrVar(file);
+            std::vector<int> RW_ratio = split_int(RW_ratio_str, ',');
+
             PCLOSE(file);
-            printf("Num rw = %d\n", numRW);
-            printf("%s values\n", name.c_str());
-            for(int i=1; i<=numRW; ++i)
+            printf("%s byte/cycle values\n", name.c_str());
+            for(int i=0; i<(int)RW_ratio.size(); ++i)
             {
+                int curr_rw_ratio = RW_ratio[i];
+                printf("curr_rw_ratio = %d\n", curr_rw_ratio);
                 success = true;
-                POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;data path bw;%d\" | sed -e \"s@B/cy@@g\" | sed -e \"s@\\[@@g\" | sed -e \"s@\\]@@g\"", TOOL_DIR, mc_file, name.c_str(), i);
+                POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;data path bw;%d\" | sed -e \"s@B/cy@@g\" | sed -e \"s@\\[@@g\" | sed -e \"s@\\]@@g\"", TOOL_DIR, mc_file, name.c_str(), curr_rw_ratio);
                 char* bw_str = readStrVar(file);
-                bytePerCycle.push_back(split_double(bw_str, ','));
-                for(int j=0; j<(bytePerCycle.back()).size(); ++j)
+                std::vector<double> currData = split_double(bw_str, ',');
+                bytePerCycle[curr_rw_ratio] = currData;
+                for(int j=0; j<currData.size(); ++j)
                 {
-                    printf("%f \t", bytePerCycle.back()[j]);
+                    printf("%f \t", currData[j]);
                 }
                 printf("\n");
                 PCLOSE(file);
                 free(bw_str);
             }
+            bytePerCycle[-1] = bytePerCycle[RW_ratio[0]]; //just a default value
         }
     }
     if(!success)

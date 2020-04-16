@@ -4,6 +4,7 @@
 #include "config.h"
 #include <vector>
 #include <string>
+#include <map>
 
 class yaskSite;
 
@@ -78,7 +79,7 @@ struct cache_info
     int cl_size;
     int cores;
     std::vector<std::vector<double>> latency; //latency in ns as a function of threads and ld:st pattern
-    std::vector<std::vector<double>> bytePerCycle; //bytePerCycle as a function of threads and ld:st pattern
+    std::map<int, std::vector<double>> bytePerCycle; //bytePerCycle as a function of threads and ld:st pattern
     double sf;
     double prefetch_cl;
     int bytePerWord;

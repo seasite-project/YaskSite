@@ -28,7 +28,7 @@ parser::parser():kernel(NULL), iter(100), cores(1), smt(1), innerDim(NULL), radi
     long_options[8]  = {"prefetch",no_argument,       0,  'P', "Enable prefetching" };
     long_options[9]  = {"path",    required_argument, 0,  'p', "Path valid values default or serpentine" };
     long_options[10]  = {"out",     required_argument, 0,  'o', "Output directory (if not provided output to stdout)" };
-    long_options[11] = {"opt",     required_argument, 0,  'O', "Optimisations [options: plain,spatial,temporal]; use ':' for combining"};
+    long_options[11] = {"opt",     required_argument, 0,  'O', "Optimisations [options: plain,spatial,temporal,AT]; use ':' for combining"};
     long_options[12] = {"mc_file", required_argument, 0,  'm', "Machine file for ECM prediction"};
     long_options[13] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
     long_options[14] = {0,         0,                 0,   0 ,  0 };
@@ -148,10 +148,13 @@ bool parser::parse_arg(int argc, char **argv)
         help();
         return false;
     }
-    else
+    if(mcFile==NULL)
     {
-        return true;
+        printf("Please provide machine file \n\n");
+        help();
+        return false;
     }
+    return true;
 }
 
 char** str_split(char* a_str, const char a_delim)
@@ -258,7 +261,7 @@ void parser::help()
 {
     printf("Usage: %s [OPTION]...\n",prgname);
     printf("Valid options are:\n\n");
-    char* HLINE = "─────────────────────────────────────────────────────────────────────────────────────────────────";
+    char* HLINE = "------------------------------------------------------------------------------------------------------";
     printf("%s\n",HLINE);
     printf("\t%s\t\t\t%s\n", "options", "description");
     printf("%s\n",HLINE);
@@ -266,7 +269,7 @@ void parser::help()
     {
         char* long_opt;
         asprintf(&long_opt,"--%s", long_options[i].gnu_opt.name);
-        printf("-%c or  %-12s |\t %-70s |\n", ((char) long_options[i].gnu_opt.val), long_opt, long_options[i].desc);
+        printf("-%c or  %-12s |\t %-75s |\n", ((char) long_options[i].gnu_opt.val), long_opt, long_options[i].desc);
         free(long_opt);
     }
 

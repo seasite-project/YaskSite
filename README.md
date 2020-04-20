@@ -1,6 +1,6 @@
 # README #
 
-yaskSite (YASK+SeASiTe) is a library that's help in generating and running well-optimised stencil kernels.
+YaskSite (YASK+SeASiTe) is a library that's help in generating and running well-optimised stencil kernels.
 Currently suppports x86 architectures: Intel and AMD. The performance model support is currently available for
 star-shaped stencils and its derivatives.
 
@@ -21,13 +21,13 @@ star-shaped stencils and its derivatives.
 
 ### How do I set up? ###
 
-* git clone https://github.com/seasite-project/YaskSite.git && cd YaskSite
-* mkdir build && cd build (We prefer out of source build so create a separate build directory)
-* CC=icc CXX=icpc cmake .. -DCMAKE_INSTALL_PREFIX=[where to install]
-* cmake . (to make configuration changes, TEMP_DIR, CACHE_BUILD and LIKWID PATH might be interesting)
-* make
-* make install
-* make calibrate - Calibrate the machine on which code has to be run. As input
+* `git clone https://github.com/seasite-project/YaskSite.git && cd YaskSite`
+* `mkdir build && cd build` (We prefer out of source build so create a separate build directory)
+* `CC=icc CXX=icpc cmake .. -DCMAKE_INSTALL_PREFIX=[where to install]`
+* To make changes in configuration use `ccmake .` . Configurtions like TEMP_DIR, CACHE_BUILD and LIKWID PATH might be interesting
+* `make`
+* `make install`
+* `make calibrate` - Calibrate the machine on which code has to be run. As input
   a machine file as generated with [kerncraft tool](https://github.com/RRZE-HPC/kerncraft) has to be provided. The
   calibration process then carries out some extra benchmarks and adds to the machine file.
 
@@ -39,6 +39,6 @@ star-shaped stencils and its derivatives.
 * [symee](https://github.com/MistFuror/symee)
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 
-### How to try out ###
+### How to try it out? ###
 
 * See [example](https://github.com/seasite-project/YaskSite/tree/master/example) folder.

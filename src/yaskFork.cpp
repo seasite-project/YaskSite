@@ -172,7 +172,7 @@ extern "C" {
                 }
             }
 
-            for (auto& sp : context->stPacks)
+            for (auto& sp : context->stStages)
             {
                 for (auto sb : *sp)
                 {

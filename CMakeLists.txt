@@ -112,8 +112,10 @@ ExternalProject_Add(yaml-cpp
 ExternalProject_Add(yask
     PREFIX ${PROJECT_BINARY_DIR}/yask
     GIT_REPOSITORY https://github.com/intel/yask.git
-    GIT_TAG 61a1b514b9113a3de6156457ee1c37e6982cecd5
-    PATCH_COMMAND ${PROJECT_SOURCE_DIR}/ys_patch/patchScript.sh ${YASK_ABSOLUTE_PATH}
+    GIT_TAG 045b5824e683d2b9738a96b2623dd9fa40072098
+    #    GIT_TAG 61a1b514b9113a3de6156457ee1c37e6982cecd5
+    #PATCH_COMMAND ${PROJECT_SOURCE_DIR}/ys_patch/patchScript.sh ${YASK_ABSOLUTE_PATH} "1 2 3 4"
+    PATCH_COMMAND ${PROJECT_SOURCE_DIR}/ys_patch/patchScript.sh ${YASK_ABSOLUTE_PATH} "1 2"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -482,11 +484,13 @@ add_custom_command(TARGET calibrate
     COMMAND ${LIB_TOOL_DIR}/read_mc_file.sh ${LIB_TOOL_DIR}/mc_file.txt
     COMMAND ${LIB_TOOL_DIR}/isMachineBenchmarkStable.sh
     COMMAND cd ${LIB_TOOL_DIR}/yamlParser && CXX=${CMAKE_CXX_COMPILER_SHORT} LIB_INC=${CMAKE_INSTALL_PREFIX}/include LIBS=${CMAKE_INSTALL_PREFIX}/lib/libyaml-cpp.a make
-    COMMAND mkdir -p ${TEMP_DIR}/bench_results
-    COMMAND ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 1 10 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
-    COMMAND ${LIB_TOOL_DIR}/latency_bench/latency_scan.sh ${TEMP_DIR}/bench_results ${TEMP_DIR}/bench_results/latency
-    COMMAND ${LIB_TOOL_DIR}/prefetcher/prefetch_dist.sh ${LIKWID_INCLUDE_DIR} ${LIKWID_LIBRARIES}
-    COMMAND ${LIB_TOOL_DIR}/data_path_bw/measure.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 1 6 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
+    #COMMAND mkdir -p ${TEMP_DIR}/bench_results
+    #COMMAND ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 1 10 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
+    #COMMAND ${LIB_TOOL_DIR}/latency_bench/latency_scan.sh ${TEMP_DIR}/bench_results ${TEMP_DIR}/bench_results/latency
+    #COMMAND ${LIB_TOOL_DIR}/prefetcher/prefetch_dist.sh ${LIKWID_INCLUDE_DIR} ${LIKWID_LIBRARIES}
+    COMMAND ${LIB_TOOL_DIR}/data_path_bw/measure.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 1 6 1 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
+    COMMAND ${LIB_TOOL_DIR}/data_path_bw/measure.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 10 11 5 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
+
 
     #not used
     #COMMAND mkdir -p ${TEMP_DIR}/bench_results/latency

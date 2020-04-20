@@ -6,7 +6,7 @@ This is an example folder for yaskSite
 
 * `mkdir build && cd build`. Make separate example build directory
 * `CC=icc CXX=icpc cmake .. -DyaskSite_DIR=[where yaskSite is installed; prefix provided while installing YASK]`
-* `make perf`
+* `make`
 
 ### Running yaskSite ###
 * `./perf -h` (to get help and options)

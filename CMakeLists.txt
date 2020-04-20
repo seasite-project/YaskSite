@@ -484,10 +484,10 @@ add_custom_command(TARGET calibrate
     COMMAND ${LIB_TOOL_DIR}/read_mc_file.sh ${LIB_TOOL_DIR}/mc_file.txt
     COMMAND ${LIB_TOOL_DIR}/isMachineBenchmarkStable.sh
     COMMAND cd ${LIB_TOOL_DIR}/yamlParser && CXX=${CMAKE_CXX_COMPILER_SHORT} LIB_INC=${CMAKE_INSTALL_PREFIX}/include LIBS=${CMAKE_INSTALL_PREFIX}/lib/libyaml-cpp.a make
-    #COMMAND mkdir -p ${TEMP_DIR}/bench_results
-    #COMMAND ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 1 10 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
-    #COMMAND ${LIB_TOOL_DIR}/latency_bench/latency_scan.sh ${TEMP_DIR}/bench_results ${TEMP_DIR}/bench_results/latency
-    #COMMAND ${LIB_TOOL_DIR}/prefetcher/prefetch_dist.sh ${LIKWID_INCLUDE_DIR} ${LIKWID_LIBRARIES}
+    COMMAND mkdir -p ${TEMP_DIR}/bench_results
+    COMMAND ${LIB_TOOL_DIR}/bw_bench/bench_scan.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 1 10 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
+    COMMAND ${LIB_TOOL_DIR}/latency_bench/latency_scan.sh ${TEMP_DIR}/bench_results ${TEMP_DIR}/bench_results/latency
+    COMMAND ${LIB_TOOL_DIR}/prefetcher/prefetch_dist.sh ${LIKWID_INCLUDE_DIR} ${LIKWID_LIBRARIES}
     COMMAND ${LIB_TOOL_DIR}/data_path_bw/measure.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 1 6 1 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
     COMMAND ${LIB_TOOL_DIR}/data_path_bw/measure.sh ${PROJECT_BINARY_DIR}/LDST-bench/src/LDST-bench ${CMAKE_CXX_COMPILER_SHORT} ${INSTR} 10 11 5 #${TEMP_DIR}/bench_results/bw_load_ratio.txt
 

@@ -19,7 +19,7 @@ star-shaped stencils and its derivatives.
 * Optional performance monitoring
 
 
-### How do I get set up? ###
+### How do I set up? ###
 
 * git clone https://github.com/seasite-project/YaskSite.git && cd YaskSite
 * mkdir build && cd build (We prefer out of source build so create a separate build directory)

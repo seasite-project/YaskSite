@@ -94,6 +94,12 @@
     #define ERROR_PRINT(...) {if (yaskSite_VERBOSITY) { PRINT(ERROR,ANSI_COLOR_RED,__VA_ARGS__); NEWLINE}}
 #endif
 
+#define PRINT_LOG(...)\
+    if(yaskSite_VERBOSITY > 1)\
+    {\
+        printf(__VA_ARGS__);\
+    }\
+
 
 #if ((yaskSite_VERBOSITY<2) && defined(yaskSite_HAVE_OpenMP))
 

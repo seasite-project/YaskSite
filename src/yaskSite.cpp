@@ -164,7 +164,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
     //move the generated stencil, if this are extra stencils
     for(int i=0; i<(int)extraStencils.size(); ++i)
     {
-        printf("check extra Stencils = %s\n", extraStencils[i].c_str());
+        PRINT_LOG("user defined stencils = %s\n", extraStencils[i].c_str());
         SYSTEM(sysLogFileName, "mv  %s/stencils_gen/%s.* %s/stencils/.", currPath, extraStencils[i].c_str(), localDir);
     }
     STRINGIFY(sysLogFileName, "%s/sysCallLog.log", localDir);
@@ -418,7 +418,7 @@ void yaskSite::initStencil(MPI_Manager* mpi_man_, char* stencilName_, int dim_, 
         {
 #pragma omp parallel
             {
-                printf("I am thread %d on rank %d set to cpu %d\n", omp_get_thread_num(), mpi_man->myRank, sched_getcpu());
+                PRINT_LOG("Thread %d : on rank %d set to cpu %d\n", omp_get_thread_num(), mpi_man->myRank, sched_getcpu());
             }
         }
         mpi_man->global_barrier();
@@ -467,7 +467,7 @@ yaskSite::~yaskSite()
 void yaskSite::cleanDir()
 {
     //remove the localDir
-    SYSTEM(sysLogFileName, "rm -r -f %s", localDir);
+    SYSTEM_WO_PIPE(sysLogFileName, "rm -r -f %s", localDir);
 }
 
 
@@ -524,8 +524,8 @@ void yaskSite::build()
         //only one rank generates the stencil
         if(mpi_man->myRank == 0)
         {
-            printf("BUILD CMD = \n");
-            printf(BUILD_CMD);
+            PRINT_LOG("BUILD CMD = \n");
+            PRINT_LOG(BUILD_CMD);
             printf("\n");
             LOAD_PRINT_START("Building %s : %s arch=%s fold='x=%d,y=%d,z=%d' real_bytes=%d prefetch=%s layout_txyz=Layout_1234 path=%s", stencilCode, stencil_with_radius, arch, fold_x, fold_y, fold_z, (dp)?8:4, (prefetch)?"on":"off", (strcmp(path,"")==0)?"default":path);
             SYSTEM(sysLogFileName, BUILD_CMD);
@@ -534,9 +534,7 @@ void yaskSite::build()
 
             //SYSTEM(sysLogFileName, "cp %s/bin/yask.%s.%s.exe %s/bin/.", yaskDir, stencil, arch, localDir);
 
-            //create YASK library
-            SYSTEM(sysLogFileName, "%s/createYASKLib.sh %s %s %s %s %s %s", TOOL_DIR, yaskDir, stencil, arch, SRC_DIR, INC_DIR, localDir);
-
+            SYSTEM_WO_PIPE(sysLogFileName, "%s/createYASKLib.sh %s %s %s %s %s %s", TOOL_DIR, yaskDir, stencil, arch, SRC_DIR, INC_DIR, localDir);
             LOAD_PRINT_END();
         }
 
@@ -649,8 +647,8 @@ void yaskSite::build()
 
 void yaskSite::cleanBuild()
 {
-    SYSTEM(sysLogFileName, "make -C %s clean", yaskDir);
-    SYSTEM(sysLogFileName, "rm -f %s/cxx-flags.%s.%s.txt %s/ld-flags.%s.%s.txt %s/make-report.%s.%s.txt", yaskDir, stencil, arch, yaskDir, stencil, arch, yaskDir, stencil, arch);
+    SYSTEM_WO_PIPE(sysLogFileName, "make -C %s clean", yaskDir);
+    SYSTEM_WO_PIPE(sysLogFileName, "rm -f %s/cxx-flags.%s.%s.txt %s/ld-flags.%s.%s.txt %s/make-report.%s.%s.txt", yaskDir, stencil, arch, yaskDir, stencil, arch, yaskDir, stencil, arch);
 }
 
 void yaskSite::setSubBlock(int z, int y, int x)
@@ -843,7 +841,7 @@ void yaskSite::setDefaultBlock()
         }
     }
 
-    printf("In default : Current block sizes (bx, by, bz) = (%d, %d, %d)\n", bx, by, bz);
+    PRINT_LOG("In default : Current block sizes (bx, by, bz) = (%d, %d, %d)\n", bx, by, bz);
 }
 
 
@@ -1831,7 +1829,7 @@ void yaskSite::init(bool noAlloc)
         {
             models[i]->setReadWriteGrids(eqGroups[mainEqGroups[i]].num_spatial_reads, eqGroups[mainEqGroups[i]].num_spatial_writes,eqGroups[mainEqGroups[i]].num_spatial_read_write, eqGroups[mainEqGroups[i]].num_stencils);
             models[i]->setWeight( (eqGroups[mainEqGroups[i]].num_points / (double) total_spatial_size) );
-            printf("eqG = %d, weight = %f\n", i, models[i]->getWeight());
+            PRINT_LOG("eqG = %d, weight = %f\n", i, models[i]->getWeight());
             eqGroups[mainEqGroups[i]].model = models[i];
         }
     }

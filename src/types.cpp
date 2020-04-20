@@ -36,7 +36,7 @@ bool EQ_GROUP::finalize()
         int curr_dim = read_grids[i].dim;
         if( ( (curr_dim != 0)&&(curr_dim!=3) ) && (curr_dim!=4) )
         {
-            ERROR_PRINT("Grid Dimension not compatible check, grid = %s, dimension = %d : eq. Group %s", read_grids[i].name.c_str(), curr_dim, name.c_str());
+            WARNING_PRINT("Grid Dimension not compatible check, grid = %s, dimension = %d : eq. Group %s", read_grids[i].name.c_str(), curr_dim, name.c_str());
             /*ret = false;
             break;*/
         }
@@ -53,7 +53,7 @@ bool EQ_GROUP::finalize()
         int curr_dim = write_grids[i].dim;
         if( ( (curr_dim != 0)&&(curr_dim!=3) ) && (curr_dim!=4) )
         {
-            ERROR_PRINT("Grid Dimension not compatible check : eq. Group %s", name.c_str());
+            WARNING_PRINT("Grid Dimension not compatible check : eq. Group %s", name.c_str());
             /*ret = false;
             break;*/
         }
@@ -70,7 +70,7 @@ bool EQ_GROUP::finalize()
             {
                 if(write_grids[i].time_steps == 1)
                 {
-                    printf("read write for %s\n", read_name.c_str());
+                    PRINT_LOG("read write for %s\n", read_name.c_str());
                     ++num_spatial_read_write;
                 }
                 //Else I cannot tell, so assuming WA is there
@@ -78,7 +78,7 @@ bool EQ_GROUP::finalize()
         }
     }
 
-    printf("num read write = %d\n", num_spatial_read_write);
+    PRINT_LOG("num read write = %d\n", num_spatial_read_write);
 
     //printf("spatial: read = %d, write = %d\n", num_spatial_reads, num_spatial_writes);
     return ret;
@@ -164,7 +164,6 @@ cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheI
     sf = 0.9;
     duplexity = 1;
 
-    printf("MEM = %d\n", isMEM);
     if(!isMEM)
     {
         POPEN(sysLogFileName, tmp, "%s/cacheInfo/getCacheInfo.sh %s %d ways", TOOL_DIR, mc_file, cacheId);
@@ -176,7 +175,7 @@ cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheI
         int cacheSets = readIntVar(tmp);
         PCLOSE(tmp);
         set_size=cacheSets;
-        printf("set size = %d\n", set_size);
+        //printf("set size = %d\n", set_size);
         POPEN(sysLogFileName, tmp, "%s/cacheInfo/getCacheInfo.sh %s %d cl_size", TOOL_DIR, mc_file, cacheId);
         int cache_cl_size = readIntVar(tmp);
         PCLOSE(tmp);
@@ -213,11 +212,9 @@ cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheI
     {
         shared = false;
     }
-    printf("###### cache cores = %d\n", cores);
     penalty = 0;
     POPEN(sysLogFileName, tmp, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;penalty cycles per mem cy\"", TOOL_DIR, mc_file, hierarchy);
     penalty = readDoubleVar(tmp);
-    printf("%s penalty = %f\n", name.c_str(), penalty);
     PCLOSE(tmp);
 
     victim = false;
@@ -230,7 +227,10 @@ cache_info::cache_info(int cacheId, char *mc_file, int isMEM_): hierarchy(cacheI
 
     POPEN(sysLogFileName, tmp, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;prefetch distance\"", TOOL_DIR, mc_file, name.c_str());
     prefetch_cl = readDoubleVar(tmp);
-    printf("Prefetch dist = %f\n", prefetch_cl);
+
+    PRINT_LOG("###### cache cores = %d\n", cores);
+    PRINT_LOG("%s penalty = %f\n", name.c_str(), penalty);
+    PRINT_LOG("Prefetch dist = %f\n", prefetch_cl);
     PCLOSE(tmp);
 }
 
@@ -278,8 +278,6 @@ double cache_info::getBytePerCycle(int rwRatio, int nthreads)
             target_val = large_range;
         }
 
-        printf("Chose for %s rwRatio of %d\n", name.c_str(), target_val);
-
         int numThreads = bytePerCycle[target_val].size();
 
        /* if(rwRatio > numRW)
@@ -309,6 +307,7 @@ double cache_info::getBytePerCycle(int rwRatio, int nthreads)
             int commonRW = 1;
             BPC = (2*(commonRW)*2*halfBPC + (actualRW_ratio-commonRW)*halfBPC)/(commonRW + actualRW_ratio);
         }
+        PRINT_LOG("Chose for %s rwRatio of %d\n", name.c_str(), target_val);
         return BPC;
     }
 }
@@ -367,10 +366,10 @@ void cache_info::readBytePerCycle(char* mc_file)
         double cpu_freq = readDoubleVar(file);
         PCLOSE(file);
 
-        printf("MEM values\n");
+        PRINT_LOG("MEM values\n");
         for(unsigned i=0; i<bw_table.size(); ++i)
         {
-            printf("%f\n",bw_table[i]/(cpu_freq));
+            PRINT_LOG("%f\n",bw_table[i]/(cpu_freq));
             bytePerCycle[i+1] = {bw_table[i]/(cpu_freq)};
         }
 
@@ -396,7 +395,7 @@ void cache_info::readBytePerCycle(char* mc_file)
 
             POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;upstream throughput;1\"", TOOL_DIR, mc_file, hierarchy);
             std::string duplexity_str(readStrVar(file));
-            printf("check duplexity = %s\n", duplexity_str.c_str());
+            PRINT_LOG("Duplexity = %s\n", duplexity_str.c_str());
             if(duplexity_str.find("half-duplex") == std::string::npos)
             {
                 duplexity = 2;
@@ -408,7 +407,7 @@ void cache_info::readBytePerCycle(char* mc_file)
         {
             POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"memory hierarchy;%d;upstream throughput;1\"", TOOL_DIR, mc_file, hierarchy);
             std::string duplexity_str(readStrVar(file));
-            printf("check duplexity = %s\n", duplexity_str.c_str());
+            PRINT_LOG("Duplexity = %s\n", duplexity_str.c_str());
             if(duplexity_str.find("half-duplex") == std::string::npos)
             {
                 duplexity = 2;
@@ -419,11 +418,11 @@ void cache_info::readBytePerCycle(char* mc_file)
             std::vector<int> RW_ratio = split_int(RW_ratio_str, ',');
 
             PCLOSE(file);
-            printf("%s byte/cycle values\n", name.c_str());
+            PRINT_LOG("%s byte/cycle values\n", name.c_str());
             for(int i=0; i<(int)RW_ratio.size(); ++i)
             {
                 int curr_rw_ratio = RW_ratio[i];
-                printf("curr_rw_ratio = %d\n", curr_rw_ratio);
+                PRINT_LOG("curr_rw_ratio = %d\n", curr_rw_ratio);
                 success = true;
                 POPEN(sysLogFileName, file, "%s/yamlParser/yamlParser %s \"benchmarks;measurements;%s;1;results;data path bw;%d\" | sed -e \"s@B/cy@@g\" | sed -e \"s@\\[@@g\" | sed -e \"s@\\]@@g\"", TOOL_DIR, mc_file, name.c_str(), curr_rw_ratio);
                 char* bw_str = readStrVar(file);
@@ -431,9 +430,9 @@ void cache_info::readBytePerCycle(char* mc_file)
                 bytePerCycle[curr_rw_ratio] = currData;
                 for(int j=0; j<currData.size(); ++j)
                 {
-                    printf("%f \t", currData[j]);
+                    PRINT_LOG("%f \t", currData[j]);
                 }
-                printf("\n");
+                PRINT_LOG("\n");
                 PCLOSE(file);
                 free(bw_str);
             }
@@ -467,7 +466,7 @@ void cache_info::readLatency(char* mc_file)
 
         if(!success)
         {
-            printf("Latency measurements not done, please go to build directory of YASKSITE and execute 'make calibrate'\n");
+            WARNING_PRINT("Latency measurements not done, please go to build directory of YASKSITE and execute 'make calibrate'\n");
 
         }
     }
@@ -515,7 +514,7 @@ void initializeCaches(char *mcFile_user)
     for(int cacheId=0; cacheId<numCaches; ++cacheId)
     {
         CACHES.push_back(cache_info(cacheId, mc_file));
-        printf("Initialized %s cache\n", CACHES[cacheId].name.c_str());
+        PRINT_LOG("Initialized %s cache\n", CACHES[cacheId].name.c_str());
     }
 
     CACHES.push_back(cache_info(numCaches, mc_file, true));
@@ -569,8 +568,8 @@ void initializeCaches(char *mcFile_user)
     }
 #endif
 
-    printf("prefetch dist L1 = %f\n", CACHES[0].prefetch_cl);
-    printf("prefetch dist MEM = %f\n", CACHES[3].prefetch_cl);
+    //printf("prefetch dist L1 = %f\n", CACHES[0].prefetch_cl);
+    //printf("prefetch dist MEM = %f\n", CACHES[3].prefetch_cl);
 
 }
 

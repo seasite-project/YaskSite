@@ -41,13 +41,9 @@ if(dim==2)\
 }\
 
 
-//#if yaskSite_VERBOSITY<2
+#if yaskSite_VERBOSITY<2
 
-/*This will make problems for command that need to pipe
- *
- */
-
-/*#define SYSTEM(sysLogFile, ...)\
+#define SYSTEM_WO_PIPE(sysLogFile, ...)\
 {\
     char *__cmd__, *__pipedCmd__;\
     asprintf(&__cmd__, __VA_ARGS__);\
@@ -59,7 +55,13 @@ if(dim==2)\
 }\
 
 #else
-*/
+
+#define SYSTEM_WO_PIPE(sysLogFile, ...)\
+{\
+    SYSTEM(sysLogFile, __VA_ARGS__);\
+}\
+
+#endif
 
 #define SYSTEM(sysLogFile, ...)\
 {\
@@ -162,7 +164,7 @@ if(dim==2)\
         }\
     }\
     double restContrib_ = numReadGrids + numWriteGrids - numStencils;\
-    printf("outer layer = %f, inner layer = %f, numReads = %d, numWrites = %d, numStencils = %d\n", outer_layer, inner_layer, numReadGrids, numWriteGrids, numStencils);\
+    PRINT_LOG("outer layer = %f, inner layer = %f, numReads = %d, numWrites = %d, numStencils = %d\n", outer_layer, inner_layer, numReadGrids, numWriteGrids, numStencils);\
     double layers_ = fold_*(numStencils*(inner_layer + 1.0 + outer_layer) + restContrib_);\
     val = layers_;\
 }
@@ -242,5 +244,6 @@ if(dim==2)\
     }\
 }
 */
+
 
 #endif

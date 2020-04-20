@@ -65,7 +65,6 @@ perfModel::perfModel(STENCIL* stencil_, double cpu_freq_, char* iacaOut):stencil
         //getBytePerCycles();
     }
 
-    printf("Am i here\n");
 }
 
 perfModel::~perfModel()
@@ -288,7 +287,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
     {
         rest_contrib = (numReadGrids-numStencils)+(numPureWriteGrids);
     }
-    printf("Read Grids = %d, writeGrids = %d, readWriteGrids = %d\n", numReadGrids, numPureWriteGrids, numReadWriteGrids);
+    PRINT_LOG("Read Grids = %d, writeGrids = %d, readWriteGrids = %d\n", numReadGrids, numPureWriteGrids, numReadWriteGrids);
     int totalGrids = numReadGrids+numPureWriteGrids;
 
     double prefetch_oh_per_LUP = getPrefetchEffects(currCache, opt);
@@ -432,8 +431,6 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
         double boundary_oh = spatialOh[2]*numStencils;
         double extra_data = boundary_oh+prefetch_oh;
         double actual_data = (numStencils*(stencil_contrib_outer + stencil_centre) + rest_contrib);
-        printf("Actual data ILC .....= %f\n", actual_data);
-        printf("Rest ILC .......= %f\n", rest_contrib);
         double shrink_space = 1.0 - (extra_data)/(extra_data+actual_data);
         bool ilc_jump = false, olc_jump = false;
         std::vector<double> assocOh = simulateCache_assoc(ilc_jump, olc_jump, currCache, shrink_space);
@@ -446,7 +443,7 @@ std::vector<double> perfModel::getDataContrib(char* cache_str, blockDetails* opt
 
         if(jump)
         {
-            printf("ILC jumped .....\n");
+            PRINT_LOG("ILC jumped .....\n");
             int stencil_contrib_inner = 2*( static_cast<int>((stencil->radius-1)/((double)stencil->fold_y)) +1 );
             streams = numStencils*(stencil_contrib_outer + stencil_contrib_inner + stencil_centre) + totalGrids - numStencils;
             prefetch_oh = streams*prefetch_oh_per_LUP;
@@ -550,7 +547,7 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
     }
 
     int CL_SIZE = static_cast<int>(cache.cl_size/(double)cache.bytePerWord);
-    printf("CL_SIZE = %d\n", CL_SIZE);
+    PRINT_LOG("CL_SIZE = %d\n", CL_SIZE);
 
     //get the volume of region
     double vol = bx*by*bz;
@@ -620,7 +617,7 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
         double data_xy = face*radius_z*(bx)*(by);
         //CL effect
         data_xy  += face*cl_avg_z*(bx)*(by);
-        printf("cl_avg_z = %f\n", cl_avg_z);
+        PRINT_LOG("cl_avg_z = %f\n", cl_avg_z);
         //Should be if ILC satisfied
         /*if(cache.shared && (radius_y+rest_contrib)*bz*totThreads < cache.getWords()) //shouldn't it be (radius_y+rest_contrib)*bz*thread_z
           {
@@ -659,7 +656,7 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
             //For caches less than ILC
             wordPerLUP.push_back(((2*radius_x)+(2*radius_y)+1)*(data_xy)/vol);
         }
-        printf("data_xy = %f, data_zx = %f, data_zy = %f\n", data_xy, data_zx, data_zy);
+        PRINT_LOG("Boundary : data_xy = %f, data_zx = %f, data_zy = %f\n", data_xy, data_zx, data_zy);
     }
     else
     {
@@ -884,7 +881,7 @@ double perfModel::getLatencyEffects(cache_info currCache, int rwRatio, bool temp
     }
 
     latency_oh = latency_oh/vol;
-    printf("num_block_z = %d, fold_factor = %f, latency = %f, latency_oh = %f\n", num_block_z, fold_factor, currCache.getLatency(rwRatio, nthreads), latency_oh);
+    PRINT_LOG("num_block_z = %d, fold_factor = %f, latency = %f, latency_oh = %f\n", num_block_z, fold_factor, currCache.getLatency(rwRatio, nthreads), latency_oh);
     //return overhead for each LUP
     return (latency_oh);
 #else
@@ -928,15 +925,15 @@ bool perfModel::LC_violated(cache_info currCache, LC  type)
 
     if(type == OUTER)
     {
-        printf("outer layers = %f\n", layers);
-        printf("cache size = %f\n", curr_cache_size);
+        PRINT_LOG("outer layers = %f\n", layers);
+        PRINT_LOG("cache size = %f\n", curr_cache_size);
     }
 
     //if((layers*blockSize+currCahce.prefetch_cl*8*layers) <= curr_cache_size)
     if(type == INNER)
     {
-        printf("inner layers = %f\n", layers);
-        printf("cache size = %f\n", curr_cache_size);
+        PRINT_LOG("inner layers = %f\n", layers);
+        PRINT_LOG("cache size = %f\n", curr_cache_size);
     }
     if((layers*blockSize) <= curr_cache_size)
     {
@@ -994,7 +991,7 @@ blockDetails perfModel::determineBlockDetails()
         if( totalGrids*(rx*ry*rz) <= curr_cache_size )
         {
             opt.temporal = &CACHES[i];
-            printf("temporal = %s\n",CACHES[i].name.c_str());
+            PRINT_LOG("temporal = %s\n",CACHES[i].name.c_str());
             break;
         }
     }
@@ -1005,7 +1002,7 @@ blockDetails perfModel::determineBlockDetails()
         if(!LC_violated(CACHES[i], OUTER))
         {
             opt.spatialOBC = &CACHES[i];
-            printf("OBC = %s\n",CACHES[i].name.c_str());
+            PRINT_LOG("OBC = %s\n",CACHES[i].name.c_str());
             break;
         }
     }
@@ -1016,7 +1013,7 @@ blockDetails perfModel::determineBlockDetails()
         if(!LC_violated(CACHES[i], INNER))
         {
             opt.spatialIBC = &CACHES[i];
-            printf("IBC = %s\n",CACHES[i].name.c_str());
+            PRINT_LOG("IBC = %s\n",CACHES[i].name.c_str());
             break;
         }
     }
@@ -1151,19 +1148,19 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
         hit_ctr_olc[curr_cl] += 1;
     }
 
-    printf("%s OLC = \n", cache.name.c_str());
+    PRINT_LOG("%s OLC = \n", cache.name.c_str());
     for(int i=0; i<(int)hit_ctr_olc.size(); ++i)
     {
-        printf("%d ", hit_ctr_olc[i]);
+        PRINT_LOG("%d ", hit_ctr_olc[i]);
     }
-    printf("\n");
+    PRINT_LOG("\n");
 
-    printf("%s ILC = \n", cache.name.c_str());
+    PRINT_LOG("%s ILC = \n", cache.name.c_str());
     for(int i=0; i<(int)hit_ctr_ilc.size(); ++i)
     {
-        printf("%d ", hit_ctr_ilc[i]);
+        PRINT_LOG("%d ", hit_ctr_ilc[i]);
     }
-    printf("\n");
+    PRINT_LOG("\n");
 
 
 
@@ -1206,13 +1203,13 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
         }
     }
 
-    printf("Cache = %s, ways = %d, sets = %d\n", cache.name.c_str(), cache.ways, (int)hit_ctr_olc.size());
+    PRINT_LOG("Cache = %s, ways = %d, sets = %d\n", cache.name.c_str(), cache.ways, (int)hit_ctr_olc.size());
     //count extra cl for olc
     double extra_cl_olc =  0;
     int ctr_olc = 0;
     for(int i=0; i<(int)hit_ctr_olc.size(); ++i)
     {
-        printf("%d ", hit_ctr_olc[i]);
+        PRINT_LOG("%d ", hit_ctr_olc[i]);
         if(hit_ctr_olc[i] > assoc)
         {
             extra_cl_olc += (hit_ctr_olc[i]-assoc);
@@ -1220,7 +1217,7 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
         }
     }
 
-    printf("\n");
+    PRINT_LOGf("\n");
 
 
     /*    for(int i=1; i<=olc_layer_cl; ++i)
@@ -1238,7 +1235,7 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
           }
           */
 
-    printf("extra cl olc = %f\n", extra_cl_olc);
+    PRINT_LOG("extra cl olc = %f\n", extra_cl_olc);
     double outer_fold = (stencil->dim==3)?stencil->fold_x:stencil->fold_y;
     int stencil_contrib_outer = 2*( static_cast<int>((stencil->radius-1)/(outer_fold)) + 1 );
     //if more than LC break; record as LC break
@@ -1247,7 +1244,7 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
         olc_jump = true;
         extra_cl_olc = (stencil_contrib_outer*olc_layer_cl);
     }
-    printf("extra cl olc = %f\n", extra_cl_olc);
+    PRINT_LOG("extra cl olc = %f\n", extra_cl_olc);
 
     //LC broken: naive analytical should have switched at this point
     /* if(ctr_olc == set_size)
@@ -1285,7 +1282,7 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
       extra_cl_ilc = 0;
       }*/
 
-    printf("%f, %f, %f\n", extra_cl_olc, extra_cl_ilc, extra_cl_nlc);
+    PRINT_LOG("%f, %f, %f\n", extra_cl_olc, extra_cl_ilc, extra_cl_nlc);
     //extra words per LUP
     return {extra_cl_olc/static_cast<double>(olc_layer_cl), extra_cl_ilc/static_cast<double>(ilc_layer_cl), extra_cl_nlc/1.0};
 #else
@@ -1371,7 +1368,7 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
         double extreme_x = dz*dy*(radius_x)*static_cast<int>(fold_x) + centre_next;
         double min_x = -1.0*dz*dy*radius_x*static_cast<int>(fold_x) + centre;
 
-        printf("radius_x = %f\n", radius_x);
+        PRINT_LOG("radius_x = %f\n", radius_x);
 
         if(dim >2)
         {
@@ -1641,7 +1638,7 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
                 ilc_jump = true;
             }
         }
-        printf("extra cl ilc = %f\n", extra_cl_ilc);
+        PRINT_LOG("extra cl ilc = %f\n", extra_cl_ilc);
 
 
         for(int i=1; i<=olc_layer_cl; ++i)
@@ -1747,10 +1744,10 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
                 }
             }
         }
-        printf("extra cl olc = %f\n", extra_cl_olc);
+        PRINT_LOG("extra cl olc = %f\n", extra_cl_olc);
 
 
-        printf("Cache = %s, ways = %d, sets = %d\n", cache.name.c_str(), cache.ways, (int)way_ctr_olc.size());
+        PRINT_LOG("Cache = %s, ways = %d, sets = %d\n", cache.name.c_str(), cache.ways, (int)way_ctr_olc.size());
         //count extra cl for olc
         /*    double extra_cl_olc =  0;
               int ctr_olc = 0;
@@ -1795,7 +1792,7 @@ std::vector<double> perfModel::simulateCache_assoc(bool &ilc_jump, bool &olc_jum
           extra_cl_ilc = 0;
           }*/
 
-        printf("%f, %f, %f\n", extra_cl_olc, extra_cl_ilc, extra_cl_nlc);
+        PRINT_LOG("%f, %f, %f\n", extra_cl_olc, extra_cl_ilc, extra_cl_nlc);
         //extra words per LUP
         return {extra_cl_olc/static_cast<double>(olc_layer_cl), extra_cl_ilc/static_cast<double>(ilc_layer_cl), extra_cl_nlc/1.0};
     }
@@ -1908,10 +1905,10 @@ double perfModel::calcTemporalExtraWork()
     {
         int first_part = std::min((int)(dt-1), (int)(bx/(double)angle_x));
         extraWork_x = angle_x*thread_x*first_part*(first_part+1)/2.0;
-        printf("check .... EW %f\n", extraWork_x);
+        //printf("check .... EW %f\n", extraWork_x);
         int second_part = (int)(dt-1) - first_part;
         extraWork_x += (second_part*thread_x*bx);
-        printf("check .... EW %f\n", extraWork_x);
+        //printf("check .... EW %f\n", extraWork_x);
     }
 
     if(angle_y != 0)
@@ -2056,7 +2053,7 @@ void perfModel::model(int scale, bool validate_)
             calc_ECM(scale);
             double burst_sat = getSaturation()[0];
             double burst_cy = applyNOL();
-            printf(".......... burst sat = %f............\n", burst_sat);
+            PRINT_LOG(".......... burst sat = %f............\n", burst_sat);
             //now model in-cache phase
             stencil->data->dt = 10000000; //a big number so it doesn't have any memory effect
             calc_ECM(scale);
@@ -2268,7 +2265,7 @@ std::vector<double> perfModel::getSaturation()
     //calculate effective threads
     double nBlocks = ((DOUBLE(stencil->data->rx) *DOUBLE(stencil->data->ry)*DOUBLE(stencil->data->rz)) / (DOUBLE(stencil->data->bx)*DOUBLE(stencil->data->by)*DOUBLE(stencil->data->bz)));
     double effThreads = nthreads;
-    printf("nBlocks = %f\n", nBlocks);
+    PRINT_LOG("nBlocks = %f\n", nBlocks);
 
 #ifdef MODEL_REMAINDER_EFFECT
     if( nthreads > 1)
@@ -2306,9 +2303,9 @@ std::vector<double> perfModel::getSaturation()
 #endif
     double tcomp = ECM[0];
     double util = utilization(nthreads, tcomp, totalNOL, mem_l3);
-    printf("....util = %f, tnol/mem = %f\n", util, totalNOL/mem_l3);
+    PRINT_LOG("....util = %f, tnol/mem = %f\n", util, totalNOL/mem_l3);
 
-    printf("effThreads= %f\n", effThreads);
+    PRINT_LOG("effThreads= %f\n", effThreads);
     if(effThreads > nthreads)
     {
         ERROR_PRINT("This shouldn't have happened\n");
@@ -2408,7 +2405,7 @@ double perfModel::applyNOL()
         ECM_total[i+1] += ECM_assoc_cy[i];
     }
     nOL = evalECM_str(ECM_total);
-    printf("nOL = %f\n", nOL);
+    PRINT_LOG("nOL = %f\n", nOL);
     nOL+=ECM_penalty;
 
 
@@ -2544,7 +2541,7 @@ void setCounter(std::string groupName, std::string metricName, int *curr_gid, in
         std::string currMetric(perfmon_getMetricName(*curr_gid,i));
         if(currMetric.find(toFind) != std::string::npos)
         {
-            printf("Found %s\n", currMetric.c_str());
+            PRINT_LOG("Found %s\n", currMetric.c_str());
             dataVol_metric_id = i;
             break;
         }

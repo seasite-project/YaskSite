@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#Do a `source ./install_script.sh`
+
 #Feel free to edit
 install_dir="~/installkit"
 tmp_dir="~/tmp_YaskSite"
@@ -19,6 +21,6 @@ make
 
 #Set PATH to example folder for Offsite.
 #Optional only needed if you need to use it with external tool like Offsite
-PATH="${PATH}:${orig_path}/example"
+export PATH="${PATH}:${PWD}"
 
-cd $orig_path
+cd ${orig_path}

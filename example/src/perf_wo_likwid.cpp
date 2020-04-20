@@ -4,27 +4,7 @@
 #include <algorithm>
 #include "timing.h"
 #include "parse.h"
-#include "likwid.h"
-
-#define DISABLE_PREFETCHER(nthreads) \
-    printf("Disabling prefetcher\n");\
-    for(int i=0; i<nthreads; ++i)\
-    {\
-        cpuFeatures_disable(i, FEAT_HW_PREFETCHER, 0); \
-        cpuFeatures_disable(i, FEAT_CL_PREFETCHER, 0); \
-        cpuFeatures_disable(i, FEAT_DCU_PREFETCHER, 0); \
-        cpuFeatures_disable(i, FEAT_IP_PREFETCHER, 0);\
-    }\
-
-#define ENABLE_PREFETCHER(nthreads) \
-    printf("Enabling prefetcher\n");\
-    for(int i=0; i<nthreads; ++i)\
-    {\
-        cpuFeatures_enable(i, FEAT_HW_PREFETCHER, 0); \
-        cpuFeatures_enable(i, FEAT_CL_PREFETCHER, 0); \
-        cpuFeatures_enable(i, FEAT_DCU_PREFETCHER, 0); \
-        cpuFeatures_enable(i, FEAT_IP_PREFETCHER, 0);\
-    }\
+//#include "likwid.h"
 
 
 #define PRINT_BANNER(file)\
@@ -58,7 +38,7 @@
         cur_time = GET_TIME(stencil_);\
     }\
     std::vector<double> ECM = stencil->getECM(true);\
-    std::vector<double> ECM_validate = ECM;\
+    std::vector<double> ECM_validate(ECM.size(), -1);\
     double ECM_mlups = stencil->getPerfECM();\
     double dt=stencil->dt;\
     double dx=stencil->dx;\
@@ -75,7 +55,7 @@
 //This measures the performance of different versions of heat3d
 void main(int argc, char** argv)
 {
-    cpuFeatures_init();
+    //cpuFeatures_init();
 
     //generate code and specify in kernel i/p if needed
 /*    CODIFY( "heat2d_update", "heat2d",
@@ -208,7 +188,6 @@ void main(int argc, char** argv)
         stencil_1->setThread(threads,1);
         //stencil_1->init();//init goes here, warm-up
 
-        //DISABLE_PREFETCHER(threads);
 
         INIT_TIME(AT);
         //plain run
@@ -260,7 +239,6 @@ void main(int argc, char** argv)
             double AT_time = GET_TIME(AT);
             PERF_RUN(stencil_1, files[3], AT_time, false);
         }
-        //ENABLE_PREFETCHER(threads);
 
         //free stencil_1
         delete stencil_1;

@@ -21,6 +21,8 @@ star-shaped stencils and its derivatives.
 
 ### How do I set up? ###
 
+See [install_script.sh](https://github.com/seasite-project/YaskSite/blob/master/install_script.sh) for a sample script to install YaskSite and example
+In general following steps should be followed to setup YaskSite:
 * `git clone https://github.com/seasite-project/YaskSite.git && cd YaskSite`
 * `mkdir build && cd build` (We prefer out of source build so create a separate build directory)
 * `CC=icc CXX=icpc cmake .. -DCMAKE_INSTALL_PREFIX=path/to/install`

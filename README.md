@@ -1,7 +1,8 @@
 # README #
 
-yaskSite (YASK+SeASiTe) is a library that's help in generating and running well-optimised stencil kernels. 
-
+yaskSite (YASK+SeASiTe) is a library that's help in generating and running well-optimised stencil kernels.
+Currently suppports x86 architectures: Intel and AMD. The performance model support is currently available for
+star-shaped stencils and its derivatives.
 
 
 ### Features ###
@@ -9,13 +10,13 @@ yaskSite (YASK+SeASiTe) is a library that's help in generating and running well-
 * Uses YASK as back-end
 * Dynamic compilation and loading of stencils's
 * Code generation for stencil algebra and convolutions
-* Analytical tuners for spatial and temporal blocking
+* Analytical tuners for spatial and temporal blocking. Temporal blocking is experimental.
 * Easy stencil Input & Output accessors
 * Easy transfer between different stencil data format
 * Easy plug and go interface for integrating into other applications
 * Optional caching of builds for later usage
 * Tuning via performance models
-* Optional performance monitoring 
+* Optional performance monitoring
 
 
 ### How do I get set up? ###
@@ -28,16 +29,10 @@ yaskSite (YASK+SeASiTe) is a library that's help in generating and running well-
 * make install
 * make calibrate - Calibrate the machine on which code has to be run.
 
-### Dependencies ###
+###External dependencies ###
 
-* YASK
-* Intel IACA
-* Intel MLC
-* LIKWID
-
-### Contribution guidelines ###
-
-
-### Who do I talk to? ###
-
-Christie Louis Alappat <christie.alappat@fau.de>
+* Intel [YASK] (https://github.com/intel/yask)
+* Intel [IACA] (https://software.intel.com/en-us/articles/intel-architecture-code-analyzer)
+* [LIKWID] (https://github.com/RRZE-HPC/likwid) - should be manually installed
+* [symee] (https://github.com/MistFuror/symee)
+* [yaml-cpp] (https://github.com/jbeder/yaml-cpp)

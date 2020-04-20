@@ -29,10 +29,14 @@ star-shaped stencils and its derivatives.
 * make install
 * make calibrate - Calibrate the machine on which code has to be run.
 
-###External dependencies ###
+### External dependencies ###
 
 * Intel [YASK] (https://github.com/intel/yask)
 * Intel [IACA] (https://software.intel.com/en-us/articles/intel-architecture-code-analyzer)
 * [LIKWID] (https://github.com/RRZE-HPC/likwid) - should be manually installed
 * [symee] (https://github.com/MistFuror/symee)
 * [yaml-cpp] (https://github.com/jbeder/yaml-cpp)
+
+### How to try out ###
+
+* See [example] (https://github.com/seasite-project/YaskSite/tree/master/example) folder.

@@ -262,7 +262,7 @@ void parser::help()
     printf("%s\n",HLINE);
     printf("\t%s\t\t\t%s\n", "options", "description");
     printf("%s\n",HLINE);
-    for(int i=0; i<numOptions; ++i)
+    for(int i=0; i<(numOptions-1); ++i)
     {
         char* long_opt;
         asprintf(&long_opt,"--%s", long_options[i].gnu_opt.name);

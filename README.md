@@ -23,7 +23,7 @@ star-shaped stencils and its derivatives.
 
 * `git clone https://github.com/seasite-project/YaskSite.git && cd YaskSite`
 * `mkdir build && cd build` (We prefer out of source build so create a separate build directory)
-* `CC=icc CXX=icpc cmake .. -DCMAKE_INSTALL_PREFIX=[where to install]`
+* `CC=icc CXX=icpc cmake .. -DCMAKE_INSTALL_PREFIX=path/to/install`
 * To make changes in configuration use `ccmake .` . Configurtions like TEMP_DIR, CACHE_BUILD and LIKWID PATH might be interesting
 * `make`
 * `make install`

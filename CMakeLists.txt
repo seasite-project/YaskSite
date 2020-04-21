@@ -185,21 +185,20 @@ elseif(TARGET_ARCHITECTURE STREQUAL "skylake-avx512")
     set(INSTR "AVX512")
 elseif(TARGET_ARCHITECTURE STREQUAL "skylake")
     set(TARGET_ARCH "hsw")  # SKYLAKE-256 or HASWELL
-elseif(TARGET_ARCHITECTURE STREQUAL "haswell" OR TARGET_ARCHITECTURE STREQUAL "broadwell")
+elseif(TARGET_ARCHITECTURE STREQUAL "haswell" OR TARGET_ARCHITECTURE STREQUAL "broadwell" OR TARGET_ARCHITECTURE STREQUAL "AMD 17h")
     set(TARGET_ARCH "hsw")  # BROADWELL
 elseif(TARGET_ARCHITECTURE STREQUAL "ivy-bridge")
     set(TARGET_ARCH "ivb")  # IVY-BRIDGE
 elseif(TARGET_ARCHITECTURE STREQUAL "sandy-bridge")
     set(TARGET_ARCH "snb")
-else()
-    message(WARNING "TARGET ARCHITECTURE could not be detected, setting to intel64")
-    #set(TARGET_ARCH "intel64")
-    set(TARGET_ARCH "hsw")
+elseif(TARGET_)
+    message(WARNING "TARGET ARCHITECTURE could not be detected, setting to snb")
+    set(TARGET_ARCH "snb") #I hope machine supports AVX
 endif()
 
 set(TARGET_ARCH "${TARGET_ARCH}" CACHE STRING "Target architecture detected by default; if needed to build for another CPU, please change this")
 
-message(STATUS "Target Architecture detected is ${TARGET_ARCH}")
+message(STATUS "Target Architecture instruction is ${TARGET_ARCH}")
 
 set(ENABLE_LOOPADAPT 0 CACHE BOOL "Enable loop adapt")
 

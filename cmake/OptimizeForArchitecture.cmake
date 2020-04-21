@@ -155,7 +155,9 @@ macro(AutodetectHostArchitecture)
          endif(_cpu_model GREATER 2)
       endif(_cpu_family EQUAL 6)
    elseif(_vendor_id STREQUAL "AuthenticAMD")
-      if(_cpu_family EQUAL 22) # 16h
+      if(_cpu_family EQUAL 23) # 17h
+         set(TARGET_ARCHITECTURE "AMD 17h")
+      elseif(_cpu_family EQUAL 22) # 16h
          set(TARGET_ARCHITECTURE "AMD 16h")
       elseif(_cpu_family EQUAL 21) # 15h
          if(_cpu_model LESS 2)

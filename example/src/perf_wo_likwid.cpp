@@ -169,7 +169,7 @@ void main(int argc, char** argv)
         {
             dim_x = static_cast<int>((grid_size)/((double)(4.0*8.0*dim*dim)));
             dim_x = static_cast<int>(dim_x/8.0) * 8; //make multiple of 8
-            dim_x = dim;
+            //dim_x = dim;
             dim_y = dim;//16;
             dim_z = dim;
         }

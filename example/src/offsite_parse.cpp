@@ -13,7 +13,7 @@ my_option::my_option()
 {
 }
 
-os_parser::os_parser():iter(100), cores(NULL), smt(1), size(NULL), fold("auto"), radius(-1), baseStencil(NULL), prefetch(false), path("default"), opt("plain:spatial:temporal"), prgname("a.out"), mode("VALIDATE"), dp(true), mcFile(NULL), numOptions(15)
+os_parser::os_parser():iter(100), cores(NULL), smt(1), size(NULL), fold("auto"), radius(-1), baseStencil(NULL), prefetch(false), path("default"), opt("plain:spatial:temporal"), prgname("a.out"), mode("VALIDATE"), dp(true), mcFile(NULL), ILC_cache("L2:0.5"), OLC_cache("L3:0.5"), Temporal_cache("L3:0.5"), numOptions(18)
 {
     long_options = new my_option[numOptions+1];
 
@@ -25,13 +25,16 @@ os_parser::os_parser():iter(100), cores(NULL), smt(1), size(NULL), fold("auto"),
     long_options[5]  = {"radius",    required_argument, 0,  'r', "Stencil radius " };
     long_options[6]  = {"base",    required_argument, 0,  'b', "Base stencil file. Note if the stencil already exists by default, this stencil will overwrite" };
     long_options[7]  = {"prefetch",no_argument,       0,  'P', "Enable prefetching" };
-    long_options[8]  = {"single prec.",no_argument, 0,  'S', "Enable for calculating in single precision" };
+    long_options[8]  = {"single_prec",no_argument, 0,  'S', "Enable for calculating in single precision" };
     long_options[9]  = {"path",    required_argument, 0,  'p', "Path valid values default or serpentine" };
     long_options[10] = {"opt",     required_argument, 0,  'o', "Optimisations [options: plain,spatial,temporal]; use ':' for combining"};
-    long_options[11] = {"mc_file", required_argument, 0,  'm', "Machine file for ECM prediction"};
-    long_options[12] = {"mode",     required_argument, 0,  'M', "Mode : available options: ECM, BENCH, VALIDATE"};
-    long_options[13] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
-    long_options[14] = {0,         0,                 0,   0 ,  0 };
+    long_options[11] = {"ILC",     required_argument, 0,  'I', "Cache along with safety factor to block inner layer condition for; default L2:0.5"};
+    long_options[12] = {"OLC",     required_argument, 0,  'O', "Cache along with safety factor to block outer layer condition for; default L3:0.5"};
+    long_options[13] = {"TEMPORAL",     required_argument, 0,  'T', "Cache along with safety factor to use for temporal blocking; default L3:0.5. Note must be shared cache"};
+    long_options[14] = {"mc_file", required_argument, 0,  'm', "Machine file for ECM prediction"};
+    long_options[15] = {"mode",     required_argument, 0,  'M', "Mode : available options: ECM, BENCH, VALIDATE"};
+    long_options[16] = {"help",    no_argument,       0,  'h', "Prints this help informations" };
+    long_options[17] = {0,         0,                 0,   0 ,  0 };
 
     gnuOptions = new option[numOptions+1];
 
@@ -52,7 +55,7 @@ bool os_parser::parse_arg(int argc, char **argv)
     prgname = argv[0];
     while (1) {
         int option_index = 0, c;
-        c = getopt_long(argc, argv, "0:i:c:t:s:f:r:b:p:o:m:M:hPS",
+        c = getopt_long(argc, argv, "0:i:c:t:s:f:r:b:p:o:m:M:I:O:T:hPS",
                 gnuOptions, &option_index);
 
         if (c == -1)
@@ -113,6 +116,21 @@ bool os_parser::parse_arg(int argc, char **argv)
             case 'o':
                 {
                     opt = optarg;
+                    break;
+                }
+            case 'I':
+                {
+                    ILC_cache = optarg;
+                    break;
+                }
+            case 'O':
+                {
+                    OLC_cache = optarg;
+                    break;
+                }
+            case 'T':
+                {
+                    Temporal_cache = optarg;
                     break;
                 }
             case  'M':
@@ -249,17 +267,17 @@ int findChar(std::vector<char*> vec, const char* str)
 
 void os_parser::help()
 {
-    printf("Usage: %s [OPTION]...\n",prgname);
+//    printf("Usage: %s [OPTION]...\n",prgname);
     printf("Valid options are:\n\n");
-    char* HLINE = "─────────────────────────────────────────────────────────────────────────────────────────────────";
+    char* HLINE = "──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────";
     printf("%s\n",HLINE);
     printf("\t%s\t\t\t%s\n", "options", "description");
     printf("%s\n",HLINE);
-    for(int i=0; i<numOptions; ++i)
+    for(int i=0; i<numOptions-1; ++i)
     {
         char* long_opt;
         asprintf(&long_opt,"--%s", long_options[i].gnu_opt.name);
-        printf("-%c or  %-12s |\t %-70s |\n", ((char) long_options[i].gnu_opt.val), long_opt, long_options[i].desc);
+        printf("-%c or  %-15s |\t %-110s |\n", ((char) long_options[i].gnu_opt.val), long_opt, long_options[i].desc);
         free(long_opt);
     }
 

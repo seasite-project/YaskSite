@@ -33,8 +33,11 @@ struct os_parser
     char* opt;
     char *prgname;
     char *mode;
-    char *mcFile;
     bool dp;
+    char *mcFile;
+    char *ILC_cache;
+    char *OLC_cache;
+    char *Temporal_cache;
     int numOptions;
     my_option *long_options;
     option *gnuOptions;

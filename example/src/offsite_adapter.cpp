@@ -116,12 +116,13 @@ double interpolate(int x,int x1, double y1, int x2, double y2)
     return (y1+(x-x1)*m);
 }
 
-//This measures the performance of different versions of heat3d
 void main(int argc, char** argv)
 {
     if(argc < 5)
     {
         printf("Usage : %s [code file] [key] [stencilParam] [stencilName] [optArgs]\n", argv[0]);
+        os_parser optParse;
+        optParse.help();
         exit(-1);
     }
 
@@ -269,6 +270,11 @@ void main(int argc, char** argv)
 
     printf("dim = %d\n", dim);
 
+    //Cache blocking
+    std::vector<char*> Temporal_cache = splitChar(optParse.Temporal_cache);
+    std::vector<char*> OLC_cache = splitChar(optParse.OLC_cache);
+    std::vector<char*> ILC_cache = splitChar(optParse.ILC_cache);
+
     printf("stencilName = %s\n", stencilName);
     yaskSite* stencil = new yaskSite(&mpiMan, derivedStencilName, dim, radius, fold[0], fold[1], fold[2], dp, prefetch);
     stencil->setDim(size[0], size[1], size[2], dt);
@@ -287,11 +293,12 @@ void main(int argc, char** argv)
             {
                 if(opt_idx == 1)
                 {
-                    stencil->spatialTuner("L3", "L2", 0.5, 0.5);
+                    stencil->spatialTuner(OLC_cache[0], ILC_cache[0], atof(OLC_cache[1]), atof(ILC_cache[1]));
+                    printf("Blocking %s, %f, %s, %f\n", OLC_cache[0], atof(OLC_cache[1]), ILC_cache[0], atof(ILC_cache[1]));
                 }
                 else if(opt_idx == 2)
                 {
-                    stencil->blockTuner("L3","L2","L1", 0.5,0.5,0.5);
+                    stencil->blockTuner(Temporal_cache[0],OLC_cache[0],ILC_cache[0], atof(Temporal_cache[1]), atof(OLC_cache[1]), atof(ILC_cache[1]));
                 }
                 double ecm_cy_cl, cy_cl;
                 RUN(stencil, mode, true);
@@ -310,11 +317,11 @@ void main(int argc, char** argv)
             {
                 if(opt_idx == 1)
                 {
-                    stencil->spatialTuner("L3", "L2", 0.5, 0.5);
+                    stencil->spatialTuner(OLC_cache[0], ILC_cache[0], atof(OLC_cache[1]), atof(ILC_cache[1]));
                 }
                 else if(opt_idx == 2)
                 {
-                    stencil->blockTuner("L3","L2","L1", 0.5,0.5,0.5);
+                    stencil->blockTuner(Temporal_cache[0],OLC_cache[0],ILC_cache[0], atof(Temporal_cache[1]), atof(OLC_cache[1]), atof(ILC_cache[1]));
                 }
                 RUN(stencil, mode, false);
             }
@@ -337,15 +344,16 @@ void main(int argc, char** argv)
                 stencil->setThread(threads, 1);
                 for(int opt_idx=0; opt_idx<2; ++opt_idx)
                 {
+
                     if(opt_bool[opt_idx])
                     {
                         if(opt_idx == 1)
                         {
-                            stencil->spatialTuner("L3", "L2", 0.5, 0.5);
+                            stencil->spatialTuner(OLC_cache[0], ILC_cache[0], atof(OLC_cache[1]), atof(ILC_cache[1]));
                         }
                         else if(opt_idx == 2)
                         {
-                            stencil->blockTuner("L3","L2","L1", 0.5,0.5,0.5);
+                            stencil->blockTuner(Temporal_cache[0],OLC_cache[0],ILC_cache[0], atof(Temporal_cache[1]), atof(OLC_cache[1]), atof(ILC_cache[1]));
                         }
                         RUN(stencil, mode, false);
                     }

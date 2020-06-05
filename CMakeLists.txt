@@ -106,7 +106,7 @@ ExternalProject_Add(yaml-cpp
     DOWNLOAD_NAME yaml-cpp.zip
     CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER_SHORT} CXX=${CMAKE_CXX_COMPILER_SHORT} cmake ../yaml-cpp -DYAML_CPP_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     BUILD_COMMAND make
-    INSTALL_COMMAND make install
+    INSTALL_COMMAND make install && mkdir -p ${CMAKE_INSTALL_PREFIX}/lib && cp -r ${CMAKE_INSTALL_PREFIX}/lib64/libyaml-cpp.a ${CMAKE_INSTALL_PREFIX}/lib/libyaml-cpp.a 2>/dev/null || :#copy to li dir as well if lib64
 )
 
 
@@ -478,6 +478,7 @@ ExternalProject_Add(LDST-bench
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
 )
+
 
 add_custom_command(TARGET calibrate
     POST_BUILD

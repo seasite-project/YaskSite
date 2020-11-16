@@ -527,7 +527,7 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
 
     double fold_x = stencil->data->fold_x;
     double fold_y = stencil->data->fold_y;
-    double fold_z = stencil->data->fold_z;
+    //double fold_z = stencil->data->fold_z;
 
     bz = std::max(1.0,bz*fold_x*fold_y);
     by = std::max(1.0,ceil(by/fold_y));
@@ -597,10 +597,11 @@ std::vector<double> perfModel::addBlockBoundaryEffects(cache_info currCache, boo
     getRadius(radius_z, stencil, z);
 
     //since inner dimension will be padded
-    radius_z *= fold_z;
+
+/*    radius_z *= fold_z;
     radius_x *= fold_x;
     radius_y *= fold_y;
-
+*/
     //temporal blocking has radius 1
     /*if(temporal)
       {
@@ -911,7 +912,7 @@ bool perfModel::LC_violated(cache_info currCache, LC  type)
         blockSize = bz_;
     }
 
-    int nThreads = currCache.cores; //stencil->data->nthreads;
+    int nThreads = std::min(currCache.cores, (int)stencil->data->nthreads);
 
     double curr_cache_size = currCache.getWords()*currCache.sf;
     if(currCache.shared)
@@ -1988,6 +1989,7 @@ void perfModel::calc_ECM(int scale, int temporalStoreMode)
     double l2_l1_transfer_rate = CACHE("L2").getBytePerCycle((int)l2_l1_data[1], nthreads); //bytePerCycle["L2"][0];
     bytePerCycle_map["L2"].push_back(l2_l1_transfer_rate);
     double l2_l1 = (l2_l1_data[0]*bytePerWord)/l2_l1_transfer_rate;
+    //printf("##### transfer_rate = %f, bytes = %f\n", l2_l1_transfer_rate, l2_l1_data[0]*bytePerWord);
     ECM.push_back((l2_l1/data_factor)*scale);
     ECM_data.push_back(l2_l1_data[0]*bytePerWord);
     ECM_prefetch_cy.push_back(ECM_prefetch[1]*scale/l2_l1_transfer_rate);
@@ -2406,6 +2408,7 @@ double perfModel::applyNOL()
     }
     nOL = evalECM_str(ECM_total);
     PRINT_LOG("nOL = %f\n", nOL);
+    //printf("@@@@@@@@@@ nOL = %f\n", nOL);
     nOL+=ECM_penalty;
 
 

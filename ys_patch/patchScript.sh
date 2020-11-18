@@ -1,3 +1,4 @@
+#!/bin/bash
 yask_folder=$1
 which_patch=$2
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #will convert all unit to lowest (for e.g. bytes)
 #Usage: ./unitconvert.sh SIZE [optional scaling]
 

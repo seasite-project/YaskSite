@@ -110,7 +110,26 @@ void main(int argc, char** argv)
     int end_dim = range[2];
     int inc_dim = range[1];
 
-    std::vector<int> fold = getRange(optParse.fold);
+    std::vector<int> fold;
+    if(strcmp(optParse.fold, "auto")==0)
+    {
+        int vecLen = 1;
+        if(strcmp(INSTR, "AVX")==0)
+        {
+            vecLen = 4;
+        }
+        else if(strcmp(INSTR, "AVX512")==0)
+        {
+            vecLen = 8;
+        }
+        fold = {1,1,vecLen};
+    }
+    else
+    {
+        fold = getRange(optParse.fold);
+    }
+
+
     int f_x = fold[0];
     int f_y = fold[1];
     int f_z = fold[2];
@@ -188,8 +207,8 @@ void main(int argc, char** argv)
         if(dimension == 3)
         {
             dim_x = static_cast<int>((grid_size)/((double)(4.0*8.0*dim*dim)));
-            dim_x = static_cast<int>(dim_x/8.0) * 8; //make multiple of 8
-            //dim_x = dim;
+           // dim_x = static_cast<int>(dim_x/8.0) * 8; //make multiple of 8
+            dim_x = dim;
             dim_y = dim;//16;
             dim_z = dim;
         }
@@ -224,7 +243,7 @@ void main(int argc, char** argv)
         if(opt_bool[1])
         {
             START_TIME(AT);
-            stencil_1->spatialTuner("L3", "L2",0.5, 0.5);
+            stencil_1->spatialTuner("L3", "L2", 0.5, 0.5);
             STOP_TIME(AT);
             double AT_time = GET_TIME(AT);
             //stencil_1->setSubBlock(750,5,512);
@@ -238,7 +257,7 @@ void main(int argc, char** argv)
             START_TIME(AT);
             if(f_y ==4 || f_x ==4 || strcmp(stencil_1->arch,"ivb")!=0)
             {
-                stencil_1->blockTuner("L3","L2","L2", 0.5,0.5,0.5);
+                stencil_1->blockTuner("L3","L2","L2", 0.8,0.5,0.5);
             }
             else
             {

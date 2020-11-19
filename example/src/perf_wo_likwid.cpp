@@ -90,7 +90,26 @@ void main(int argc, char** argv)
     int end_dim = range[2];
     int inc_dim = range[1];
 
-    std::vector<int> fold = getRange(optParse.fold);
+    std::vector<int> fold;
+    if(strcmp(optParse.fold, "auto")==0)
+    {
+        int vecLen = 1;
+        if(strcmp(INSTR, "AVX")==0)
+        {
+            vecLen = 4;
+        }
+        else if(strcmp(INSTR, "AVX512")==0)
+        {
+            vecLen = 8;
+        }
+        fold = {1,1,vecLen};
+    }
+    else
+    {
+        fold = getRange(optParse.fold);
+    }
+
+
     int f_x = fold[0];
     int f_y = fold[1];
     int f_z = fold[2];

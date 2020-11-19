@@ -534,7 +534,7 @@ void yaskSite::build()
 
             //SYSTEM(sysLogFileName, "cp %s/bin/yask.%s.%s.exe %s/bin/.", yaskDir, stencil, arch, localDir);
 
-            SYSTEM_WO_PIPE(sysLogFileName, "%s/createYASKLib.sh %s %s %s %s %s %s", TOOL_DIR, yaskDir, stencil, arch, SRC_DIR, INC_DIR, localDir);
+            SYSTEM(sysLogFileName, "%s/createYASKLib.sh %s %s %s %s %s %s", TOOL_DIR, yaskDir, stencil, arch, SRC_DIR, INC_DIR, localDir);
             LOAD_PRINT_END();
         }
 
@@ -542,6 +542,8 @@ void yaskSite::build()
         //generated library
         LOAD_PRINT_START("Loading %s", stencilCode);
 
+        free(lib);
+        STRINGIFY(lib, "%s/lib/libYASK.so", localDir);
         dl_handle = dlopen(lib, RTLD_LOCAL|RTLD_NOW);
         if(!dl_handle)
         {

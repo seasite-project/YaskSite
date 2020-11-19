@@ -49,12 +49,30 @@ From: ubuntu:latest
 ##### App for running yasksite ######
 %apprun YaskSite
     cd $SINGULARITY_BASE_PATH
-    cd YaskSite/example/build
     echo "Running YaskSite with arguments $*"
     threads=$(echo "$*" | grep -o -P '(?<=\-c).*?(?=\-)')
-    echo "Num threads = $threads"
-    bash -c "source /opt/intel/oneapi/setvars.sh && taskset -c 0-$((threads-1)) ./perf_wo_likwid $@"
-    cd ${SINGULARITY_BASE_PATH}
+    echo "executing export PATH=$PATH:YaskSite/example/build && source /opt/intel/oneapi/setvars.sh && likwid-pin -c S0:0-$((threads-1)) perf_wo_likwid $@"
+    bash -c "export PATH=$PATH:YaskSite/example/build && source /opt/intel/oneapi/setvars.sh && likwid-pin -c S0:0-$((threads-1)) perf_wo_likwid $@"
+
+%apprun YaskSite
+    This is the complete YaskSite app. To see help options type 'singularity run --app YaskSite <container_name> "-h"'.
+    Remember: Please pass arguments as a string, i.e., for example to run Wave3D, radius 1 with 20 cores and inner-dimensions in range 500:20:800 on Cascade Lake Gold 6248
+    use 'singularity run --app YaskSite YS_CGO.sif "-k Wave3D:3 -m YaskSite/example/mc_files/CascadelakeSP_Gold-6248.yml -R 500:20:800 -c 20 -t 1 -f auto -r 1 -O spatial -o <out file>"'
+
+###### App for reproducing Fig. 3 plots #######
+%apprun Fig3
+    cd $SINGULARITY_BASE_PATH
+    echo "Running Fig3 with arguments $*"
+    threads=$(echo "$*" | grep -o -P '(?<=\-c).*?(?=\-)')
+    echo "executing export PATH=$PATH:YaskSite/example/build && source /opt/intel/oneapi/setvars.sh && likwid-pin -c S0:0-$((threads-1)) perf_wo_likwid -k Wave3D:3-t 1 -R 20:20:1000 -f auto $@"
+    bash -c "export PATH=$PATH:YaskSite/example/build && source /opt/intel/oneapi/setvars.sh && likwid-pin -c S0:0-$((threads-1)) perf_wo_likwid -k Wave3D:3-t 1 -R 20:20:1000 -f auto $@"
+
+%apphelp Fig3
+    Reproduces result in Figure 3 of the paper. machine file, threads, radius, blocking and output file are the parameters. For reproducing the
+    results in paper set threads to number of cores on 1 socket (20 on Intel Cascade Lake which we tested). 
+    The machine file corresponding to our architecture is the  YaskSite/example/mc_files/CascadelakeSP_Gold-6248.yml
+    For example for radius 1 and spatial blocking run : 'singularity run --app Fig3 <container_name> -m <machine_file> -c <ncores> -r 1 -O spatial -o <out_file>'
+
 
 %help
     This is a singularity container that reproduces result from CGO2021 paper
